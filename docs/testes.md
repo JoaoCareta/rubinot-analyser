@@ -1,6 +1,6 @@
 # Harness
 
-Entrada: `tools/verificar.ps1`; implementação portátil do runner em `tools/verificar.py`. Executar Python com cwd em `hunt-analyzer/`. Dependências fixadas em `requirements-dev.txt`.
+Entrada: `tools/verificar.ps1`; implementação portátil do runner em `tools/verificar.py`. Executar Python com cwd em `hunt-analyzer/`. Dependências diretas em `requirements-dev.txt` e resolução completa do ambiente validado em `requirements-lock.txt`.
 
 | Perfil | Verificações |
 |---|---|
