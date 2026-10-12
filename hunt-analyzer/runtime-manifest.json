@@ -82,6 +82,10 @@
     "vocab_update.py"
   ],
   "assets": [
+    "atlas.json",
+    "botao_x.png",
+    "monstros_nomes.txt",
+    "pin_template.png",
     "ui/app/hunt.css",
     "ui/app/hunt.js",
     "ui/auxiliadores.html",
@@ -182,7 +186,6 @@
     "ui/roda_referencias.json",
     "ui/roda_visual.js",
     "ui/rtc.js",
-    "ui/rtc_player.json",
     "ui/rtc_referencias.json",
     "ui/rtc_worker.js",
     "ui/shared/apresentacao.js",
@@ -191,11 +194,7 @@
     "ui/temporal.js",
     "ui/tutorial.js",
     "ui/voc_ed.png",
-    "ui/voc_ms.png",
-    "atlas.json",
-    "botao_x.png",
-    "pin_template.png",
-    "monstros_nomes.txt"
+    "ui/voc_ms.png"
   ],
   "paginas": [
     "index",
@@ -274,5 +273,26 @@
     "sinais.py",
     "stream_twitch.py",
     "ue_alerta.py"
+  ],
+  "dados_pessoais": [
+    ".tela_perfil",
+    "KS",
+    "app.log",
+    "app_anterior.log",
+    "auxiliares.json",
+    "cache_mundo.npz",
+    "calibracao.json",
+    "calibracao_print.png",
+    "capture",
+    "configuracoes_player",
+    "fonte.json",
+    "fontes",
+    "hunt_data",
+    "locais_player.json",
+    "mapa_ajustes.json",
+    "mock_hunt.json",
+    "rtc_player.json",
+    "stream_estado.json",
+    "z_ue_calib.png"
   ]
 }

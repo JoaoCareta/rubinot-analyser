@@ -36,4 +36,5 @@ class ArquiteturaTest(unittest.TestCase):
         fontes = {p.name for p in pathlib.Path('.').glob('*.py') if not p.name.startswith('test_')}
         self.assertEqual(fontes - classificados, set())
         for asset in m['assets']:
+            self.assertNotIn(pathlib.Path(asset).name, m['dados_pessoais'])
             self.assertTrue(pathlib.Path(asset).is_file(), asset)
