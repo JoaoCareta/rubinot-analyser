@@ -55,3 +55,5 @@ function especiesDe(voltas) {
 }
 
 if (typeof module !== 'undefined') module.exports = {taxasDe, especiesDe, PAUSA_S};   // o _demo do ao_vivo confere por aqui
+
+if(typeof module==='undefined')globalThis.HuntMetricas={taxasDe,especiesDe,PAUSA_S};

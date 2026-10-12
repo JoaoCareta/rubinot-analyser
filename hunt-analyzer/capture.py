@@ -16,6 +16,7 @@ import ctypes
 import collections
 import contextlib
 import ctypes.wintypes as wt
+from rubinot.adapters.historico import reservar_sessao
 import datetime as dt
 import json
 import pathlib
@@ -117,7 +118,7 @@ def main():
         sys.exit(3)
     # 21/09: pasta dada = continua a mesma sessao (relance depois de cair/auto-stop)
     session = (pathlib.Path(sys.argv[1]) if len(sys.argv) > 1
-               else out_root / dt.datetime.now().strftime("session_%Y%m%d_%H%M%S"))
+               else reservar_sessao(out_root, dt.datetime.now()))
     session.mkdir(parents=True, exist_ok=True)
     fonte_p = session / 'fonte.json'
     if not fonte_p.exists():

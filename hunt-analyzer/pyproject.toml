@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+include = ["rubinot/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["F821", "F822", "F823", "E9"]
+
+[tool.coverage.run]
+branch = true
+source = ["rubinot"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

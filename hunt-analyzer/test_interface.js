@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const C=require('./ui/features/hunt/card.js');
+const M=require('./ui/features/mapas/grade.js');
+assert.equal(C.pct(105,100),5);
+assert.equal(C.comparacoes({profit:5,base:'Leader'},{profit:10,base:'Market'}).profit,null);
+assert.equal(C.comparacoes({profit:5,reset:true},{profit:10}).profit,null);
+assert.equal(C.mediaDa([{n:1,ini:1,fim:121,dur:120,xp_raw:0,profit:0,sup_pt:null,sup_eu:0}]).xph,0);
+const grade=M.agrega([[1,13,100,100,5],[3,13,101,101,3],[5,12,101,101,99]],{x0:100,y0:100,w:32,h:32},13);
+assert.equal(grade.length,1);assert.equal(grade[0].seg,4);assert.equal(grade[0].bichos,4);
+assert.equal(M.faixas([]),null);assert.equal(M.faixa([1,2,3,4,5,6],4),3);
+console.log('Interface: cards, reset, Leader, zero observado, grade, andares e quantis aprovados.');

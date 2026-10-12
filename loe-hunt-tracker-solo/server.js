@@ -3,12 +3,12 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, extname, normalize, sep } from 'node:path';
+import { dirname, join, extname, normalize, sep, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(__dirname, 'public');
-const PORT = 3311;
+const PORT = Number(process.env.PORT ?? 3311);
 const HOST = '127.0.0.1';
 
 const MIME = {
@@ -31,8 +31,15 @@ const TITULO = {
 
 const CHARS_VALIDOS = new Set(['Hetero afeminado', 'Traps the cat']);
 
+export function dentro(raiz, caminho) {
+  const base=resolve(raiz), alvo=resolve(caminho);
+  return alvo===base || alvo.startsWith(base+sep);
+}
+
+export function criarServidor({pastaDados=__dirname, publico=PUBLIC, personagens=CHARS_VALIDOS}={}) {
+  const PUBLIC=publico;
 function comColadas(fn, escrita = false) {
-  const db = new DatabaseSync(join(__dirname, 'coladas.db'));
+  const db = new DatabaseSync(join(pastaDados, 'coladas.db'));
   try {
     db.exec(`CREATE TABLE IF NOT EXISTS colada (
       id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, personagem TEXT, data TEXT,
@@ -44,7 +51,7 @@ function comColadas(fn, escrita = false) {
 function guardarColada(sess) {
   const nome = sess?.party?.players?.[0]?.name;
   const ts = sess?.party?.start;
-  if (!CHARS_VALIDOS.has(nome) || !ts) return { erro: 'sessao invalida' };
+  if (!personagens.has(nome) || !ts) return { erro: 'sessao invalida' };
   return comColadas((db) => {
     const r = db.prepare('INSERT OR IGNORE INTO colada (ts, personagem, data) VALUES (?, ?, ?)')
       .run(String(ts), nome, JSON.stringify(sess));
@@ -60,7 +67,7 @@ function coladas() {
 }
 
 function comBanco(fn) {
-  const db = new DatabaseSync(join(__dirname, 'solo.db'), { readOnly: true });
+  const db = new DatabaseSync(join(pastaDados, 'solo.db'), { readOnly: true });
   try { return fn(db); } finally { db.close(); }
 }
 
@@ -111,7 +118,7 @@ function apiSessions() {
           kills, items: [], durationH: durH,
           rawXp, xp,
           xpH: (xp != null && durH) ? Math.round(xp / durH) : null,
-          rawXpH: (rawXp != null && durH) ? Math.round(rawXp / durH) : null,
+          rawXpH: s.xp_raw_h_mediana ?? ((rawXp != null && durH) ? Math.round(rawXp / durH) : null),
           damage: s.damage || 0, damageH: durH ? Math.round((s.damage || 0) / durH) : 0,
           healing: s.healing || 0, healingH: durH ? Math.round((s.healing || 0) / durH) : 0,
           totalKills,
@@ -163,9 +170,15 @@ const server = createServer(async (req, res) => {
     return res.end(data);
   } catch (e) {
     if (e.code === 'ENOENT') { res.writeHead(404); return res.end('nao encontrado'); }
-    if (e.code === 'ERR_INVALID_URL') { res.writeHead(400); return res.end('endereco invalido'); }
+    if (e instanceof URIError || e.code === 'ERR_INVALID_URL') { res.writeHead(400); return res.end('endereco invalido'); }
     console.error(e); res.writeHead(500); return res.end('erro');
   }
 });
 
-server.listen(PORT, HOST, () => console.log(`Solo Hunt Tracker -> http://${HOST}:${PORT}`));
+  return server;
+}
+
+if (process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
+  const server=criarServidor({pastaDados: process.env.HUNT_SOLO_DADOS || __dirname});
+  server.listen(PORT, HOST, () => console.log(`Solo Hunt Tracker -> http://${HOST}:${server.address().port}`));
+}

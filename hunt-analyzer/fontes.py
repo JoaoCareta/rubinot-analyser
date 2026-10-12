@@ -1,11 +1,12 @@
 """Configuração de entrada e calibrações isoladas, preservando a janela legada."""
+import os
 import hashlib
 import json
 import pathlib
 import re
 from urllib.parse import urlsplit
 
-PASTA = pathlib.Path(__file__).resolve().parent
+PASTA = pathlib.Path(os.environ.get('HUNT_FONTES_RAIZ') or pathlib.Path(__file__).resolve().parent)
 CONFIG = PASTA / 'fonte.json'
 
 
@@ -33,11 +34,7 @@ def atual():
     return normalizar(json.loads(CONFIG.read_text(encoding='utf-8'))) if CONFIG.exists() else {'tipo': 'janela'}
 
 
-def grava_json(path, dados):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix('.tmp')
-    temp.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding='utf-8')
-    temp.replace(path)
+from rubinot.adapters.arquivos import gravar_json as grava_json
 
 
 def salvar(dados):

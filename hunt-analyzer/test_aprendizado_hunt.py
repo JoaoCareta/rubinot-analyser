@@ -84,7 +84,7 @@ class AprendizadoHunt(unittest.TestCase):
         with patch.object(c,'AQUI',self.raiz),patch.object(c,'RAIZ',self.raiz/'configuracoes_player'), \
              patch.object(c,'consultar',side_effect=lambda *args:obs), \
              patch('atlas_build.load_atlas',return_value=({},0)),patch('events_build.frame_messages',side_effect=mensagens):
-            leitor=o.Observador();leitor.processar(sessao,'QA')
+            leitor=o.Observador(registro_de=lambda _:ah.Registro(self.raiz/'hunt_data'/'_aprendizado'));leitor.processar(sessao,'QA')
             obs['confirmacao']={'valida':True,'sugestao_id':'nova','instante':9999999999}
             (sessao/'c_000002_000.png').touch()
             leitor.processar(sessao,'QA')

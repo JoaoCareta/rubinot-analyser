@@ -143,11 +143,7 @@ class FontesTest(unittest.TestCase):
 
     def test_quadros_preservados_com_moeda(self):
         # A evidência JPEG não é idêntica ao frame original; este é um replay separado.
-        p=pathlib.Path(__file__).parent/'reports/stream_9dude_20261009/teste_hunt_160850'
-        if not p.exists(): self.skipTest('Amostras pessoais não acompanham a distribuição')
-        row=json.loads((p/'leituras.jsonl').read_text(encoding='utf-8').splitlines()[-1])
-        r=row['regioes']['hunt']; x,y,w,h=[r[k] for k in ('left','top','width','height')]
-        with Image.open(p/row['quadro']) as img: v,_=painel_stream.ler(img.crop((x,y,x+w,y+h)))
+        with Image.open('tests/fixtures/leitores/hunt-moeda.png') as img: v,_=painel_stream.ler(img)
         self.assertEqual(v['Loot'],185149)
         self.assertEqual(v['Supplies'],5998)
         self.assertEqual(v['Balance'],179151)

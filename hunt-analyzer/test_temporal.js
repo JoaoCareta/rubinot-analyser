@@ -64,7 +64,7 @@ const calculada=T.limiares([uma],pequeno,{duracao:2,rodadas:1});assert.equal(T.c
 // Custos e buffs relativos: uma cura medida sob +4% não recebe +4% duas vezes.
 const curaCtx={...ctx,cura:{potencia_hp:{mass_healing:1000},base_multiplicadores:{mass_healing:1.04},janelas:[{t:0,fim:2,vida:{eu:{atual:100,maxima:5000}}}],aliados:[]},observado:{cura:{slots:[{tipo:'autocura',id:'mass_healing',vida_percent:90}]}}};
 const curaMH=I.curar(cat,pontosMH,[],magias,curaCtx,'mas_res',{fixar_limiares:true});assert.equal(curaMH.linhas.find(m=>m.id==='mass_healing').cura_hp,1000);
-const tela=fs.readFileSync('ui/rtc_ui.js','utf8')+fs.readFileSync('ui/rtc_integrado_ui.js','utf8');
+const tela=fs.readFileSync('ui/features/planejamento/painel.js','utf8');
 // RTC funciona sem pontos e sem escolher uma roda futura.
 const semRoda={...ctx,total:null};
 const livre=I.calcularRTC(cat,magias,semRoda);
@@ -104,7 +104,7 @@ const inicial=I.curar(cat,{},[],magias,ctx,'vida_link99');assert.equal(inicial.l
 assert.notEqual(inicial.linhas.find(m=>m.id==='ultimate_healing').vida_percent,fria.cura.linhas.find(m=>m.id==='ultimate_healing').vida_percent);
 const parcial=I.calcular(cat,magias.map(m=>({...m,resistencia:null,ajustado:null,cobertura:0})),{...ctx,criaturas_histograma:{}},'dano','vida',0,{finais:1,limite_ms:500});assert(parcial.rtc.linhas.length>=4);assert(parcial.rtc.linhas.some(m=>m.familia==='ue'));assert(parcial.rtc.linhas.some(m=>m.runa));assert(parcial.cura.linhas.every(m=>m.vida_percent!=null));
 const neutra=I.ataque(magias.filter(m=>m.tipo==='ofensiva').map(m=>({...m,ajustado:0})),ctx);assert(!neutra.linhas.length); // imunidade não vira candidata positiva.
-const integrado=fs.readFileSync('ui/rtc_integrado_ui.js','utf8');assert(!/a calibrar|calibração parcial|Faltam vida|quantidade atingida/i.test(integrado));
+const integrado=fs.readFileSync('ui/features/planejamento/painel.js','utf8');assert(!/a calibrar|calibração parcial|Faltam vida|quantidade atingida/i.test(integrado));
 // Sem sequência temporal, a mediana de cobertura não inventa espera por uma leva.
 const combate=magias.filter(m=>HuntRTC.categoria(m)&&!m.requer_roda);
 for(const cobertura of [null,{forked_thorns:1,forked_glacier:1},Object.fromEntries(combate.map(m=>[m.id,1]))]){

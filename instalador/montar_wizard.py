@@ -34,7 +34,7 @@ def valida_dados():
     if fora:
         raise RuntimeError(f"Dados citados e fora da lista: {sorted(fora)}")
     for p in dados:
-        if pacote.PROIBIDO.search(p) or pathlib.Path(p).suffix in {".py", ".pyc", ".pyo"}:
+        if pacote.PROIBIDO.search(p) or pathlib.Path(p).name in pacote.PESSOAIS or pathlib.Path(p).suffix in {".py", ".pyc", ".pyo"}:
             raise RuntimeError(f"Arquivo proibido: {p}")
     return mods, dados
 

@@ -39,5 +39,5 @@ assert.equal(HuntRTC.simular(trio,[],{alvos:7,mana_percent:4},2).score,0);
 const sio=cat.fatias.filter(f=>f.conviction_id===33),link=cat.fatias.find(f=>f.conviction_id===28);
 const p=Object.fromEntries([...sio,link].map(f=>[f.id,f.limite]));
 assert(Math.abs(W.cura(cat,p).sio-110)<1e-9);assert(Math.abs(W.cura(cat,p).autocura_por_sio-27.5)<1e-9);
-fs.writeFileSync('../output/planejamento/rtc-roda/qa-final/testes-roda.json',JSON.stringify(resultados,null,2));
+if(process.env.HUNT_QA_SAIDA)fs.writeFileSync(process.env.HUNT_QA_SAIDA+'/testes-roda.json',JSON.stringify(resultados,null,2));
 console.log('Roda: ED/MS, mínimos exatos, reserva, conectores completos, códigos, 12 cenários, cura separada e prioridades/Mana/Criaturas aprovados.');

@@ -1,0 +1,11 @@
+# Operação
+
+O atalho abre a instalação compilada diretamente no navegador. O supervisor é invisível. Fechar a janela ou Desligar salva a hunt e encerra os processos do aplicativo. Minimizar conserva a execução. Clique repetido traz a janela existente.
+
+Iniciar hunt abre sessão nova; Encerrar conserva o servidor e guarda histórico. Reiniciar encerra a análise atual e volta a observar. Não iniciar uma segunda captura manual se o aplicativo está gravando.
+
+Encerramento: interromper produção de quadros, drenar consumidores, guardar números e mapas, consolidar aprendizado, somente então autorizar limpeza. Se a extração falhou, conservar quadros e corrigir o consumidor; não apagar a sessão para esconder o erro.
+
+Capture/lap_watch/KS continuam sendo entradas do dispatcher compilado. CLIs e ferramentas manuais estão classificadas em `runtime-manifest.json`. Os nomes antigos permanecem executáveis pelas fachadas. Usar caminho completo ao iniciar processo manual para permitir sua identificação pelo supervisor.
+
+Interface e API podem ser verificadas sem jogo com `app.py --sem-gravacao --sem-observacao --sem-navegador`. Não usar esse modo para medir desempenho de captura real.

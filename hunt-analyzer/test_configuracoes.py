@@ -36,8 +36,8 @@ class ConfiguracoesTest(unittest.TestCase):
         with self.assertRaises(ValueError):c.guardar_sugestao('QA',payload)
 
     def test_reconhece_sem_calibrar_e_estabiliza(self):
-        pasta=pathlib.Path('../output/planejamento/rtc-roda')
-        for tipo,arquivo in [('rtc','referencias-cliente-20261011/01-rtc-configurado.png'),('cura','referencias-cura/cura-sio-gran-sio.png'),('roda','roda-referencia.png')]:
+        pasta=pathlib.Path('tests/fixtures/leitores')
+        for tipo,arquivo in [('rtc','01-rtc-configurado.png'),('cura','cura.png'),('roda','roda-referencia.png')]:
             img=Image.open(pasta/arquivo).convert('RGB');leitor=c.Leitor(estabilizar=True)
             char='QA '+tipo
             leitor.processar_imagem(img,char)
@@ -72,7 +72,7 @@ class ConfiguracoesTest(unittest.TestCase):
 
     def test_recursos_reais_sem_converter_bp_em_hp(self):
         import observacao_execucao as o
-        img=Image.open('../output/planejamento/rtc-roda/referencias-cura/cura-sio-gran-sio.png')
+        img=Image.open('tests/fixtures/leitores/cura.png')
         r=o.recursos(img)
         self.assertEqual(r['vida']['atual'],5855)
         self.assertEqual(r['mana']['maxima'],32610)
@@ -102,7 +102,7 @@ class ConfiguracoesTest(unittest.TestCase):
         self.assertFalse(nova['aplicado_confirmado'])
 
     def test_referencia_real_e_janela_movida(self):
-        p = pathlib.Path('../output/planejamento/rtc-roda/roda-referencia.png')
+        p = pathlib.Path('tests/fixtures/leitores/roda-referencia.png')
         if not p.exists():
             self.skipTest('Imagem de referência local indisponível')
         img = Image.open(p).convert('RGB')
@@ -124,7 +124,7 @@ class ConfiguracoesTest(unittest.TestCase):
         self.assertFalse(lido['roda']['aplicado_confirmado'])
 
     def test_rtc_real_slots_campos_e_popup(self):
-        pasta = pathlib.Path('../output/planejamento/rtc-roda/referencias-cliente-20261011')
+        pasta = pathlib.Path('tests/fixtures/leitores')
         p = pasta/'01-rtc-configurado.png'
         img = Image.open(p).crop((540,272,1381,738)).convert('RGB')
         leitura = c.observar('rtc',img,'A','s1')['snapshot']
@@ -157,7 +157,7 @@ class ConfiguracoesTest(unittest.TestCase):
         self.assertEqual(nova['slots'][1]['estado'],'icone_nao_identificado')
 
     def test_rtc_calibracao_movimento_escala_e_deduplicacao(self):
-        p = pathlib.Path('../output/planejamento/rtc-roda/referencias-cliente-20261011/01-rtc-configurado.png')
+        p = pathlib.Path('tests/fixtures/leitores/01-rtc-configurado.png')
         c.calibrar('rtc',{'left':540,'top':272,'width':841,'height':466},p,'A')
         img = Image.open(p).crop((540,272,1381,738)).resize((1682,932),Image.Resampling.NEAREST)
         moved = Image.new('RGB',(1850,1100),'black');moved.paste(img,(80,60))
@@ -176,7 +176,7 @@ class ConfiguracoesTest(unittest.TestCase):
         self.assertEqual(c.rtc_da_imagem(parcial,c.linhas(parcial))[1],[])
 
     def test_roda_selecao_zero_nao_e_total(self):
-        pasta=pathlib.Path('../output/planejamento/rtc-roda/referencias-cliente-20261011')
+        pasta=pathlib.Path('tests/fixtures/leitores')
         for nome,atual,limite in [('03-roda-ressonancia.png',50,50),('04-roda-magic-skill.png',75,75),('05-roda-mass-healing.png',100,100),('06-roda-mana-leech.png',0,150),('07-roda-healing-link.png',200,200)]:
             img=Image.open(pasta/nome).crop((460,182,1460,825))
             s=c.observar('roda',img,'A','s3')['snapshot']
@@ -191,7 +191,7 @@ class ConfiguracoesTest(unittest.TestCase):
 
     def test_casas_da_roda_por_numero_e_acumulacao(self):
         import leitura_jogo
-        pasta=pathlib.Path('../output/planejamento/rtc-roda/referencias-cliente-20261011')
+        pasta=pathlib.Path('tests/fixtures/leitores')
         esperados={'03-roda-ressonancia.png':('QTL0',50),'04-roda-magic-skill.png':('QTL1',75),'05-roda-mass-healing.png':('QTL4',100),'06-roda-mana-leech.png':('QTL7',0),'07-roda-healing-link.png':('QTL8',200)}
         for nome,(fatia,n) in esperados.items():
             im=Image.open(pasta/nome).crop((460,182,1460,825));s=c.observar('roda',im,'QA','s')['snapshot']
