@@ -1360,7 +1360,8 @@ def _demo_historico():
                                          "fundo": mm.fundo(0, (0, 2, 0, 2))}}}
             g._historico(final=True)
             lista = historico()
-            assert [s["id"] for s in lista] == ["unhallowed_crypt/20260923_0824"], lista
+            from rubinot.adapters.historico import chave_sessao
+            assert [s["id"] for s in lista] == ["unhallowed_crypt/" + chave_sessao(g.sessao.name, g.char)], lista
             assert (lista[0]["voltas"], lista[0]["bichos"], lista[0]["mapa"], lista[0]["icone"]) \
                 == (1, 33, True, "crypt_fiend"), lista
             h = historico_um(lista[0]["id"])
