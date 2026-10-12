@@ -31,7 +31,7 @@ DADOS = [
     "requirements.txt", "instalar.bat", "abrir.bat",
     "ui/index.html", "ui/hunt.html", "ui/evolucao.html", "ui/auxiliadores.html",
     "ui/taxas.js",   # taxas.js = a conta da tela
-    "ui/navegacao.js",  # menu lateral e cabeçalho compartilhados
+    "ui/navegacao.js", "ui/calibracoes_resumo.js",  # navegação e referências da calibração
     "ui/tutorial.js", "ui/rtc.js", "ui/magias.json",
     "ui/rtc_worker.js", "ui/temporal.js", "ui/integracao.js", "ui/janelas_referencias.json", "ui/recursos_glifos.json", "ui/roda_motor.js", "ui/fflate.js", "ui/fflate-LICENSE.txt", "ui/roda_catalogo.json",
     "ui/configuracoes.html", "ui/voc_ed.png", "ui/voc_ms.png", "ui/roda_visual.js",

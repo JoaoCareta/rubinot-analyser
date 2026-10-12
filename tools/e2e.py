@@ -103,6 +103,28 @@ def main():
                     resposta = page.request.post(url + '/api/fonte', data='{', headers={'content-type': 'application/json'})
                     assert resposta.status == 400
                     assert page.request.get(url + '/api/status').status == 200
+                    page.route('**/api/status', lambda route: route.fulfill(json={'char': 'Personagem QA', 'jogo': True}))
+                    page.route('**/api/configuracoes?*', lambda route: route.fulfill(json={
+                        'char': 'Personagem QA', 'calibracoes': {'rtc': {'instante': 1791800000}}}))
+                    page.goto(url + '/')
+                    if page.locator('#guiaSair').is_visible():
+                        page.locator('#guiaSair').click()
+                    expect(page.locator('#referenciasResumo .referencia-resumo')).to_have_count(3)
+                    expect(page.locator('#referenciasResumo')).to_contain_text('Referência guardada:')
+                    expect(page.locator('#referenciasResumo')).to_contain_text('Nenhuma leitura coletada.')
+                    fonte = page.locator('#fonteCaptura').bounding_box()
+                    configuracoes = page.locator('#configuracoesCaptura').bounding_box()
+                    assert fonte['x'] < configuracoes['x'] and abs(fonte['y'] - configuracoes['y']) < 2
+                    page.screenshot(path=str(saida / 'calibracao.png'), full_page=True)
+                    page.set_viewport_size({'width': 390, 'height': 844})
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+                    page.set_viewport_size({'width': 1440, 'height': 1000})
+                    page.get_by_role('link', name='Conferir RTC', exact=True).click()
+                    expect(page.locator('#tipo')).to_have_value('rtc')
+                    expect(page.locator('#registros')).to_contain_text('Referência guardada em')
+                    page.screenshot(path=str(saida / 'configuracoes.png'), full_page=True)
+                    page.locator('#voltarCalibracao').click()
+                    expect(page.locator('#fonteCaptura')).to_be_visible()
                     assert not erros, erros
                     browser.close()
             finally:

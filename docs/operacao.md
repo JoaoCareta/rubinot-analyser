@@ -4,6 +4,8 @@ O atalho abre a instalação compilada diretamente no navegador. O supervisor é
 
 O ícone da janela vem do favicon declarado em todas as páginas (`ui/hunt_analyzer_icone.png`); o ícone do atalho/executável é configurado separadamente em `instalador/assets/hunt-analyzer.ico`. Manter ambos com a mesma arte. Após atualizar a interface, recarregar a janela para o navegador buscar o favicon.
 
+A calibração mostra a fonte da análise à esquerda e as referências de RTC, cura e roda à direita (em telas pequenas, os blocos ficam empilhados). As datas de referência manual guardada e última leitura são separadas: uma leitura automática não significa que o usuário marcou uma referência. Cada atalho abre o tipo escolhido para o personagem da fonte. A tela de configurações tem retorno explícito à calibração no cabeçalho.
+
 Iniciar hunt abre sessão nova; Encerrar conserva o servidor e guarda histórico. Reiniciar encerra a análise atual e volta a observar. Não iniciar uma segunda captura manual se o aplicativo está gravando.
 
 Encerramento: interromper produção de quadros, drenar consumidores, guardar números e mapas, consolidar aprendizado, somente então autorizar limpeza. Se a extração falhou, conservar quadros e corrigir o consumidor; não apagar a sessão para esconder o erro.

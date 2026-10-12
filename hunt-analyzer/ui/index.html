@@ -48,7 +48,19 @@
   .botao.cheio { background: var(--ouro); color: #17130a; }
   .botao.cheio:hover { background: var(--ouro-claro); }
 
-  #fonteCaptura { display: block; padding: 28px; }
+  .calibracao-colunas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; margin:24px 0 14px; }
+  .calibracao-colunas .passo { margin:0; min-width:0; }
+  #fonteCaptura, #configuracoesCaptura { display:flex; flex-direction:column; align-items:stretch; padding:28px; gap:12px; }
+  .calibracao-colunas .fonte-form { grid-template-columns:1fr; margin-top:18px; }
+  .calibracao-colunas .fonte-acoes { justify-content:flex-start; margin-top:auto; }
+  #configuracoesCaptura > .botao { align-self:flex-start; margin-top:auto; text-decoration:none; white-space:normal; }
+  #referenciasResumo { display:grid; gap:12px; margin:8px 0; }
+  .referencia-resumo { border:1px solid var(--borda); border-radius:8px; padding:14px; }
+  .referencia-resumo strong { color:var(--ouro-claro); }
+  .referencia-resumo p { margin:7px 0 0; color:var(--suave); line-height:1.5; }
+  .referencia-resumo a { color:var(--ouro-claro); display:inline-block; margin-top:10px; }
+  @media(max-width:1050px) { .calibracao-colunas { grid-template-columns:1fr; } }
+
   .fonte-intro { max-width: 760px; margin-top: 10px; line-height: 1.65; }
   .fonte-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 28px; }
   .fonte-form label { display: flex; flex-direction: column; gap: 10px; min-width: 0;
@@ -175,12 +187,7 @@
     </div>
   </section>
 
-  <section class="passo" aria-label="Calibração de RTC e roda">
-    <div><div class="rotulo">configurações do personagem</div><h2>RTC e roda de habilidades</h2>
-      <p class="sub">Referências opcionais para reconhecer as configurações quando suas janelas estiverem abertas.</p></div>
-    <a class="botao" href="/configuracoes">Calibrar roda de habilidades / RTC</a>
-  </section>
-
+  <div class="calibracao-colunas">
   <section class="passo" id="fonteCaptura">
     <div>
       <div class="rotulo">fonte da análise</div>
@@ -197,6 +204,14 @@
     </div>
     <div class="fonte-acoes"><button id="btnTutorial" class="botao discreto">Como configurar</button><button id="btnFonte" class="botao cheio">Usar esta fonte</button></div>
   </section>
+  <section class="passo" id="configuracoesCaptura" aria-label="Calibrações do personagem">
+    <div class="rotulo">configurações do personagem</div><h2>RTC, cura e roda</h2>
+    <p class="sub">Confira as referências e as últimas leituras do personagem.</p>
+    <p id="referenciasPersonagem" class="sub"></p>
+    <div id="referenciasResumo" aria-live="polite">Consultando referências…</div>
+    <a class="botao" href="/configuracoes">Abrir calibrações do personagem</a>
+  </section>
+  </div>
   <section class="passo" id="passoCaptura">
     <div>
       <div class="rotulo">01 · captura</div>
@@ -640,5 +655,6 @@ $('#btnFonte').onclick = async () => {
 })();
 </script>
 <script src="/ui/tutorial.js"></script>
+<script src="/ui/calibracoes_resumo.js"></script>
 </body>
 </html>
