@@ -31,6 +31,7 @@
 !/instalador/*.md
 !/instalador/*.txt
 !/instalador/*.iss
+!/instalador/assets/
 /loe-hunt-tracker-solo/*
 !/loe-hunt-tracker-solo/*.js
 !/loe-hunt-tracker-solo/*.json

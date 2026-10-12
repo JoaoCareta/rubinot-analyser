@@ -76,6 +76,7 @@ def main():
                "--experimental=avoid-short-path",
                "--assume-yes-for-downloads", "--windows-console-mode=disable",
                "--output-filename=HuntAnalyzer.exe", f"--output-dir={BUILD}",
+               f"--windows-icon-from-ico={AQUI / 'assets/hunt-analyzer.ico'}",
                f"--report={BUILD / 'compilacao.xml'}", "--company-name=Hunt Analyzer",
                "--product-name=Hunt Analyzer", f"--file-version={args.versao}",
                f"--product-version={args.versao}", "--jobs=4"]
