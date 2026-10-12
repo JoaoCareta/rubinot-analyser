@@ -65,6 +65,11 @@ def main():
                     page.on('pageerror', lambda e: erros.append(str(e)))
                     page.route('**/*', lambda route: route.continue_() if route.request.url.startswith(url) or route.request.url.startswith('data:') else route.abort())
                     page.goto(url + '/hunt')
+                    icone = page.locator('link[rel="icon"]')
+                    assert icone.get_attribute('href') == '/ui/hunt_analyzer_icone.png?v=1'
+                    resposta_icone = page.request.get(url + icone.get_attribute('href'))
+                    assert resposta_icone.status == 200
+                    assert resposta_icone.body().startswith(b'\x89PNG\r\n\x1a\n')
                     expect(page.locator('#conteudo')).to_have_class(re.compile(r'\bborrado\b'), timeout=10000)
                     dados.update(copy.deepcopy(completo))
                     expect(page.locator('#historico .volta')).to_have_count(8, timeout=15000)

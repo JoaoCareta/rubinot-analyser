@@ -194,7 +194,8 @@
     "ui/temporal.js",
     "ui/tutorial.js",
     "ui/voc_ed.png",
-    "ui/voc_ms.png"
+    "ui/voc_ms.png",
+    "ui/hunt_analyzer_icone.png"
   ],
   "paginas": [
     "index",

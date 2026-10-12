@@ -2,6 +2,8 @@
 
 O atalho abre a instalação compilada diretamente no navegador. O supervisor é invisível. Fechar a janela ou Desligar salva a hunt e encerra os processos do aplicativo. Minimizar conserva a execução. Clique repetido traz a janela existente.
 
+O ícone da janela vem do favicon declarado em todas as páginas (`ui/hunt_analyzer_icone.png`); o ícone do atalho/executável é configurado separadamente em `instalador/assets/hunt-analyzer.ico`. Manter ambos com a mesma arte. Após atualizar a interface, recarregar a janela para o navegador buscar o favicon.
+
 Iniciar hunt abre sessão nova; Encerrar conserva o servidor e guarda histórico. Reiniciar encerra a análise atual e volta a observar. Não iniciar uma segunda captura manual se o aplicativo está gravando.
 
 Encerramento: interromper produção de quadros, drenar consumidores, guardar números e mapas, consolidar aprendizado, somente então autorizar limpeza. Se a extração falhou, conservar quadros e corrigir o consumidor; não apagar a sessão para esconder o erro.
