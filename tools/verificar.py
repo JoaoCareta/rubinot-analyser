@@ -24,7 +24,10 @@ def impressao_runtime():
                  for p in (ANALISADOR / d).rglob('*') if p.is_file())
     h = hashlib.sha256()
     for nome in sorted(nomes):
-        h.update(nome.encode('utf8')); h.update((ANALISADOR / nome).read_bytes())
+        conteudo = (ANALISADOR / nome).read_bytes()
+        if pathlib.Path(nome).suffix.lower() in {'.py', '.js', '.html', '.css', '.json', '.txt', '.bat'}:
+            conteudo = conteudo.replace(b'\r\n', b'\n')
+        h.update(nome.encode('utf8')); h.update(conteudo)
     return h.hexdigest()
 
 

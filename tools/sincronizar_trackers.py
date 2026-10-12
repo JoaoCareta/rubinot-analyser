@@ -12,14 +12,14 @@ def main():
     p.add_argument('--verificar', action='store_true')
     args = p.parse_args()
     origem = ROOT / 'hunt-analyzer/ui/shared/tracker.js'
-    conteudo = origem.read_bytes()
+    conteudo = origem.read_bytes().replace(b'\r\n', b'\n')
     sha = hashlib.sha256(conteudo).hexdigest()
     destinos = [ROOT / nome / 'public/shared/tracker.js' for nome in ('loe-hunt-tracker-solo', 'loe-hunt-tracker')
                 if (ROOT / nome).is_dir()]
     for destino in destinos:
         manifesto = destino.with_suffix('.manifest.json')
         if args.verificar:
-            assert destino.read_bytes() == conteudo, f'Snapshot divergente: {destino}'
+            assert destino.read_bytes().replace(b'\r\n', b'\n') == conteudo, f'Snapshot divergente: {destino}'
             assert json.loads(manifesto.read_text(encoding='utf8'))['sha256'] == sha
         else:
             destino.parent.mkdir(parents=True, exist_ok=True)
