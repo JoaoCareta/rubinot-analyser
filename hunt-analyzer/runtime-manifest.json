@@ -263,6 +263,7 @@
     "rubinot/contratos.py",
     "rubinot/hunt/__init__.py",
     "rubinot/hunt/aplicacao.py",
+    "rubinot/hunt/areas.py",
     "rubinot/hunt/metricas.py",
     "rubinot/observacao/__init__.py",
     "rubinot/observacao/configuracao.py",

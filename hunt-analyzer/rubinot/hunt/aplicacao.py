@@ -486,6 +486,7 @@ class Gravacao:
             m = re.search(r"HUNT COMECOU as (\d\d:\d\d:\d\d)",
                           log.read_text(encoding="utf-8", errors="replace")) if log.exists() else None
             self.hunt_comecou = m[1] if m else (laps[0]["inicio"] if laps else None)
+        self._areas(bs)
         st = _le_json(self.sessao / "lap_state.json")
         nome = re.search(r"(\d{4})(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)", self.sessao.name)
         self.info = {
@@ -526,8 +527,50 @@ class Gravacao:
             "refis": refis, "refil": refil,
             "trechos": lt["trechos"], "entradas": lt["marcos"],
             "especies_fora": fora,
+            "areas_hunt": getattr(self, 'areas_hunt', []),
         }
         self._historico()
+
+    def _areas(self, bs):
+        """Reusa recortes existentes; só mudança sustentada de dois sinais separa a área."""
+        from rubinot.hunt.areas import detectar
+        arquivo = self.sessao / 'areas_observacoes.jsonl'
+        if getattr(self, '_areas_sessao', None) != self.sessao:
+            self._areas_sessao = self.sessao
+            self._areas_obs = [json.loads(l) for l in arquivo.read_text(encoding='utf-8').splitlines()] if arquivo.exists() else []
+            self._areas_ate = self._areas_obs[-1]['t'] if self._areas_obs else -1
+        bt = [lw.fsec(n) for n in bs]
+        conhecidas = lw.nomes_conhecidos()
+        novas = []
+        pasta = self.sessao
+        class Quadro:
+            def __init__(self, png):
+                self.png = png
+            def __str__(self):
+                return str(pasta)
+            def glob(self, padrao):
+                return [self.png]
+        for t, z, x, y, battle in self.amostras:
+            if t <= self._areas_ate or (novas and t-novas[-1]['t'] < 4):
+                continue
+            j = bisect.bisect_left(bt, t)
+            j = min((k for k in (j-1,j) if 0 <= k < len(bt)), key=lambda k: abs(bt[k]-t), default=None)
+            if j is None or abs(bt[j]-t) > BATTLE_S:
+                continue
+            nomes = lw.battle_especies(Quadro(pasta / bs[j]), t-BATTLE_S, t+BATTLE_S, GLYPHS, conhecidas)
+            novas.append({'t': t, 'z': z, 'especies': nomes})
+        if novas:
+            with arquivo.open('a', encoding='utf-8') as fh:
+                for p in novas:
+                    fh.write(json.dumps(p, ensure_ascii=False)+'\n')
+            self._areas_obs.extend(novas)
+            self._areas_ate = novas[-1]['t']
+        anterior = getattr(self, 'areas_hunt', [])
+        inicio = pt_card.sec(self.hunt_comecou) if self.hunt_comecou else None
+        self.areas_hunt = detectar([p for p in self._areas_obs if p['t'] >= inicio]) if inicio is not None else []
+        if len(self.areas_hunt) > len(anterior) and len(self.areas_hunt) > 1:
+            a = self.areas_hunt[-1]
+            self.registra(f"troca de área às {lw.fmt(a['inicio'])}: andar {a['andar']} · {', '.join(a['especies'])}")
 
     def _trilha(self, ms, bs):
         """Posição dos m_ novos + battle da b_ mais próxima -> trilha.jsonl. Rastreio no minimapa do
@@ -834,7 +877,7 @@ class Gravacao:
         resumo = {"salvo_em": dt.datetime.now().isoformat(timespec="seconds"), "versao": VERSAO,
                   "fonte": fontes.da_sessao(self.sessao),
                   "pasta": self.sessao.name, "hunt_comecou": self.hunt_comecou, "fechada": final,
-                  "sessao": d["sessao"],
+                  "sessao": d["sessao"], "areas_hunt": d.get('areas_hunt', []),
                   "totais": {"voltas": len(d["voltas"]), "dur_s": soma("dur"), "xp_raw": soma("xp_raw"),
                              "profit": soma("profit"), "sup_pt": soma("sup_pt"), "sup_eu": soma("sup_eu"),
                              "bichos": soma("bichos")},
@@ -934,7 +977,17 @@ class Gravacao:
             recente = time.time() - st.get('atualizado_em', 0) < 5
             e.update(jogo=bool(recente and st.get('conectado')), janela_mudou=False, stream=st)
             e['mensagem'] = (st.get('mensagem', 'Conectando à Twitch…') if ativo else e['mensagem']) + ' Mapas dependem da base local; alertas têm o atraso da live.'
-        return {"estado": e, **(self.dados if ativo else _vazio()),
+        dados = self.dados if ativo else _vazio()
+        areas = getattr(self, 'areas_hunt', []) if ativo else []
+        if len(areas) > 1:
+            from rubinot.hunt.areas import recortar
+            dados = recortar(dados, areas)
+            a = areas[-1]
+            nome = f"{self.local[1][0] or 'Hunt'} · andar {a['andar']} · {' / '.join(a['especies'])}"
+            dados = {**dados, 'sessao': {**dados['sessao'], 'hunt': nome}}
+            e.update(local=nome, hunt_comecou=lw.fmt(a['inicio']))
+            e['mensagem'] = 'Nova área reconhecida por andar e monstros. Volta que atravessou a troca fica parcial.'
+        return {"estado": e, **dados,
                 "ks": _le_json(self.sessao / "ks.json", {}) if self.sessao else {}}
 
     def _mensagem(self, e):

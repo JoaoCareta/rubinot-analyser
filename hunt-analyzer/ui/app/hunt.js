@@ -680,7 +680,7 @@ const CATALOGO = {}, abertos = new Set();
 const milhar = v => v == null ? '?' : v.toLocaleString('pt-BR');
 const classeToma = p => p == null || p === 100 ? '' : p === 0 ? 'imune' : p > 100 ? 'fraco' : 'resiste';
 // a MESMA lista do resumo guardado e dos bichos da capa do histórico (ui/taxas.js = ao_vivo.especies)
-const monstrosDaHunt = () => Object.keys(especiesDe(voltasVisiveis()));
+const monstrosDaHunt = () => D.area_atual?.especies || Object.keys(especiesDe(voltasVisiveis()));
 function pedeMonstro(nome) {      // o servidor devolve do catálogo ou busca no TibiaWiki e guarda
   if (CATALOGO[nome]) return;
   CATALOGO[nome] = {buscando: true};
@@ -729,7 +729,7 @@ function renderMonstros() {
   const nomes = monstrosDaHunt();
   nomes.forEach(pedeMonstro);
   HuntPlanejamento.renderizar();
-  $('#monstrosInfo').textContent = nomes.length ? `${nomes.length} espécie${nomes.length > 1 ? 's' : ''} · clique para abrir` : '';
+  $('#monstrosInfo').textContent = nomes.length ? `${nomes.length} espécie${nomes.length > 1 ? 's' : ''} · ${D.area_atual ? 'presença na área atual' : 'clique para abrir'}` : '';
   if (!nomes.length) $('#listaMonstros').replaceChildren(el('p', 'nota', voltasVisiveis().length ? 'Nenhum monstro lido nas voltas fechadas até agora.' : 'Os monstros aparecem quando a primeira volta fechar.'));
   else {
     const grupos = new Map();       // classe do Bestiary → espécies
@@ -822,7 +822,7 @@ ligaDica('perm'); ligaDica('dens');
 
 // ------------------------------------------------------------ ao vivo: pergunta ao programa a cada 5 s
 const VAZIO = {estado: null, sessao: {}, andares: {}, voltas: [], amostras: [],
-               refis: [], refil: {}, trechos: [], entradas: [], especies_fora: {}, ks: {}, sessoes_origem: [], intervalos_gravacao: []};
+               refis: [], refil: {}, trechos: [], entradas: [], especies_fora: {}, ks: {}, sessoes_origem: [], intervalos_gravacao: [], area_atual: null, areas_hunt: []};
 const ajustesMapa=fetch('/ui/mapa_ajustes.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}));
 async function aplicaAjustesMapa(dados){
   const ajuste=(await ajustesMapa).sessoes?.[dados.estado?.sessao];
