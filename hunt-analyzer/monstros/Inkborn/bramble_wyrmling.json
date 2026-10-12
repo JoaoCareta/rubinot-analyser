@@ -1,0 +1,52 @@
+{
+ "nome": "Bramble Wyrmling",
+ "categoria": "Inkborn",
+ "hp": 2350,
+ "xp": 2350,
+ "toma": {
+  "físico": 95,
+  "terra": 80,
+  "fogo": 105,
+  "morte": 110,
+  "energia": 100,
+  "sagrado": 95,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Mordida (180-250)"
+  ],
+  "terra": [
+   "Envenena, Corpo a corpo (100-200), Mordida (200-280), Wave (200-280)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "1+ Gold Coins",
+   "1+ Platinum Coins"
+  ],
+  "incomum": [
+   "1+ Small Emeralds",
+   "1+ Green Crystal Fragments"
+  ],
+  "semi-raro": [
+   "Book with a Dragon"
+  ],
+  "raro": [
+   "Terra Hood"
+  ],
+  "muito raro": [
+   "Terra Mantle",
+   "Green Gem",
+   "Dragon Shield",
+   "Dragonbone Staff"
+  ]
+ },
+ "gif": "bramble_wyrmling.gif",
+ "local": [
+  "Book World"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Bramble_Wyrmling",
+ "catalogado": "2026-09-21"
+}

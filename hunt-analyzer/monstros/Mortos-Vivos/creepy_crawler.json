@@ -1,0 +1,52 @@
+{
+ "nome": "Creepy Crawler",
+ "categoria": "Mortos-Vivos",
+ "hp": 27000,
+ "xp": 22380,
+ "toma": {
+  "físico": 94,
+  "terra": 112,
+  "fogo": 112,
+  "morte": 97,
+  "energia": 88,
+  "sagrado": 106,
+  "gelo": 94,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "()"
+  ],
+  "morte": [
+   "()"
+  ],
+  "energia": [
+   "()"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "Crystal Coin"
+  ],
+  "semi-raro": [
+   "Blue Crystal Shard",
+   "Cyan Crystal Fragment",
+   "Amber (Item)",
+   "Necromantic Core",
+   "Giant Tusk",
+   "Crystallized Death",
+   "Cluster of Crystallized Death"
+  ],
+  "raro": [
+   "Blue Gem",
+   "Amber with a Bug",
+   "Amber with a Dragonfly"
+  ]
+ },
+ "gif": "creepy_crawler.gif",
+ "local": [
+  "Unhallowed Crypt"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Creepy_Crawler",
+ "catalogado": "2026-09-23"
+}

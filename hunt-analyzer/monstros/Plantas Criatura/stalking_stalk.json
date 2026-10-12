@@ -1,0 +1,50 @@
+{
+ "nome": "Stalking Stalk",
+ "categoria": "Plantas (Criatura)",
+ "hp": 17100,
+ "xp": 12440,
+ "toma": {
+  "físico": 110,
+  "terra": 75,
+  "fogo": 75,
+  "morte": 90,
+  "energia": 115,
+  "sagrado": 100,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "()"
+  ],
+  "terra": [
+   "()"
+  ],
+  "morte": [
+   "()"
+  ]
+ },
+ "loot": {
+  "incomum": [
+   "Small Diamond",
+   "1+ Crystal Coins",
+   "Dragon Necklace",
+   "1+ Stalking Seeds"
+  ],
+  "semi-raro": [
+   "Magma Coat",
+   "Green Gem",
+   "Bow",
+   "Warrior's Axe",
+   "Muck Rod",
+   "Green Crystal Fragment",
+   "1+ Opal"
+  ]
+ },
+ "gif": "stalking_stalk.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Stalking_Stalk",
+ "catalogado": "2026-10-08"
+}

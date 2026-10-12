@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunt Analyzer · Hunt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10; --barra: #0e1015; --painel: #11141b; --card: #161a23; --card-sel: #1b1f2b;
+    --borda: #262b36; --borda-forte: #353b49;
+    --texto: #ece6d8; --suave: #9aa1ad; --apagado: #6b7280;
+    --ouro: #d6a84e; --ouro-claro: #f0cf85; --verde: #6fdc8c; --ambar: #f2b44a; --vermelho: #ef6b6b; --roxo: #b06cf5;
+    --serif: "Cinzel", Georgia, serif; --sans: "Inter", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }   /* flex/grid ganham do hidden do navegador */
+  body { margin: 0; background: var(--bg); color: var(--texto); font: 14px/1.5 var(--sans); }
+  button { font: inherit; }
+
+  .topo { display: flex; align-items: center; gap: 28px; padding: 14px 28px; background: var(--barra); border-bottom: 1px solid var(--borda); }
+  .marca { font: 600 14px var(--serif); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  nav { display: flex; gap: 18px; }
+  nav a { font-size: 13px; color: var(--suave); padding-bottom: 4px; border-bottom: 1px solid transparent; text-decoration: none; }
+  nav a.ativo { color: var(--texto); border-bottom-color: var(--ouro); }
+  .jogo { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--suave); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--apagado); display: inline-block; flex: none; }
+  .dot.on { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+  .dot.gravando { background: var(--vermelho); box-shadow: 0 0 8px var(--vermelho); animation: pulsa 1.6s ease-in-out infinite; }
+  .dot.pausa { background: var(--ambar); }
+  .dot.erro { background: var(--vermelho); }
+  @keyframes pulsa { 50% { opacity: .35; } }
+  .desligado { display: none; position: fixed; inset: 0; z-index: 30; background: rgba(11, 12, 16, .96);
+               align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .desligado.on { display: flex; }
+
+  .botao { font: 600 13px var(--sans); letter-spacing: .03em; color: var(--ouro-claro); background: transparent;
+           border: 1px solid var(--ouro); border-radius: 999px; padding: 7px 18px; cursor: pointer; white-space: nowrap; }
+  .botao:hover { background: rgba(214, 168, 78, .10); }
+  .botao.discreto { color: var(--suave); border-color: var(--borda-forte); }
+  .botao.discreto:hover { color: var(--texto); background: rgba(255, 255, 255, .04); }
+  .botao.pequeno { padding: 5px 14px; font-size: 12px; }
+
+  .previa { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 28px; border-bottom: 1px dashed var(--borda-forte);
+            background: repeating-linear-gradient(135deg, #0d0f14 0 10px, #0f1117 10px 20px); font: 12px var(--mono); color: var(--suave); }
+  .previa b { color: var(--roxo); letter-spacing: .12em; font-weight: 500; }
+  .previa[hidden] { display: none; }   /* só aparece com ?previa na URL */
+
+  main { max-width: 1520px; margin: 0 auto; padding: 24px 28px 48px; position: relative; }
+  .rotulo { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  h1 { font: 600 32px/1.2 var(--serif); color: #efe7d6; margin: 6px 0 4px; }
+  h2 { font: 600 19px var(--serif); color: var(--ouro-claro); margin: 4px 0; }
+  .sub { color: var(--suave); margin: 0; }
+
+  .cabeca { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 18px; }
+  .ao-vivo { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border: 1px solid var(--borda); border-radius: 999px;
+             background: var(--card); font: 12px var(--mono); color: var(--suave); white-space: nowrap; }
+  .ao-vivo b { color: var(--texto); font-weight: 500; }
+
+  .conteudo { transition: filter .35s, opacity .35s; }
+  .conteudo.borrado { filter: blur(7px) saturate(.6); opacity: .55; pointer-events: none; user-select: none; }
+
+  .tiles { display: grid; grid-template-columns: repeat(9, 1fr); gap: 10px; margin-bottom: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--borda); border-radius: 8px; padding: 11px 14px; min-width: 0; }
+  .tile.largo { grid-column: span 2; }              /* refil: quatro números num tile só (user, 22/09) */
+  .tile.largo .obs { white-space: normal; }         /* e nenhum deles cortado: aqui a observação quebra linha */
+  .tile .num { font: 600 20px var(--mono); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .obs { font: 11px var(--mono); color: var(--apagado); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .filtros { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; padding: 12px 16px; margin-bottom: 12px;
+             background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; }
+  .grupo { display: flex; align-items: center; gap: 10px; }
+  .pilulas { display: flex; gap: 6px; }
+  .pilula { font: 500 12px var(--sans); color: var(--suave); background: transparent; border: 1px solid var(--borda-forte);
+            border-radius: 999px; padding: 4px 13px; cursor: pointer; }
+  .pilula:hover { color: var(--texto); }
+  .pilula.ativa { color: var(--ouro-claro); border-color: var(--ouro); background: rgba(214, 168, 78, .08); }
+
+  /* linha do tempo da sessão (user, 22/09): o caminho até a hunt e o refil não são volta, mas contam tempo */
+  .tempo { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; padding: 12px 16px 13px; margin-bottom: 12px; }
+  .tempo[hidden] { display: none; }
+  .tempo .barra { display: flex; gap: 2px; height: 22px; margin: 9px 0; }
+  .tempo .barra div { border-radius: 3px; min-width: 3px; }
+  .tempo .linha { display: flex; flex-wrap: wrap; gap: 3px 18px; font: 11.5px var(--mono); color: var(--suave); }
+  .tempo .linha span { display: flex; align-items: center; gap: 6px; }
+  .tempo .linha i { width: 9px; height: 9px; flex: none; border-radius: 2px; }
+  .tempo .linha b { color: var(--texto); font-weight: 500; }
+  .tempo .marcos { margin-top: 7px; color: var(--apagado); }
+  .tempo .marcos b { color: var(--ouro-claro); }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 40; max-width: 620px;
+           background: var(--card); border: 1px solid var(--borda-forte); border-left: 3px solid var(--ouro);
+           border-radius: 8px; padding: 12px 18px; font: 13px/1.5 var(--sans); box-shadow: 0 12px 32px rgba(0, 0, 0, .5); }
+  .toast[hidden] { display: none; }
+
+  /* a coluna da direita desce ao lado do histórico: monstro aberto não abre buraco embaixo dos mapas */
+  .grade { display: grid; grid-template-columns: minmax(0, 1fr) 350px; grid-template-rows: auto 1fr; gap: 0 12px; align-items: start; }
+  .mapas { grid-area: 1 / 1; }
+  .lateral { grid-area: 1 / 2 / 3; }
+  .baixo { grid-area: 2 / 1; min-width: 0; }
+  .mapas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-width: 0; }
+  .mapa-card { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; padding: 12px 14px 14px; min-width: 0; }
+  .mapa-titulo { font-size: 13px; color: var(--ouro-claro); margin-bottom: 10px; display: flex; justify-content: space-between; gap: 8px; }
+  .mapa-titulo span:last-child { font: 11px var(--mono); color: var(--apagado); white-space: nowrap; }
+  .mapa-card canvas { display: block; width: 100%; margin: 0 auto; border-radius: 4px; cursor: crosshair; background: #0a0b0e; }
+  .legenda { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 10px; }
+  .legenda div { font: 11px var(--mono); color: var(--suave); text-align: center; }
+  .legenda i { display: block; height: 10px; border-radius: 3px; margin-bottom: 4px; }
+  .legenda-caminho { display: flex; align-items: center; gap: 8px; margin-top: 10px; font: 11px var(--mono); color: var(--suave); }
+  .legenda-caminho i { width: 9px; height: 9px; flex: none; background: #f4f1ea; box-shadow: 0 0 0 1px #0b0c10; }
+  .legenda-tit { font: 500 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--apagado); margin-top: 12px; }
+  /* lugar ainda não achado no minimapa: o resto da tela funciona, os mapas avisam */
+  .sem-mapa { display: none; min-height: 240px; align-items: center; justify-content: center; text-align: center; padding: 0 28px;
+              color: var(--apagado); border: 1px dashed var(--borda-forte); border-radius: 6px; }
+  .sem-mapas .sem-mapa { display: flex; }
+  .sem-mapas .mapa-card canvas, .sem-mapas .legenda, .sem-mapas .legenda-tit, .sem-mapas .legenda-caminho, .sem-mapas #blocoCelulas { display: none; }
+
+  .painel { background: var(--card); border: 1px solid var(--borda); border-left: 3px solid var(--roxo); border-radius: 8px; padding: 16px 16px 14px; }
+  .painel .topo-card { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .painel h2 { margin: 6px 0 2px; font-size: 21px; }
+  .metricas { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .metricas td { padding: 8px 0; border-top: 1px solid var(--borda); vertical-align: middle; }
+  .metricas td:first-child { color: var(--suave); font-size: 13px; }
+  .metricas td.valor { font: 600 15px var(--mono); text-align: right; padding-right: 10px; white-space: nowrap; }
+  .metricas td.var { text-align: right; width: 78px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font: 500 11px var(--mono); padding: 2px 8px; border-radius: 999px;
+          border: 1px solid var(--borda-forte); color: var(--suave); white-space: nowrap; }
+  .chip.bom { color: var(--verde); border-color: rgba(111, 220, 140, .45); }
+  .chip.ruim { color: var(--vermelho); border-color: rgba(239, 107, 107, .45); }
+  .nota { font: 11.5px/1.5 var(--sans); color: var(--apagado); margin: 10px 0 0; }
+  .painel .sessao { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--borda); }
+  .painel .sessao .num { font: 600 14px var(--mono); }
+  .painel .sessao .rotulo { font-size: 9.5px; color: var(--apagado); }
+  .painel .sessao .tit { grid-column: 1 / -1; }
+  .voltar { font: 11px var(--mono); color: var(--suave); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  /* coluna da direita: card da volta em cima, monstros até o fim dos mapas (user, 21/09) */
+  .lateral { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .monstros { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; padding: 14px 14px 8px; }
+  .monstros .topo-card { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .monstros .obs { font: 11px var(--mono); color: var(--apagado); }
+  .resumo-elementos { margin-top: 14px; padding-bottom: 12px; }
+  .resumo-elementos .rotulo { font-size: 10px; margin-bottom: 8px; display: block; }
+  .ranking-elementos { display: grid; gap: 5px; }
+  .ranking-elementos .elem { flex-direction: row; justify-content: space-between; gap: 8px; padding: 6px 8px; }
+  .recomenda-elementos { display: grid; gap: 8px; margin-top: 14px; }
+  .recomenda-elementos .det { margin: 0; padding: 8px; border: 1px solid var(--borda); border-radius: 6px; }
+  .resumo-elementos .nota { margin: 8px 0 0; line-height: 1.5; }
+  .rtc-filtros, .rtc-campos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 16px 0; }
+  .rtc-campos label { display: flex; flex-direction: column; gap: 8px; color: var(--suave); font-size: 12px; }
+  .rtc-filtros select, .rtc-campos select, .rtc-campos input { min-width: 0; width: 100%; padding: 9px 10px;
+    background: #11141b; color: #ece6d8; border: 1px solid #353b49; border-radius: 6px; color-scheme: dark; }
+  .rtc-elemento { color: var(--ouro); text-transform: uppercase; font: 11px var(--mono); margin: 18px 0 8px; }
+  .rtc-rolagem { overflow-x: auto; }
+  .rtc-tabela { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rtc-tabela th, .rtc-tabela td { padding: 7px 4px; border-bottom: 1px solid #262b36; text-align: right; }
+  .rtc-tabela th:first-child, .rtc-tabela td:first-child { text-align: left; }
+  .rtc-tabela small { display: block; color: var(--suave); }
+  .rtc-tabela a { color: var(--texto); }
+  .rtc-check { display: flex; gap: 8px; align-items: start; margin: 10px 0; font-size: 12px; }
+  .rtc-calcular { display: block; margin: 20px 0; padding: 9px 16px; background: #d6a84e; color: #17130a;
+    border: 0; border-radius: 6px; font: inherit; cursor: pointer; }
+  #otimizacaoRTC details { margin: 16px 0; font-size: 12px; }
+  #otimizacaoRTC ol { padding-left: 20px; font-size: 12px; line-height: 1.7; }
+  .classe { font: 500 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--apagado); margin: 12px 0 4px; }
+  .monstro { border-top: 1px solid var(--borda); }
+  .linha-monstro { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 2px; background: none; border: 0;
+                   color: var(--texto); cursor: pointer; text-align: left; }
+  .linha-monstro:hover { background: rgba(255, 255, 255, .03); }
+  .linha-monstro .foto { width: 44px; height: 44px; flex: none; border-radius: 6px; background: #3a3f4a; }  /* chão cinza: sprite escuro some no fundo preto */
+  .linha-monstro img { width: 44px; height: 44px; object-fit: contain; display: block; }
+  .linha-monstro .txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .linha-monstro .nome { font-size: 13.5px; }
+  .linha-monstro .seta { color: var(--apagado); font-size: 15px; }
+  .monstro.aberto .seta { color: var(--roxo); }
+  .detalhe { padding: 2px 2px 12px; }
+  .detalhe .rotulo { font-size: 9.5px; color: var(--apagado); margin: 10px 0 6px; }
+  .toma { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .elem { display: flex; flex-direction: column; padding: 3px 7px; border: 1px solid var(--borda); border-radius: 6px; font: 10.5px var(--mono); color: var(--suave); }
+  .elem b { font: 600 12px var(--mono); color: var(--texto); }
+  .elem.fraco { border-color: rgba(111, 220, 140, .45); } .elem.fraco b { color: var(--verde); }
+  .elem.resiste { border-color: rgba(242, 180, 74, .45); } .elem.resiste b { color: var(--ambar); }
+  .elem.imune { border-color: rgba(239, 107, 107, .45); } .elem.imune b { color: var(--vermelho); }
+  .det { margin: 3px 0; font-size: 12px; line-height: 1.45; color: var(--suave); }
+  .det b { font-weight: 500; color: var(--texto); margin-right: 4px; }
+  .monstros .nota a { color: var(--ouro-claro); }
+
+  .secao-tit { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 10px; }
+  .historico { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+  .volta { background: var(--card); border: 1px solid var(--borda); border-left: 3px solid transparent; border-radius: 8px;
+           padding: 10px 12px; cursor: pointer; text-align: left; color: var(--texto); }
+  .volta:hover { border-color: var(--borda-forte); }
+  .volta.sel { background: var(--card-sel); border-left-color: var(--roxo); }
+  .volta.nova { animation: entra .6s ease-out; }
+  @keyframes entra { from { opacity: 0; transform: translateY(-6px); } }
+  .volta .linha { display: flex; justify-content: space-between; align-items: baseline; }
+  .volta .n { font: 600 13px var(--serif); color: var(--ouro-claro); }
+  .volta .d { font: 11px var(--mono); color: var(--apagado); }
+  .volta .vals { display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; margin-top: 6px; font-size: 11.5px; color: var(--suave); }
+  .volta .vals b { font: 500 12px var(--mono); color: var(--texto); text-align: right; }
+
+  table.celulas { width: 100%; border-collapse: collapse; background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
+  .celulas th { font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--apagado); text-align: left; padding: 9px 14px; background: var(--barra); }
+  .celulas td { padding: 7px 14px; border-top: 1px solid var(--borda); font: 12px var(--mono); font-variant-numeric: tabular-nums; }
+  .celulas td i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+
+  .espera { display: none; position: absolute; inset: 0; z-index: 5; align-items: flex-start; justify-content: center; padding-top: 170px; }
+  .espera.on { display: flex; }
+  .espera .caixa { text-align: center; max-width: 640px; padding: 28px 34px; background: rgba(17, 20, 27, .82); border: 1px solid var(--borda);
+                   border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+  .espera h2 { font-size: 26px; margin: 8px 0 8px; }
+  .passos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin-top: 18px; font: 12px var(--mono); color: var(--apagado); }
+  .passos span { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .passos .feito { color: var(--verde); }
+  .passos .agora { color: var(--texto); }
+  .relogio { font: 600 30px var(--mono); color: var(--texto); margin-top: 16px; }
+  .espera a { color: var(--ouro-claro); }
+
+  .dica-mapa { position: fixed; z-index: 20; pointer-events: none; display: none; background: #0e1015; border: 1px solid var(--borda-forte);
+               border-radius: 6px; padding: 8px 10px; font: 12px/1.5 var(--sans); color: var(--suave); max-width: 260px; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); }
+  .dica-mapa b { font: 600 14px var(--mono); color: var(--texto); display: block; }
+
+  /* histórico das hunts (user, 23/09): uma seção por hunt, um quadrado por sessão com a data em cima */
+  a.botao { text-decoration: none; display: inline-flex; align-items: center; }
+  .fonte-mapa { grid-column: 1 / -1; margin: -2px 0 0; font: 11.5px var(--mono); color: var(--apagado); }
+  .fonte-mapa[hidden] { display: none; }
+  .hunt-bloco { margin-bottom: 30px; }
+  .hunt-bloco .secao-tit { border-bottom: 1px solid var(--borda); padding-bottom: 8px; }
+  .hunt-bloco .totais { font: 11.5px var(--mono); color: var(--apagado); text-align: right; }
+  .hunt-bloco .totais b { color: var(--suave); font-weight: 500; }
+  .sessoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+  .cartao { min-width: 0; }
+  .cartao .data { font: 500 12px var(--mono); letter-spacing: .08em; color: var(--ouro-claro); margin-bottom: 6px; }
+  .quadro { display: block; width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden; cursor: pointer;
+            background: #0a0b0e; border: 1px solid var(--borda); border-radius: 8px; position: relative; }
+  .quadro:hover { border-color: var(--ouro); }
+  /* capa da sessão (user, 24/09): o mapa vira só a textura do fundo e quem aparece é o bicho da hunt */
+  .quadro .fundo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+                   image-rendering: pixelated; filter: brightness(.42) saturate(.5) contrast(.95); }
+  .quadro::after { content: ''; position: absolute; inset: 0; z-index: 1;
+                   background: radial-gradient(115% 85% at 50% 38%, rgba(214, 168, 78, .12), transparent 62%),
+                               linear-gradient(180deg, rgba(11, 12, 16, .3), rgba(11, 12, 16, .86)); }
+  .quadro .bicho { position: absolute; width: 64px; height: 64px; image-rendering: pixelated; z-index: 2;
+                   filter: drop-shadow(0 4px 7px rgba(0, 0, 0, .8)); }
+  .quadro .b0 { left: 50%; top: 42%; transform: translate(-50%, -50%) scale(1.45); z-index: 3; }
+  .quadro .b1 { left: 4%; bottom: 20%; transform: scale(.9); opacity: .9; }
+  .quadro .b2 { right: 4%; bottom: 20%; transform: scale(.9); opacity: .9; }
+  .quadro .pico { position: absolute; left: 0; bottom: 0; z-index: 4; padding: 3px 8px; background: rgba(11, 12, 16, .82);
+                  border-top-right-radius: 6px; font: 500 11px var(--mono); color: var(--ouro-claro); }
+  .quadro .vazio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                   color: var(--borda-forte); font: 600 34px var(--serif); }
+  .quadro .n-voltas { position: absolute; right: 0; bottom: 0; z-index: 4; padding: 3px 8px; background: rgba(11, 12, 16, .82);
+                      border-top-left-radius: 6px; font: 500 11px var(--mono); color: var(--suave); }
+  .cartao .pe { margin-top: 7px; font: 11px var(--mono); color: var(--apagado); line-height: 1.55; }
+  .cartao .pe b { color: var(--texto); font-weight: 500; }
+  .cartao .aberta { color: var(--ambar); }
+
+  @media (max-width: 1280px) { .grade { grid-template-columns: 1fr; grid-template-rows: none; gap: 12px; } .mapas, .lateral, .baixo { grid-area: auto; }
+                               .tiles { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 860px) { .mapas { grid-template-columns: 1fr; } }
+
+.party-dano {margin:24px 0;padding:22px;border:1px solid var(--borda);border-radius:8px;background:var(--painel)}
+.party-dano[hidden] {display:none}
+.party-dano .secao-tit {margin-bottom:16px}
+.party-dano .rolagem {overflow-x:auto}
+.party-dano table {width:100%;border-collapse:collapse;font:12px var(--mono);white-space:nowrap}
+.party-dano th,.party-dano td {padding:12px 14px;text-align:right;border-bottom:1px solid var(--borda)}
+.party-dano th {font-weight:400;color:var(--apagado)}
+.party-dano th:first-child,.party-dano td:first-child {text-align:left}
+.party-dano td:first-child {color:var(--ouro-claro)}
+.party-dano h2 {font:20px var(--serif);color:var(--ouro-claro);margin:0}
+.party-dano .sub {font-size:12px;line-height:1.6;margin:14px 0 0}
+/* KS: comparação expansível, com alerta e hierarquia própria. */
+.ks-card > summary {cursor:pointer;list-style:none}
+.ks-card > summary::-webkit-details-marker {display:none}
+.ks-card > summary:focus-visible {outline:2px solid #edafb5;outline-offset:6px;border-radius:4px}
+.ks-card:not([open]) > .ks-head {margin-bottom:0}
+.ks-maior-dano {margin-top:8px;font:12px/1.5 var(--sans);color:var(--suave)}
+.ks-maior-dano strong.aliada {color:var(--verde)}
+.ks-maior-dano strong.inimiga {color:#ed8794}
+.ks-actions {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ks-toggle {font-size:12px;color:#efb9bf;white-space:nowrap}
+.ks-card[open] .ks-expandir,.ks-card:not([open]) .ks-recolher {display:none}
+#ksPainel {padding:0;background:none;border:0;max-height:min(760px,80vh);overflow:auto;scrollbar-width:thin;scrollbar-color:#665066 #15151d}
+.ks-guilda-bloco {margin-top:16px;border-top:1px solid var(--borda);padding-top:14px}
+.ks-guilda-bloco > summary {cursor:pointer;color:#ddc8ff;font:12px var(--mono);padding:4px 0}
+.ks-guilda-bloco .ks-guilda {border:0;padding-top:10px;margin-top:0}
+/* O seletor faz parte do mesmo card que recebe os dois conteúdos. */
+.painel-alternavel {min-width:0;padding:16px 16px 14px;background:var(--card);border:1px solid var(--borda);border-left:3px solid var(--roxo);border-radius:8px}
+.painel-alternavel.aba-ks {border-left-color:#d96d78}
+.painel-tabs {position:relative;isolation:isolate;display:flex;width:210px;max-width:100%;margin:0 auto 18px;padding:0;overflow:hidden;border:2px solid var(--ouro);border-radius:999px;background:#10141b}
+.painel-tabs::before {content:'';position:absolute;inset:0 auto 0 0;width:50%;border-radius:999px;background:var(--ouro);transition:transform .2s ease;z-index:-1}
+.aba-ks .painel-tabs::before {transform:translateX(100%)}
+.painel-tabs button {flex:1;border:0;border-radius:999px;padding:10px 12px;background:transparent;color:var(--ouro-claro);font:600 12px var(--mono);cursor:pointer;transition:color .2s ease}
+.painel-tabs button[aria-selected="true"] {color:#17130b}
+.painel-tabs button:focus-visible {outline:2px solid var(--ouro-claro);outline-offset:-5px}
+.painel-alternavel #painel {background:none;border:0;border-radius:0;padding:0}
+#painel[hidden],#ksPainel[hidden] {display:none}
+.painel-alternavel .ks-card {padding:0;margin:0;background:none;border:0;border-radius:0}
+.painel-alternavel .ks-card + .ks-card {border-top:1px solid var(--borda);margin-top:16px;padding-top:16px}
+@media(prefers-reduced-motion:reduce){.painel-tabs::before,.painel-tabs button {transition:none}}
+.lateral .ks-head {align-items:flex-start;flex-direction:column;gap:10px;margin-bottom:12px}
+.lateral .ks-head h2 {font-size:19px}
+.lateral .ks-grid {grid-template-columns:1fr;gap:10px}
+.lateral .ks-team {padding:12px}
+.lateral .ks-team h3 {font-size:17px;margin-bottom:6px}
+.lateral .ks-metric strong {font-size:18px}
+.ks-guilda {margin-top:18px;border-top:1px solid var(--borda);padding-top:16px;display:grid;gap:14px}
+.ks-campo {display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--suave);min-width:0}
+.ks-campo input,.ks-campo textarea {box-sizing:border-box;width:100%;background:#10141c;border:1px solid #3a4250;border-radius:6px;color:var(--texto);font:12px var(--mono);padding:10px;min-width:0}
+.ks-campo input:focus,.ks-campo textarea:focus {outline:2px solid #8f6bb6;outline-offset:1px}
+.ks-campo small {font-size:10px;color:var(--apagado);line-height:1.5}
+.ks-campo textarea {min-height:90px;resize:vertical}
+.ks-dupla {display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ks-tank {display:flex;align-items:center;gap:8px;font-size:12px;color:var(--suave)}
+.ks-tank input {accent-color:#ae8bdd}
+.ks-guilda .ks-note {margin:0}
+.ks-copy {justify-self:start;cursor:pointer;font:12px var(--mono)}
+.ks-prints {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.ks-print {display:flex;flex-direction:column;gap:8px;color:#efb9bf;text-decoration:none;font-size:11px}
+.ks-print img {width:100%;height:80px;object-fit:contain;background:#0b0d12;border:1px solid #50303a;border-radius:5px}
+.ks-print-download {font-size:11px;color:var(--suave)}
+.ks-card {border:1px solid #59313a;border-left:3px solid #d96d78;border-radius:10px;background:linear-gradient(120deg,#20151c,#141820 65%);padding:22px;margin-bottom:16px}
+.ks-head {display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}
+.ks-head h2 {font-family:Cinzel,Georgia,serif;color:#edafb5;margin:6px 0;font-size:24px}
+.ks-card .rotulo {color:#d88b95}
+.ks-badge {border:1px solid #75404a;border-radius:20px;color:#e6a0a8;padding:6px 12px;font-size:12px;white-space:nowrap}
+.ks-grid {display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ks-team {background:#171c25;border:1px solid #303949;border-radius:8px;padding:18px;min-width:0;--ks-color:#8bb8d7}
+.ks-team.rival {background:#20191f;border-color:#50303a;--ks-color:#e18b97}
+.ks-team h3 {font-family:Cinzel,Georgia,serif;color:var(--ks-color);margin:0 0 16px;font-size:20px}
+.ks-metric {display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #ffffff12;color:#aeb5c0;font-size:13px}
+.ks-metric strong {font-size:20px;color:#ece6df;font-variant-numeric:tabular-nums}
+.ks-metric small {color:#939ba8}
+.ks-value {display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.ks-delta {border:1px solid #4d5361;border-radius:20px;padding:3px 8px;font-size:11px;white-space:nowrap;color:#aeb5c0;font-variant-numeric:tabular-nums}
+.ks-delta.favoravel {color:#82d5a0;border-color:#35694a}
+.ks-delta.desfavoravel {color:#ed8f98;border-color:#85434b}
+.ks-share {margin:16px 0 8px;display:flex;justify-content:space-between;color:var(--ks-color);font-size:12px}
+.ks-bar {height:5px;border-radius:4px;background:#ffffff0b;overflow:hidden}
+.ks-bar span {height:100%;display:block;background:var(--ks-color)}
+.ks-player {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;padding:12px 0;border-bottom:1px solid #ffffff0b;font-size:13px}
+.ks-player b {font-weight:500;overflow-wrap:anywhere}.ks-player strong {font-variant-numeric:tabular-nums;color:#e4e7ec}
+.ks-player small {grid-column:1/-1;color:#959dab;font-size:11px}
+.ks-foot {display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.ks-proof {display:inline-block;padding:9px 14px;border:1px solid #70414b;border-radius:6px;color:#efb9bf;text-decoration:none;font-size:12px;background:#311e26}
+.ks-proof:hover {background:#472a35;color:white}.ks-proof:focus-visible {outline:2px solid #edafb5;outline-offset:3px}
+.ks-note {font-size:12px;color:#a9a0aa;line-height:1.6;margin:16px 0 0;max-width:1000px}
+@media(max-width:700px){.ks-grid{grid-template-columns:1fr}.ks-head{align-items:flex-start;flex-direction:column}.ks-card{padding:16px}}
+
+/* A análise reaproveita as espécies e a sessão da hunt, em uma tela própria. */
+body.modo-dano main > :not(.dano-pagina) { display:none !important; }
+.modo-dano #btnHunt,.modo-dano #btnReiniciar,.modo-dano #jogo { display:none !important; }
+.dano-pagina { max-width:1100px; margin:0 auto; }
+.dano-pagina h1 { margin:10px 0 26px; }
+.dano-pagina #recomendacaoMagias { border:0; padding:0; margin-top:24px; }
+.dano-sessao label,.dano-pagina .rtc-filtros label { display:flex; flex-direction:column; gap:10px; color:var(--suave); font:12px var(--mono); }
+.dano-sessao select,.dano-pagina select { width:100%; min-width:0; padding:12px; border:1px solid var(--borda); border-radius:6px; background:var(--painel); color:var(--texto); font:14px var(--sans); }
+.dano-pagina .rtc-filtros { grid-template-columns:1fr 2fr; gap:22px; margin:24px 0; }
+.dano-contexto { padding:20px; border:1px solid var(--borda); background:var(--painel); border-radius:8px; }
+.dano-elementos { display:flex; flex-wrap:wrap; gap:22px; margin-top:18px; color:var(--suave); font-size:12px; }
+.dano-elementos b { display:block; margin-top:4px; color:var(--texto); font:16px var(--mono); }
+.dano-elementos small { display:block; margin-top:4px; }
+.dano-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:24px 0 20px; }
+.dano-tabs button { padding:13px 16px; border:1px solid var(--borda); border-radius:6px; background:var(--painel); color:var(--suave); font:12px var(--mono); cursor:pointer; }
+.dano-tabs button[aria-pressed=true] { background:#30233f; border-color:#765395; color:#e4d2fa; }
+.dano-tabs button:focus-visible,.dano-pagina select:focus-visible { outline:2px solid var(--roxo); outline-offset:3px; }
+.dano-resultados { border:1px solid var(--borda); border-radius:8px; background:var(--painel); overflow:hidden; }
+.dano-resultados > .nota { padding:0 18px; }
+.dano-tabela { width:100%; border-collapse:collapse; table-layout:fixed; }
+.dano-tabela th { padding:18px 12px; background:var(--barra); color:var(--suave); font:11px/1.6 var(--mono); text-transform:uppercase; }
+.dano-tabela td { text-align:center; padding:20px 12px; border-top:1px solid var(--borda); overflow-wrap:anywhere; }
+.dano-tabela small { display:block; margin-top:6px; color:var(--suave); font:11px/1.5 var(--sans); }
+.dano-tabela a { display:block; color:var(--texto); text-decoration:none; font-size:14px; }
+.dano-tabela a:hover { color:var(--ouro-claro); text-decoration:underline; }
+.dano-icone { display:block; object-fit:contain; image-rendering:pixelated; margin:0 auto 12px; }
+.dano-numero { font:24px var(--mono); font-variant-numeric:tabular-nums; }
+.dano-tabela .dano-melhor { color:var(--verde); }
+.dano-tabela .dano-badge { font:10px/1.6 var(--mono); }
+@media(max-width:700px){ .dano-pagina .rtc-filtros { grid-template-columns:1fr; } .dano-tabs button { padding:12px 10px; } .dano-tabela td,.dano-tabela th { padding:16px 6px; } .dano-numero { font-size:20px; } }
+
+
+/* Magias e elementos: card e tabela usam o mesmo resultado. */
+.rtc-classes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.rtc-classes button{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border:1px solid var(--borda);background:var(--painel);color:var(--texto);border-radius:7px;text-align:left}
+.rtc-classes button[aria-pressed=true]{background:#30233f;border-color:#a582c7}
+.rtc-classes strong,.rtc-classes small{display:block}.rtc-classes strong{font:18px var(--serif)}.rtc-classes small{font:11px var(--sans);color:var(--suave);margin-top:5px}
+.rtc-classe-icone{object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.rtc-filtros label{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--suave)}
+.rtc-barras{display:flex;flex-direction:column;gap:12px;margin:24px 0;padding:18px 14px;border:1px solid var(--borda);border-radius:8px;background:var(--painel);min-width:0}.rtc-barras>h3{margin:0 0 4px}.rtc-barras>.nota{margin:0}.rtc-barra{height:44px;min-height:44px;flex:1;background:#20242d;border-radius:5px;position:relative;overflow:hidden;margin:0}
+#elementosHunt .rtc-barras{margin:0}.rtc-comparativo>.rtc-tabs{margin:0 0 22px}
+.rtc-barra-fill{position:absolute;top:0;bottom:0;left:0}.rtc-barra-texto{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;color:#f4f2ed;font:13px var(--mono);text-shadow:0 1px 2px #000}
+.rtc-elemento-nome{display:flex;align-items:center;gap:10px;min-width:0}.rtc-elemento-icone{display:block;width:18px;height:18px;flex-shrink:0;object-fit:contain;image-rendering:pixelated}
+.rtc-barra-ref{position:absolute;top:0;bottom:0;border-left:1px dashed #ffffff50;pointer-events:none}
+.rtc-tabs{display:flex;flex-wrap:nowrap;justify-content:center;gap:8px;margin:22px 0;max-width:100%}
+.rtc-tabs button{display:flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;margin:0;padding:8px 4px;border:1px solid var(--borda);background:var(--painel);color:var(--suave);border-radius:5px;gap:5px}
+.rtc-tabs button[aria-pressed=true]{flex:2.8 1 0;background:#30233f;border-color:#a582c7;color:#e4d2fa}
+.rtc-tab-icone{display:block;width:24px;height:24px;object-fit:contain;image-rendering:pixelated;margin:0;flex-shrink:0}
+.rtc-tab-nome{display:none;font:11px var(--mono)}.rtc-tabs button[aria-pressed=true] .rtc-tab-nome{display:inline}
+.rtc-comparativo{padding:18px 12px;border:1px solid var(--borda);background:var(--painel);border-radius:8px}
+.rtc-opcoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px;margin:20px 0}
+.rtc-opcao{text-align:center;min-width:0;overflow-wrap:anywhere}.rtc-opcao>strong,.rtc-opcao>small{display:block}.rtc-opcao>strong{min-height:36px;font:13px var(--sans)}
+.rtc-recomendado{min-height:30px;color:var(--verde);font:10px var(--mono)}.rtc-total{font:24px var(--mono);margin:12px 0 6px;white-space:nowrap;overflow-wrap:normal}
+.rtc-vencedor{color:var(--verde)}.rtc-selo{color:var(--verde);font:10px var(--mono)}.rtc-ajustar{color:var(--ouro);font:10px var(--mono)}
+.rtc-acao{display:inline-block;margin:16px 0;padding:12px;border:1px solid var(--borda);border-radius:6px;background:var(--painel);color:var(--texto);font:12px var(--mono);cursor:pointer;text-decoration:none}
+.rtc-acao:disabled{opacity:.6}.rtc-detalhes{margin:20px 0;padding-top:12px;border-top:1px solid var(--borda)}.rtc-detalhes summary{padding:10px 0;font:12px var(--mono);color:var(--texto);cursor:pointer}.rtc-detalhes a{color:var(--ouro)}
+.rtc-detalhes input{box-sizing:border-box;max-width:100%;padding:12px 14px;border:1px solid var(--borda);border-radius:6px;background:var(--painel);color:var(--texto);font:12px var(--mono);margin:8px 0}.rtc-detalhes label{display:flex;flex-direction:column;gap:8px;margin-top:18px;font:12px var(--mono);color:var(--suave)}
+.rtc-sequencia{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin:18px 0;max-height:430px;overflow:auto}
+.rtc-evento{padding:10px 6px;border:1px solid var(--borda);background:var(--painel);text-align:center;font-size:11px}.rtc-evento small,.rtc-evento span{display:block}.rtc-evento .dano-icone{margin:8px auto}
+.rtc-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.rtc-slot{padding:16px;border:1px solid var(--borda);border-radius:6px}.rtc-slot strong{font-size:13px}
+.rtc-roda-prova{display:block;max-width:100%;max-height:420px;object-fit:contain;margin:20px auto}
+.rtc-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}.rtc-tier{padding:14px 8px;border:1px solid var(--borda);border-radius:6px}.rtc-tier strong{font-size:13px}.rtc-tier small{color:var(--suave);font-size:11px}
+.rtc-tabela{min-width:650px}.rtc-tabela .dano-icone{width:28px;height:28px;display:inline-block;margin:0 8px 0 0;vertical-align:middle}
+.rtc-acao:focus-visible,.rtc-tabs button:focus-visible,.rtc-classes button:focus-visible{outline:2px solid var(--roxo);outline-offset:3px}
+@media(min-width:700px){.rtc-tabs button{flex:0 0 44px;width:44px}.rtc-tabs button[aria-pressed=true]{flex:0 1 auto;width:auto;min-width:84px}}
+@media(min-width:900px){.dano-pagina .rtc-opcoes{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.dano-pagina .rtc-campos{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.dano-pagina .filtros .grupo{flex-direction:column;align-items:flex-start;gap:8px}.dano-pagina .filtros .pilulas{flex-wrap:wrap}}
+@media(max-width:390px){.rtc-total{font-size:17px}.rtc-tabs{gap:3px}.rtc-tab-icone{width:20px;height:20px}.rtc-tab-nome{font-size:10px}.rtc-classes button{padding:9px 6px;gap:6px}.rtc-classe-icone{width:34px;height:34px}}
+
+
+.rtc-conjunto{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:24px 0}.rtc-conjunto section{min-width:0;padding:18px;border:1px solid var(--borda);border-radius:8px;background:var(--painel)}.rtc-conjunto section:last-child{grid-row:span 2}.rtc-gemas{display:flex;gap:10px;flex-wrap:wrap}.rtc-gemas button[aria-pressed=true]{border-color:#a582c7;background:#30233f}.rtc-escolha{display:flex;flex-direction:column;gap:10px;margin:20px 0;color:var(--suave);font:12px var(--mono)}.rtc-escolha select,.rtc-escolha input{box-sizing:border-box;max-width:100%;min-width:0;padding:12px;border:1px solid var(--borda);background:var(--painel);color:var(--texto);border-radius:6px}.rtc-integrado-controles{margin-bottom:22px}.rtc-conjunto .rtc-slots{grid-template-columns:1fr}.rtc-beneficios{margin:14px 0}.rtc-conjunto svg image{pointer-events:none}@media(max-width:760px){.rtc-conjunto{grid-template-columns:1fr}.rtc-conjunto section{padding:12px}.rtc-conjunto section:last-child{grid-row:auto}.rtc-gemas{gap:8px}.rtc-gemas .rtc-acao{font-size:11px;padding:10px}.rtc-escolha select{width:100%}}
+
+/* Planejamento ocupa a coluna larga, abaixo das células da hunt. */
+#blocoCelulas{max-width:100%;overflow-x:auto}
+.hunt-planejamento{margin-top:28px;padding:24px;border:1px solid var(--borda);border-radius:8px;background:var(--painel);min-width:0}
+#recomendacaoMagias{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,1.15fr);gap:0 28px;min-width:0}
+#recomendacaoMagias>.rtc-classes,#recomendacaoMagias>.nota{grid-column:1/-1}
+#recomendacaoMagias>.rtc-classes{max-width:480px}
+#recomendacaoMagias>.rtc-barras{grid-column:1;grid-row:3;margin:0;align-self:stretch}
+#recomendacaoMagias>.rtc-comparativo{grid-column:2;grid-row:3;align-self:stretch}
+.rtc-independentes{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;margin-top:28px;align-items:start}
+.rtc-independentes>section{min-width:0;padding:22px;border:1px solid var(--borda);border-radius:8px;background:#0d1016}
+.rtc-independentes h2{font-size:23px;margin:10px 0 16px}.rtc-independentes h3{margin:24px 0 16px;font:15px var(--serif);color:var(--ouro-claro)}
+.rtc-independentes .rtc-classes{margin:20px 0 24px}.rtc-independentes .rtc-classes button{justify-content:center;margin:0}
+.rtc-independentes .rtc-slots{grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}.rtc-cura-paineis{margin:0 0 28px}.rtc-cura-paineis section+section{margin-top:24px}
+.rtc-independentes .rtc-gemas{margin:16px 0 24px;gap:8px}.rtc-independentes .rtc-gemas button{margin:0}
+.rtc-independentes svg image{pointer-events:none}.rtc-roda-painel svg{display:block;margin:20px auto}
+.rtc-slot{overflow-wrap:anywhere}.rtc-slot .nota{margin-bottom:0}.rtc-confirmacao{margin-top:16px}
+@media(max-width:900px){#recomendacaoMagias{display:block}.rtc-independentes{grid-template-columns:1fr}.hunt-planejamento{padding:18px}.rtc-independentes>section{padding:18px}}
+@media(max-width:390px){.hunt-planejamento{padding:12px}.rtc-independentes>section{padding:12px}.rtc-independentes{gap:16px}.rtc-independentes .rtc-slots{grid-template-columns:1fr}.ao-vivo{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}.filtros .grupo,.filtros .pilulas{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header class="topo">
+  <span class="marca">Hunt Analyzer</span>
+  <nav><a href="/">calibração</a><a class="ativo" id="navHunt" href="/hunt">hunt</a><a id="navHist" href="/hunt?h">histórico</a><a href="/evolucao">evolução</a><a href="/auxiliadores">auxiliadores</a></nav>
+  <span class="jogo" id="jogo"><span class="dot"></span>procurando o jogo…</span>
+  <a class="botao discreto pequeno" id="btnVoltarHist" href="/hunt?h" hidden>← histórico</a>
+  <button class="botao discreto pequeno" id="btnHunt">Encerrar hunt</button>
+  <button class="botao discreto pequeno" id="btnReiniciar" title="Fecha a sessão atual e volta a esperar a hunt, sem fechar o programa">Reiniciar análise</button>
+  <button class="botao discreto pequeno" id="btnDesligar">Desligar</button>
+</header>
+<script src="/ui/navegacao.js"></script>
+<div id="desligado" class="desligado"><div>
+  <div class="rotulo">— hunt analyzer</div>
+  <h1>Analisador desligado</h1>
+  <p class="sub">Todos os processos foram encerrados. Pode fechar esta janela; para ligar de novo, use o painel de controle.</p>
+</div></div>
+
+<div class="previa" hidden>
+  <b>PRÉVIA DO DESIGN</b><span>dados reais da hunt de 21/09 · simule as voltas fechando:</span>
+  <button class="pilula" data-previa="0">aguardando a 1ª volta</button>
+  <button class="pilula" data-previa="1">1 volta</button>
+  <button class="pilula" data-previa="+1">+1 volta</button>
+  <button class="pilula" data-previa="todas">todas as voltas</button>
+  <span id="previaInfo"></span>
+</div>
+
+<main>
+  <section class="cabeca">
+    <div>
+      <div class="rotulo">— hunt</div>
+      <h1 id="huntNome">—</h1>
+      <p class="sub" id="huntSub">—</p>
+    </div>
+    <div class="ao-vivo" role="status"><span class="dot" id="dotVivo"></span><span id="aoVivo">conectando…</span></div>
+  </section>
+
+  <div id="conteudo" class="conteudo">
+    <section class="tiles" id="tiles"></section>
+
+    <section class="tempo" id="tempo" hidden>
+      <div class="rotulo">— trechos da sessão</div>
+      <div class="barra" id="tempoBarra"></div>
+      <div class="linha" id="tempoLista"></div>
+      <div class="linha marcos" id="tempoMarcos"></div>
+    </section>
+
+    <section class="filtros">
+      <div class="grupo"><span class="rotulo">recorte</span><div class="pilulas" id="fRecorte"></div></div>
+    </section>
+
+    <section class="grade">
+      <div class="mapas">
+        <p class="fonte-mapa" id="fonteMapa" hidden></p>
+        <article class="mapa-card">
+          <div class="mapa-titulo"><span id="tPerm">—</span><span id="nPerm"></span></div>
+          <canvas id="cPerm"></canvas>
+          <div class="sem-mapa">Mapa ainda não encontrado: o programa procura o lugar no minimapa do jogo enquanto você caça</div>
+          <div class="legenda-tit">legenda · tempo parado na célula</div>
+          <div class="legenda" id="lPerm"></div>
+          <div class="legenda-caminho"><i></i><span></span></div>
+        </article>
+        <article class="mapa-card">
+          <div class="mapa-titulo"><span id="tDens">—</span><span id="nDens"></span></div>
+          <canvas id="cDens"></canvas>
+          <div class="sem-mapa">Mapa ainda não encontrado: o programa procura o lugar no minimapa do jogo enquanto você caça</div>
+          <div class="legenda-tit">legenda · bichos na battle list, em média</div>
+          <div class="legenda" id="lDens"></div>
+          <div class="legenda-caminho"><i></i><span></span></div>
+        </article>
+      </div>
+      <aside class="lateral">
+        <section class="painel-alternavel" aria-label="Painel da hunt e KS">
+          <div class="painel-tabs" role="tablist" aria-label="Hunt ou KS">
+            <button id="abaHunt" role="tab" aria-controls="painel" aria-selected="true">Hunt</button>
+            <button id="abaKS" role="tab" aria-controls="ksPainel" aria-selected="false" tabindex="-1">KS</button>
+          </div>
+          <div class="painel" id="painel" role="tabpanel" aria-labelledby="abaHunt"></div>
+          <section id="ksPainel" role="tabpanel" aria-labelledby="abaKS" hidden></section>
+        </section>
+        <section id="elementosHunt" aria-label="Elementos consolidados da hunt"></section>
+        <section class="monstros">
+          <div class="topo-card"><span class="rotulo">monstros</span><span class="obs" id="monstrosInfo"></span></div>
+          <div id="listaMonstros"></div>
+        </section>
+      </aside>
+      <div class="baixo">
+        <section class="party-dano" id="partyDano" aria-label="Dano individual da party"></section>
+        <div class="secao-tit"><div class="rotulo">histórico das voltas</div><span class="sub" id="histInfo" style="font-size:12px"></span></div>
+        <section class="historico" id="historico"></section>
+
+        <div id="blocoCelulas">
+          <div class="secao-tit"><div class="rotulo">células com mais tempo</div><span class="sub" style="font-size:12px">mesmo recorte e mapa da tela</span></div>
+          <table class="celulas">
+            <thead><tr><th id="thAndar">andar</th><th>célula (x, y)</th><th>tempo parado</th><th>visitas</th><th>bichos em média</th></tr></thead>
+            <tbody id="tabela"></tbody>
+          </table>
+        </div>
+        <section class="hunt-planejamento" aria-label="Magias, RTC e roda de habilidade">
+          <div class="secao-tit"><div class="rotulo">magias e elementos</div></div>
+          <div id="recomendacaoMagias"></div>
+          <div id="otimizacaoRTC"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <!-- histórico das hunts guardadas (user, 23/09): uma seção por hunt, um quadrado por sessão -->
+  <div id="lista" hidden></div>
+
+  <div id="espera" class="espera"><div class="caixa">
+    <div class="rotulo" id="esperaRot">— gravando</div>
+    <h2 id="esperaTit">Aguardando a primeira volta</h2>
+    <p class="sub" id="esperaTxt">—</p>
+    <div class="relogio" id="relogio">00:00</div>
+    <div class="passos" id="passos">
+      <span class="feito">✓ calibração salva</span>
+      <span class="agora"><span class="dot gravando"></span>hunt detectada</span>
+      <span>○ primeira volta</span>
+    </div>
+  </div></div>
+</main>
+<div id="dica" class="dica-mapa"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="/ui/taxas.js"></script>
+<script src="/ui/rtc.js?v=20261011_final"></script>
+<script src="/ui/fflate.js"></script>
+<script src="/ui/roda_motor.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/roda_visual.js?v=20261011_final"></script>
+<script src="/ui/temporal.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/integracao.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/rtc_integrado_ui.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/rtc_ui.js?v=20261012_elementos_dry_v1"></script>
+<script>
+// ------------------------------------------------------------ escalas (validadas: ordinais, fundo escuro #11141b)
+const RAMPA_PERM = ['#6b4f1a', '#94702a', '#bb923a', '#dcb455', '#f3d98f'];
+const RAMPA_DENS = ['#225585', '#2b71a8', '#3a91c8', '#5db3e1', '#a6dcf4'];
+// PAUSA_S (volta de 6 min ou mais = refill/pausa, fora da média) vem do ui/taxas.js, que é a cópia
+// de ao_vivo.taxas: a regra de quais voltas contam mora num lugar só
+
+let PREVIA = new URLSearchParams(location.search).has('previa');   // ?previa = mockup com os dados de 21/09 e a barra que simula as voltas
+// histórico (user, 23/09): ?h = lista das hunts guardadas · ?h=<hunt>/<AAAAMMDD_HHMM> = uma sessão
+// no MESMO painel da hunt ao vivo, em modo leitura. A troca é pela URL: o voltar do navegador serve.
+const HIST = new URLSearchParams(location.search).get('h');
+const $ = s => document.querySelector(s);
+const el =(tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const virg = (v, c = 2) => v.toFixed(c).replace('.', ',');
+const kk = v => v == null ? '–' : `${virg(v / 1e6)} kk`;
+const ouro = v => v == null ? '–' : (Math.abs(v) >= 1e6 ? `${virg(v / 1e6)} kk` : `${Math.round(v / 1000)}k`);
+const dur = s => `${Math.floor(s / 60)}m${String(Math.round(s % 60)).padStart(2, '0')}`;
+const hms = t => [t / 3600, (t % 3600) / 60, t % 60].map(v => String(Math.floor(v)).padStart(2, '0')).join(':');
+const durc = s => s >= 3600 ? `${Math.floor(s / 3600)}h${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}` : dur(s);
+// mapa montado dos próprios quadros (23/09): sem as coordenadas do mundo, o "andar" é só o número
+// da área que o programa separou — então a tela chama de área, para ninguém ler "andar 0" numa cripta
+const mapaLocal = () => { const m = D?.estado?.mapa; return !!m && m.fonte === 'local' && !m.ancorado; };
+const rotZ = () => mapaLocal() ? 'área' : 'andar';
+
+let D = null;            // dados da hunt
+let mostradas = 0;       // voltas fechadas visíveis (0 = aguardando a primeira)
+let selN = null;         // volta escolhida no histórico (null = a mais recente)
+let andar = 12, recorte = 'sessao';
+const cel = 4;           // sem seletor de andar nem de célula (user, 21/09): não ajudavam na análise
+
+// ------------------------------------------------------------ regras do card (as mesmas do party_card)
+const xph = v => v.xp_raw_15min ? v.xp_raw_15min * 4 : (v.xp_raw ? v.xp_raw * 3600 / v.dur : null);
+function pct(a, b) { return (a == null || b == null || b === 0) ? null : Math.round(100 * (a - b) / Math.abs(b)); }
+// volta parcial (a gravação parou no meio, user 21/09): fora das comparações, nas duas pontas
+const anterior = (vs, i) => { for (let j = i - 1; j >= 0; j--) if (!vs[j].parcial) return vs[j]; return null; };
+function comparacoes(v, ant) {
+  if (v.parcial) ant = null;
+  const mesmaRaw = ant && !v.estabilizando && !!v.xp_raw_15min === !!ant.xp_raw_15min;
+  const mesmaBase = ant && (v.base || null) === (ant.base || null);   // solo não tem Party Hunt: base null nas duas compara
+  // 22/09: Party Hunt zerado numa das duas = profit e supplies da pt só de um pedaço da volta
+  const zerou = !!(v.reset || ant?.reset);
+  return {
+    xp: mesmaRaw ? pct(xph(v), xph(ant)) : null,
+    profit: mesmaBase && !zerou ? pct(v.profit, ant.profit) : null,
+    sup_pt: ant && !zerou ? pct(v.sup_pt, ant.sup_pt) : null,
+    sup_eu: ant ? pct(v.sup_eu, ant.sup_eu) : null,
+    bichos: ant ? pct(v.bichos, ant.bichos) : null,
+  };
+}
+function humor(v, c) {
+  if (v.parcial) return 'parcial';
+  if (v.estabilizando) return '⏳';
+  const ds = [c.xp, c.profit, c.bichos].filter(x => x != null);
+  if (!ds.length) return '📖';
+  const m = ds.reduce((a, b) => a + b, 0) / ds.length;
+  return m >= 8 ? '🔥' : m > 0 ? '👍' : m <= -8 ? '🐌' : '😐';
+}
+// 24/09 (user): o card é a última volta enquanto a raw ainda não consolidou (a janela do XP
+// Analyser é de 15 min); passados os 15 min de hunt ele vira a MÉDIA da hunt, porque volta a volta
+// já fica no histórico logo abaixo. Volta parcial fica fora da média (CLAUDE.md).
+const RAW_MIN_S = 900;
+function mediaDa(vs) {
+  // os números vêm todos do taxasDe (ui/taxas.js = a cópia de ao_vivo.taxas): a tela, o histórico e
+  // os gráficos leem a MESMA conta. Aqui só entra o que é do card: solo e o recorte de horário.
+  const t = taxasDe(vs);
+  if (!t.voltas) return null;
+  const limpas = vs.filter(v => !v.parcial && v.dur < PAUSA_S), ult = limpas[limpas.length - 1];
+  return {n: t.voltas, total: t.total, parciais: t.parciais, refil: t.refil, dur: t.dur_media,
+          xph: t.raw_h, profit: t.media.profit, sup_pt: t.media.sup_pt, sup_eu: t.media.sup_eu,
+          bichos: t.media.bichos, solo: ult.solo ?? (ult.sup_pt == null), ini: limpas[0].ini, fim: ult.fim};
+}
+function chip(p, inverso = false) {
+  const c = el('span', 'chip');
+  if (p == null) { c.textContent = '–'; return c; }
+  const sobe = p >= 5, desce = p <= -5;
+  if (sobe || desce) c.classList.add((sobe !== inverso) ? 'bom' : 'ruim');
+  c.textContent = `${sobe ? '▲' : desce ? '▼' : '●'} ${p > 0 ? '+' : ''}${p}%`;
+  return c;
+}
+
+// ------------------------------------------------------------ agregação por célula
+function amostrasDe(ini, fim) {
+  return D.amostras.filter(a => a[0] >= ini && a[0] <= fim);
+}
+function agrega(amostras, z) {
+  const A = D.andares[z], mapa = new Map();
+  let antes = null;
+  for (let i = 0; i < amostras.length; i++) {
+    const [t, az, x, y, b] = amostras[i];
+    const dt = i + 1 < amostras.length ? Math.min(amostras[i + 1][0] - t, 3) : 1;
+    if (az !== z || x < A.x0 || y < A.y0 || x >= A.x0 + A.w || y >= A.y0 + A.h) { antes = null; continue; }
+    const cx = Math.floor((x - A.x0) / cel), cy = Math.floor((y - A.y0) / cel), k = cx + ',' + cy;
+    const c = mapa.get(k) || {cx, cy, seg: 0, bsoma: 0, visitas: 0};
+    c.seg += dt; c.bsoma += (b || 0) * dt;   // battle sem leitura no frame não vira NaN na escala
+    if (antes !== k) c.visitas++;
+    antes = k;
+    mapa.set(k, c);
+  }
+  return [...mapa.values()].map(c => ({...c, bichos: c.bsoma / c.seg}));
+}
+function faixas(valores) {   // 5 faixas por quantil, como a legenda do vídeo
+  const v = [...valores].sort((a, b) => a - b);
+  if (!v.length) return null;
+  const q = p => v[Math.min(v.length - 1, Math.floor(p * v.length))];
+  return [v[0], q(.2), q(.4), q(.6), q(.8), v[v.length - 1]];
+}
+const faixa = (lim, x) => lim ? Math.max(0, Math.min(4, [1, 2, 3, 4].filter(i => x >= lim[i]).length)) : 0;
+
+// ------------------------------------------------------------ desenho dos mapas
+const MAPAS = {
+  perm: {canvas: '#cPerm', leg: '#lPerm', rampa: RAMPA_PERM, valor: c => c.seg, fmt: s => s >= 60 ? dur(s) : `${Math.round(s)}s`, min: 3},  // < 3 s = só passagem: o caminho mostra
+  dens: {canvas: '#cDens', leg: '#lDens', rampa: RAMPA_DENS, valor: c => c.bichos, fmt: b => virg(b, 1), min: 3},
+};
+const vista = {};
+function desenhaMapa(qual, paineis) {
+  const M = MAPAS[qual], cv = $(M.canvas);
+  const lista = paineis.flatMap(p => p.celulas.filter(c => c.seg >= M.min)), lim = faixas(lista.map(M.valor));
+  const larg = Math.max(1, cv.parentElement.clientWidth - 28), dpr = window.devicePixelRatio || 1;
+  let altura = 0;
+  const planos = paineis.map(p => {
+    const A = D.andares[p.z], esc = Math.min(larg / A.w, Math.max(larg * 1.25, 560) / A.h);
+    const desenho = {...p, A, esc, lado:cel * esc, topo:altura, y:altura + 26, w:A.w * esc, h:A.h * esc};
+    altura += desenho.h + 46; return desenho;
+  });
+  const W = larg, H = Math.max(1, altura - 20);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  const g = cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled = false;
+  for(const p of planos){
+    g.fillStyle = '#e9bd64';g.font = '12px monospace';g.fillText(`${rotZ()} ${p.z}`,0,p.topo+15);
+    g.save();g.translate(0,p.y);g.filter='grayscale(.85) brightness(.5)';
+    if(fundos[p.z])g.drawImage(fundos[p.z],0,0,p.w,p.h);g.filter='none';
+    const lado=p.lado,vao=Math.min(2,lado*.15);
+    for(const c of p.celulas.filter(c=>c.seg>=M.min)){
+      g.globalAlpha=.9;g.fillStyle=M.rampa[faixa(lim,M.valor(c))];
+      g.fillRect(c.cx*lado+vao/2,c.cy*lado+vao/2,lado-vao,lado-vao);
+    }
+    const trilha=p.caminho,n=trilha.length,CLARO='#f4f1ea',ESCURO='#0b0c10';
+    const quadrado=(c,f)=>{const tamanho=Math.max(4,lado*f);return [c.cx*lado+(lado-tamanho)/2,c.cy*lado+(lado-tamanho)/2,tamanho,tamanho];};
+    trilha.forEach((c,i)=>{
+      g.globalAlpha=.35+.65*(n>1?i/(n-1):1);g.fillStyle=CLARO;g.fillRect(...quadrado(c,.42));
+      g.strokeStyle=ESCURO;g.lineWidth=1;g.strokeRect(...quadrado(c,.42));
+    });
+    g.globalAlpha=1;
+    if(n){g.strokeStyle=CLARO;g.lineWidth=2;g.strokeRect(trilha[0].cx*lado+2,trilha[0].cy*lado+2,lado-4,lado-4);
+      g.fillStyle=CLARO;g.fillRect(...quadrado(trilha[n-1],.62));g.strokeStyle=ESCURO;g.lineWidth=1.5;g.strokeRect(...quadrado(trilha[n-1],.62));}
+    const hover=vista[qual]?.hover;
+    if(hover?.z===p.z){g.strokeStyle='#ece6d8';g.lineWidth=2;g.strokeRect(hover.cx*lado+1,hover.cy*lado+1,lado-2,lado-2);}
+    g.restore();
+  }
+  vista[qual]={...(vista[qual]||{}),lista,paineis:planos,lim};
+  $(M.leg).replaceChildren(...M.rampa.map((cor,i)=>{const d=el('div'),sw=el('i');sw.style.background=cor;d.append(sw,lim?`${M.fmt(lim[i])}–${M.fmt(lim[i+1])}`:'–');return d;}));
+}
+
+// ------------------------------------------------------------ dica ao passar o mouse
+function ligaDica(qual) {
+  const cv = $(MAPAS[qual].canvas), dica = $('#dica');
+  cv.addEventListener('mousemove', e => {
+    const V = vista[qual]; if (!V) return;
+    const r = cv.getBoundingClientRect();
+    const P=V.paineis.find(p=>e.clientY-r.top>=p.y&&e.clientY-r.top<p.y+p.h);
+    if(!P){dica.style.display='none';return;}
+    const cx = Math.floor((e.clientX - r.left) / P.lado), cy = Math.floor((e.clientY - r.top-P.y) / P.lado);
+    const passo = P.caminho.find(k => k.cx === cx && k.cy === cy) || null;
+    const c = V.lista.find(k => k.z === P.z && k.cx === cx && k.cy === cy) || passo;
+    // compara pela célula: cada renderMapas cria objetos novos, e por identidade todo movimento redesenhava
+    if (c?.z !== V.hover?.z || c?.cx !== V.hover?.cx || c?.cy !== V.hover?.cy) { V.hover = c; renderMapas(); }
+    if (!c) { dica.style.display = 'none'; return; }
+    const A = P.A, x = A.x0 + cx * cel, y = A.y0 + cy * cel;
+    dica.replaceChildren();
+    if (c === passo && !V.lista.includes(c)) {  // só passagem: sem cor de calor, só o quadrado do caminho
+      dica.append(el('b', null, 'caminho da volta ' + voltaCaminho), passo.seg >= 1 ? `passou por aqui em ${MAPAS.perm.fmt(passo.seg)}` : 'só de passagem');
+    } else {
+      const forte = el('b', null, qual === 'perm' ? `${MAPAS.perm.fmt(c.seg)} parado` : `${virg(c.bichos, 1)} bichos em média`);
+      dica.append(forte, qual === 'perm'
+        ? `${c.visitas} visita${c.visitas > 1 ? 's' : ''} · ${virg(c.bichos, 1)} bichos em média`
+        : `${MAPAS.perm.fmt(c.seg)} de amostra · ${c.visitas} visita${c.visitas > 1 ? 's' : ''}`);
+      if (passo) dica.append(el('br'), `no caminho da volta ${voltaCaminho}`);
+    }
+    dica.append(el('br'), `${rotZ()} ${P.z} · célula de ${cel} sqm em (${x}, ${y})`);
+    dica.style.display = 'block';
+    dica.style.left = Math.min(e.clientX + 14, innerWidth - 270) + 'px';
+    dica.style.top = (e.clientY + 14) + 'px';
+  });
+  cv.addEventListener('mouseleave', () => { $('#dica').style.display = 'none'; if (vista[qual]) { vista[qual].hover = null; renderMapas(); } });
+}
+
+// ------------------------------------------------------------ montagem da tela
+const voltasVisiveis = () => D.voltas.slice(0, mostradas);
+function voltaEscolhida() {
+  const vs = voltasVisiveis();
+  return vs.find(v => v.n === selN) || vs[vs.length - 1] || null;
+}
+function recorteAtual() {
+  const vs = voltasVisiveis(), v = voltaEscolhida();
+  if (!v) return {amostras: [], caminhoDe: null};
+  const lista = recorte === 'sessao' ? amostrasDe(vs[0].ini, vs[vs.length - 1].fim) : amostrasDe(v.ini, v.fim);
+  return {amostras: lista, caminhoDe: v};
+}
+let voltaCaminho = null;
+function caminho(v, zAlvo = andar) {             // células por onde a volta passou neste andar, na ordem da 1ª passagem
+  if (!v) return [];
+  const A = D.andares[zAlvo], celulas = new Map(), am = amostrasDe(v.ini, v.fim);
+  const marca = (x, y, dt) => {
+    if (x < A.x0 || y < A.y0 || x >= A.x0 + A.w || y >= A.y0 + A.h) return;
+    const cx = Math.floor((x - A.x0) / cel), cy = Math.floor((y - A.y0) / cel), k = cx + ',' + cy;
+    const c = celulas.get(k) || {cx, cy, seg: 0};
+    c.seg += dt;
+    celulas.set(k, c);
+  };
+  am.forEach(([t, z, x, y], i) => {
+    if (z !== zAlvo) return;
+    const prox = am[i + 1], dt = prox ? prox[0] - t : 1;
+    marca(x, y, Math.min(dt, 3));
+    // 1 ponto a cada ~2 s e com haste o char anda até ~18 sqm nisso: liga ao próximo ponto para o
+    // caminho não ficar pontilhado. Troca de andar, captura parada ou salto acima de 10 sqm/s não liga.
+    const d = prox && prox[1] === z && dt <= 3 ? Math.hypot(prox[2] - x, prox[3] - y) : Infinity;
+    for (let s = .5; d <= 10 * dt && s < d; s += .5) marca(x + (prox[2] - x) * s / d, y + (prox[3] - y) * s / d, 0);
+  });
+  return [...celulas.values()].map(c=>({...c,z:zAlvo}));   // o Map guarda a ordem de inserção = ordem da 1ª passagem
+}
+function andarComMaisTempo(amostras) {   // o mapa mostra o andar onde a pt passou mais tempo no recorte
+  const n = {};
+  for (const a of amostras) if (D.andares[a[1]]) n[a[1]] = (n[a[1]] || 0) + 1;
+  const z = Object.keys(n).sort((a, b) => n[b] - n[a])[0] || (D.andares[andar] ? andar : Object.keys(D.andares)[0]);
+  return z != null ? Number(z) : null;   // null = cave sem mapa preparado
+}
+function renderMapas() {
+  const {amostras, caminhoDe} = recorteAtual();
+  andar = andarComMaisTempo(amostras);
+  voltaCaminho = caminhoDe ? caminhoDe.n : null;
+  $('#conteudo').classList.toggle('sem-mapas', andar == null);
+  // 23/09 (user): quando o cliente não gravou o minimapa da região, o mapa vem dos próprios quadros
+  $('#fonteMapa').hidden = !mapaLocal() || andar == null;
+  $('#fonteMapa').textContent = 'mapa montado pelo minimapa da sessão (o jogo ainda não gravou esta região)';
+  $('#thAndar').textContent = rotZ();
+  if (andar == null) {
+    vista.perm = vista.dens = null;
+    $('#tPerm').textContent = 'permanência'; $('#tDens').textContent = 'densidade de bichos';
+    $('#nPerm').textContent = $('#nDens').textContent = '';
+    return [];
+  }
+  const paineis=Object.keys(D.andares).map(Number).sort((a,b)=>a-b).map(z=>({z,celulas:agrega(amostras,z).map(c=>({...c,z})),caminho:caminho(caminhoDe,z)})).filter(p=>p.celulas.length);
+  const cels=paineis.flatMap(p=>p.celulas),trilha=paineis.flatMap(p=>p.caminho);
+  const legCaminho = trilha.length ? `caminho da volta ${voltaCaminho}: mais forte perto do fim · □ início · ■ fim` : 'a volta escolhida não passou por este andar';
+  document.querySelectorAll('.legenda-caminho span').forEach(s => s.textContent = legCaminho);
+  desenhaMapa('perm', paineis);
+  desenhaMapa('dens', paineis);
+  const alvo = recorte === 'sessao' ? `sessão até a volta ${mostradas || '—'}` : `volta ${caminhoDe ? caminhoDe.n : '—'}`;
+  const rotulo=paineis.length>1?`${mapaLocal()?'áreas':'andares'} ${paineis.map(p=>p.z).join(' e ')}`:`${rotZ()} ${andar}`;
+  $('#tPerm').textContent = `${rotulo} — permanência`;
+  $('#tDens').textContent = `${rotulo} — densidade de bichos`;
+  $('#nPerm').textContent = alvo; $('#nDens').textContent = alvo;
+  return cels;
+}
+function renderTiles() {
+  const vs = voltasVisiveis(), limpas = vs.filter(v => v.dur < PAUSA_S && !v.parcial);
+  const T = taxasDe(vs);   // o mesmo taxasDe do card e dos gráficos: um número só por medida
+  const zs = Object.keys(D.andares).map(Number);   // chaves vêm como texto; as amostras guardam o andar em número
+  const celsSessao = vs.length && zs.length ? zs.reduce((n, z) => n + agrega(amostrasDe(vs[0].ini, vs[vs.length - 1].fim), z).length, 0) : null;
+  const media = limpas.length ? limpas.reduce((a, v) => a + v.dur, 0) / limpas.length : null;
+  const rapida = limpas.length ? limpas.reduce((a, v) => v.dur < a.dur ? v : a) : null;
+  const lenta = limpas.length ? limpas.reduce((a, v) => v.dur > a.dur ? v : a) : null;
+  const tempo = vs.length ? vs[vs.length - 1].fim - vs[0].ini : null;
+  const parciais = vs.filter(v => v.parcial).length;
+  // refil (user, 22/09): quem mede é o motor — a ida ao depot nem chega a virar volta, então não
+  // dá mais para contar "volta com refill" pelo tamanho dela
+  const fechado = D.estado?.historico || D.estado?.gravando === false;
+  const refis = (D.refis || []).filter(r => !fechado || (vs.length && !r.aberto && r.inicio >= vs[0].ini && r.fim < vs[vs.length-1].fim));
+  const totalRefil = refis.reduce((s,r) => s + r.dur_s,0);
+  const R = fechado ? {n:refis.length,total_s:totalRefil,media_s:refis.length ? totalRefil/refis.length : 0,fracao:tempo ? totalRefil/tempo : 0} : D.refil || {};
+  const aberto = !fechado && refis.some(r => r.aberto);
+  const dados = [
+    ['tempo de hunt', tempo != null ? `${Math.floor(Math.round(tempo / 60) / 60)}h${String(Math.round(tempo / 60) % 60).padStart(2, '0')}` : '—', vs.length ? `desde ${hms(vs[0].ini).slice(0, 5)}` : ''],
+    ['voltas', vs.length || '—', parciais ? `${parciais} parcia${parciais > 1 ? 'is' : 'l'}` : 'fechadas'],
+    ['volta média', media ? dur(media) : '—', 'sem refill'],
+    ['mais rápida', rapida ? dur(rapida.dur) : '—', rapida ? `volta ${rapida.n}` : ''],
+    ['mais lenta', lenta ? dur(lenta.dur) : '—', lenta ? `volta ${lenta.n}` : ''],
+    ['refil e pausas', R.n ? dur(R.total_s) : '—',
+     R.n ? `${R.n} parada${R.n > 1 ? `s · média ${dur(R.media_s)}` : ''} · ${Math.round((R.fracao || 0) * 100)}% da hunt${aberto ? ' · uma em curso' : ''}`
+         : 'nenhuma até agora', 'largo'],   // com 1 parada a média é o próprio total, que já está no número
+    ['células', celsSessao ?? '—', zs.length ? `de ${cel} sqm, ${zs.length} ${rotZ()}${zs.length > 1 ? (mapaLocal() ? 's' : 'es') : ''}` : 'mapa ainda não encontrado'],
+    ['raw estabilizada', T.raw_h ? `${virg(T.raw_h / 1e6)} kk/h` : '—',
+     T.raw_de === '15min' ? `mediana de ${T.voltas_15min} voltas, 15 min` : T.raw_de ? 'raw ÷ tempo, sem os 15 min' : 'aos 15 min'],
+  ];
+  $('#tiles').replaceChildren(...dados.map(([r, n, o, cls]) => {
+    const t = el('div', 'tile' + (cls ? ' ' + cls : ''));
+    t.append(el('div', 'rotulo', r), el('div', 'num', String(n)), el('div', 'obs', o));
+    return t;
+  }));
+}
+// trechos e entradas (user, 22/09): o caminho pela cidade e o refil ficam fora das voltas, mas o
+// tempo deles é da sessão. Uma barra e duas linhas de texto bastam — o mapa continua sendo o da hunt.
+const TRECHO = {cidade: ['#4b5563', 'cidade e caminho'], espera: ['#374151', 'esperando na hunt'],
+                hunt: ['#d6a84e', 'caçando'], refil: ['#b06cf5', 'refil ou pausa'],
+                inicio_hunt: ['#60758a', 'início da hunt'], fim_hunt: ['#60758a', 'fim da hunt'],
+                ks: ['#d96d78', 'KS'], house: ['#6b8e82', 'house do player'],
+                inicio_house: ['#6b8e82', 'início da hunt · house do player'],
+                fim_house: ['#6b8e82', 'fim da hunt · house do player']};
+const MARCO = {inicio_hunt: 'hunt começou', entrada_hunt: 'entrou na área da hunt', entrada_cave: 'entrou na cave'};
+function renderTempo() {
+  const original = D.trechos || [], ms = [...(D.entradas || [])].sort((a, b) => a.t - b.t);
+  const hunts = original.filter(t => t.tipo === 'hunt');
+  const fechado = D.estado?.historico || D.estado?.gravando === false;
+  const vs = D.voltas || [];
+  const primeiro = vs.length ? Math.min(...vs.map(v => v.ini)) : hunts.length ? Math.min(...hunts.map(t => t.inicio)) : null;
+  const ultimo = vs.length ? Math.max(...vs.map(v => v.fim)) : hunts.length ? Math.max(...hunts.map(t => t.fim)) : null;
+  const segundos = h => (h || '00:00:00').split(':').reduce((s,n) => s*60+Number(n),0);
+  const intervalosKS = (D.ks?.episodios || []).map(e => [segundos(e.inicio), e.ultimo_t ?? segundos(e.fim || e.ultimo_evento?.ts || e.inicio)]);
+  const ts = original.flatMap(t => {
+    const limites = [...intervalosKS.flat(), primeiro, ...(fechado ? [ultimo] : [])].filter(v => v != null && v > t.inicio && v < t.fim);
+    const cortes = [...new Set([t.inicio, t.fim, ...limites])].sort((a,b) => a-b);
+    return cortes.slice(0,-1).map((ini,i) => ({...t, inicio:ini, fim:cortes[i+1], dur_s:cortes[i+1]-ini,
+      tipo:intervalosKS.some(([a,b]) => ini < b && cortes[i+1] > a) ? 'ks'
+        : primeiro != null && cortes[i+1] <= primeiro ? (t.tipo === 'house' ? 'inicio_house' : 'inicio_hunt')
+        : fechado && ultimo != null && ini >= ultimo ? (t.tipo === 'house' ? 'fim_house' : 'fim_hunt') : t.tipo,
+      house:t.tipo === 'house'}));
+  });
+  $('#tempo').hidden = !ts.length;
+  if (!ts.length) return;
+  const soma = {};
+  for (const t of ts) soma[t.tipo] = (soma[t.tipo] || 0) + t.dur_s;
+  $('#tempoBarra').replaceChildren(...ts.map(t => {
+    const [cor, rot] = TRECHO[t.tipo] || ['#4b5563', t.tipo], d = el('div');
+    d.style.flex = `${Math.max(t.dur_s, 1)} 0 0`; d.style.background = cor;
+    const areas = [...new Set(t.areas || [])];   // o cliente repete a subárea ao atravessar de novo
+    d.title = `${rot} · ${hms(t.inicio).slice(0, 5)} → ${hms(t.fim).slice(0, 5)} · ${dur(t.dur_s)}`
+            + (t.andares?.length ? ` · ${rotZ()} ${t.andares.join(', ')}` : '') + (areas.length ? `\n${areas.join(' · ')}` : '');
+    return d;
+  }));
+  $('#tempoLista').replaceChildren(...Object.entries(soma).sort((a, b) => b[1] - a[1]).map(([tipo, s]) => {
+    const [cor, rot] = TRECHO[tipo] || ['#4b5563', tipo], sp = el('span'), i = el('i');
+    i.style.background = cor;
+    sp.append(i, rot + ' ', el('b', null, dur(s)));
+    return sp;
+  }));
+  $('#tempoMarcos').replaceChildren(...ms.filter(m => MARCO[m.tipo]).map(m => {
+    const sp = el('span');
+    sp.append(MARCO[m.tipo] + ' ', el('b', null, hms(m.t).slice(0, 5) + (m.z != null ? ` · ${rotZ()} ${m.z}` : '')));
+    return sp;
+  }));
+}
+function renderPainel() {
+  const p = $('#painel'), vs = voltasVisiveis(), v = voltaEscolhida();
+  p.replaceChildren();
+  if (!v) { p.append(el('div', 'rotulo', 'última volta'), el('h2', null, '—'), el('p', 'nota', 'O card aparece quando a primeira volta fechar.')); return; }
+  const i = vs.indexOf(v), ant = anterior(vs, i), c = comparacoes(v, ant);
+  // média da hunt: só sem volta escolhida no histórico e passados os 15 min que consolidam a raw
+  const M = selN == null && vs[vs.length - 1].fim - vs[0].ini >= RAW_MIN_S ? mediaDa(vs) : null;
+  const topo = el('div', 'topo-card');
+  topo.append(el('div', 'rotulo', M ? 'média da hunt' : v === vs[vs.length - 1] ? 'última volta fechada' : 'volta escolhida'));
+  if (v !== vs[vs.length - 1]) { const b = el('button', 'voltar', 'ver a hunt'); b.onclick = () => { selN = null; recorte = 'sessao'; tudo(); }; topo.append(b); }
+  // "26 de 29" no título (user, 24/09): o tile diz 29 voltas fechadas e a média usa 26 — sem o
+  // "de 29" os dois números batiam de frente na mesma tela
+  const cab = M ? [`Média · ${M.n}${M.n < M.total ? ` de ${M.total}` : ''} voltas · ${dur(M.dur)}`, hms(M.ini), hms(M.fim)]
+                : [`Volta ${v.n} · ${dur(v.dur)} ${humor(v, c)}`, hms(v.ini), hms(v.fim)];
+  p.append(topo, el('h2', null, cab[0]), el('p', 'sub', `${D.sessao.hunt} · ${cab[1].slice(0, 5)} → ${cab[2].slice(0, 5)}`));
+  const tab = el('table', 'metricas');
+  // no modo média o ▲▼ é a última volta contra a média (a comparação com a volta anterior já está
+  // em cada card do histórico); no modo volta continua sendo contra a volta anterior
+  const cm = M && {xp: pct(xph(v), M.xph), profit: pct(v.profit, M.profit), sup_pt: pct(v.sup_pt, M.sup_pt),
+                   sup_eu: pct(v.sup_eu, M.sup_eu), bichos: pct(v.bichos, M.bichos)};
+  const linhas = M ? [
+    ['📈 XP raw/h', M.xph ? `${kk(M.xph)}/h` : '–', chip(cm.xp)],
+    ['💰 Profit', ouro(M.profit), chip(cm.profit)],
+    ['🧪 Supplies da pt', ouro(M.sup_pt), chip(cm.sup_pt, true)],
+    ['🧪 Seus supplies', ouro(M.sup_eu), chip(cm.sup_eu, true)],
+    ['💀 Bichos mortos', M.bichos == null ? '–' : virg(M.bichos, 1), chip(cm.bichos)],
+  ] : [
+    ['📈 XP raw/h', xph(v) ? `${kk(xph(v))}/h` : '–', chip(c.xp)],
+    ['💰 Profit', ouro(v.profit), chip(c.profit)],
+    ['🧪 Supplies da pt', ouro(v.sup_pt), chip(c.sup_pt, true)],
+    ['🧪 Seus supplies', ouro(v.sup_eu), chip(c.sup_eu, true)],
+    ['💀 Bichos mortos', v.bichos ?? '–', chip(c.bichos)],
+  ];
+  // solo (CLAUDE.md): só a linha do jogador. 22/09: pelo "solo" do pt_card; sup_pt nulo também vem
+  // de base do loot trocada no meio da volta (pt). Sem o campo (card antigo): sup_pt nulo = solo
+  const solo = M ? M.solo : (v.solo ?? (v.sup_pt == null));
+  if (solo) linhas.splice(2, 1);
+  for (const [rot, val, ch] of linhas) {
+    const tr = el('tr'), td = el('td', 'var');
+    td.append(ch);
+    tr.append(el('td', null, rot), el('td', 'valor', String(val)), td);
+    tab.append(tr);
+  }
+  p.append(tab);
+  const notas = [];
+  const forasco = [M && M.parciais && `${M.parciais} parcia${M.parciais > 1 ? 'is' : 'l'}`,
+                   M && M.refil && `${M.refil} de 6 min ou mais (refill ou pausa)`].filter(Boolean).join(' e ');
+  if (M) notas.push(`Das ${M.total} voltas fechadas, ${M.n} entram na média${forasco ? ` — ${forasco} ficam de fora, as mesmas dos tiles lá em cima` : ''}. ` +
+                    `XP raw/h é a mediana das voltas com a raw consolidada; o ▲▼ é a volta ${v.n} contra esta média.`);
+  else if (v.parcial) notas.push('Volta parcial: a gravação parou no meio dela. Fica fora da média, da mais rápida e das comparações.');
+  else if (v.estabilizando) notas.push('⏳ Raw estabilizando: a janela de 15 min ainda pega o início da hunt ou um refill, então a XP é da própria volta e não compara.');
+  else if (v.xp_raw_15min) notas.push('XP raw/h = raw dos últimos 15 min, o mesmo número do XP Analyser.');
+  const baseMudou = ant && v.base && ant.base && v.base !== ant.base;
+  if (baseMudou) notas.push(`Base do loot mudou (${ant.base} → ${v.base}): o profit não compara com a volta anterior.`);
+  if (v.reset) notas.push('O Party Hunt foi zerado no meio desta volta: profit e supplies da pt contam só depois do zeramento e não comparam.');
+  else if (v.profit == null && !baseMudou) notas.push(`Profit sem leitura nesta volta: o ${solo ? 'Hunt Analyser' : 'Party Hunt'} não foi lido.`);
+  if (notas.length) p.append(el('p', 'nota', notas.join(' ')));
+  const tot = vs.slice(0, i + 1);
+  const sessao = el('div', 'sessao');
+  sessao.append(el('div', 'rotulo tit', M ? 'na sessão inteira' : `na sessão, até a volta ${v.n}`));
+  for (const [r, n] of [['raw', kk(tot.reduce((a, x) => a + (x.xp_raw || 0), 0))],
+                        ['profit', ouro(tot.reduce((a, x) => a + (x.profit || 0), 0))],
+                        ['bichos', tot.some(x => x.bichos != null) ? tot.reduce((a, x) => a + (x.bichos || 0), 0).toLocaleString('pt-BR') : '–']]) {   // sem fator da cave = sem contagem
+    const d = el('div'); d.append(el('div', 'rotulo', r), el('div', 'num', n)); sessao.append(d);
+  }
+  p.append(sessao);
+}
+function renderHistorico(novaN) {
+  const vs = voltasVisiveis(), atual = voltaEscolhida();
+  $('#histInfo').textContent = vs.length ? `${vs.length} volta${vs.length > 1 ? 's' : ''} · a mais nova primeiro · clique para ver a volta nos mapas` : '';
+  $('#historico').replaceChildren(...[...vs].reverse().map((v) => {
+    const c = comparacoes(v, anterior(vs, vs.indexOf(v)));
+    const b = el('button', 'volta' + (v === atual ? ' sel' : '') + (v.n === novaN ? ' nova' : ''));
+    const l = el('div', 'linha');
+    l.append(el('span', 'n', `Volta ${v.n}`), el('span', 'd', `${dur(v.dur)} ${humor(v, c)}`));
+    const vals = el('div', 'vals');
+    vals.append('XP raw/h', el('b', null, xph(v) ? virg(xph(v) / 1e6) : '–'), 'profit', el('b', null, ouro(v.profit)), 'bichos', el('b', null, String(v.bichos ?? '–')));
+    b.append(l, vals);
+    b.onclick = () => { selN = v.n; recorte = 'volta'; tudo(); };
+    return b;
+  }));
+}
+function renderTabela(cels) {
+  const top = [...cels].sort((a, b) => b.seg - a.seg).slice(0, 10);
+  const limP = vista.perm?.lim;
+  $('#tabela').replaceChildren(...top.map(c => {
+    const tr = el('tr'), t1 = el('td'), A = D.andares[c.z];
+    const sw = el('i'); sw.style.background = RAMPA_PERM[faixa(limP, c.seg)];
+    t1.append(sw, MAPAS.perm.fmt(c.seg));
+    tr.append(el('td', null, String(c.z)), el('td', null, `(${A.x0 + c.cx * cel}, ${A.y0 + c.cy * cel})`), t1,
+              el('td', null, String(c.visitas)), el('td', null, virg(c.bichos, 1)));
+    return tr;
+  }));
+}
+function renderFiltros() {
+  const grupo = (id, opcoes, atual, muda) => $(id).replaceChildren(...opcoes.map(([valor, rotulo]) => {
+    const b = el('button', 'pilula' + (valor === atual ? ' ativa' : ''), rotulo);
+    b.onclick = () => { muda(valor); tudo(); };
+    return b;
+  }));
+  grupo('#fRecorte', [['sessao', 'sessão inteira'], ['volta', 'volta escolhida']], recorte, v => recorte = v);
+}
+function renderCabeca() {
+  renderAbaPainel();
+  renderKS();
+  renderPartyDano();
+  const vs = voltasVisiveis(), S = D.sessao || {}, E = D.estado || {};
+  const roster = new Set([...(D.ks?.party || []), ...(D.ks?.sessoes || []).flatMap(s => s.party || [])].map(n => n.replace(/\s+/g, '').toLocaleLowerCase()));
+  const pt = roster.size >= 2 ? `pt x${roster.size}` : S.pt;
+  const nome = S.hunt || E.local || 'Hunt';   // o backend manda o nome; local = lugar pelo catálogo
+  $('#huntNome').textContent = nome;
+  $('#huntSub').textContent = [E.local !== nome && E.local, S.data, S.char, pt,
+    D.sessoes_origem?.length > 1 && `${D.sessoes_origem.length} gravações reunidas`,
+    E.historico ? 'hunt guardada, em modo leitura' : S.inicio && `gravação desde ${S.inicio}`].filter(Boolean).join(' · ') || '—';  // pt "" em solo
+  const espera = !vs.length && !E.historico;   // hunt guardada sem volta fechada: a tela mostra o que tem
+  $('#conteudo').classList.toggle('borrado', espera);
+  $('#conteudo').inert = espera;   // borrado não recebe foco nem clique de teclado
+  if (espera) $('#dica').style.display = 'none';   // inert não dispara mouseleave: a dica do mapa ficaria presa
+  $('#espera').classList.toggle('on', espera);
+  // hunt guardada (user, 23/09): modo leitura, sem estado ao vivo nenhum
+  if (E.historico) {
+    $('#dotVivo').className = 'dot';
+    $('#aoVivo').replaceChildren('hunt guardada · ', el('b', null, [S.inicio, S.fim].filter(Boolean).join(' → ') || '—'));
+    return;
+  }
+  if (!PREVIA) return renderEstado(vs, E);
+  $('#dotVivo').className = 'dot gravando';
+  $('#aoVivo').replaceChildren('gravando · ', el('b', null, `volta ${vs.length + 1} em andamento`));
+  $('#previaInfo').textContent = `${vs.length} de ${D.voltas.length} voltas`;
+  $('#esperaTxt').textContent = `A hunt começou às ${S.inicio}. O mapa, o card e o histórico aparecem quando a primeira volta fechar.`;
+}
+
+function ksNumero(v) {
+  const magnitude = Math.abs(v);
+  const divisor = magnitude >= 1e6 ? 1e6 : magnitude >= 1e3 ? 1e3 : 1;
+  return (v / divisor).toLocaleString('pt-BR', {maximumFractionDigits: divisor === 1 ? 0 : 1}) + (divisor === 1e6 ? ' kk' : divisor === 1e3 ? 'k' : '');
+}
+function ksDiferenca(atual, outro, rival = false) {
+  if (!Number.isFinite(atual) || !Number.isFinite(outro) || outro <= 0)
+    return {texto:'—', classe:'', dica:'Sem comparação: falta leitura ou a base é zero.'};
+  const pct = (atual - outro) / outro * 100;
+  const favoravel = pct > 0;
+  return {texto:(pct > 0 ? '▲ +' : pct < 0 ? '▼ −' : '= ') + Math.abs(pct).toLocaleString('pt-BR', {maximumFractionDigits:1}) + '%',
+    classe:pct === 0 ? '' : favoravel ? 'favoravel' : 'desfavoravel',
+    dica:(rival ? 'Time de fora comparado à sua party' : 'Sua party comparada ao time de fora') + ': (dano deste time ÷ dano do outro − 1) × 100. Apenas dano observado.'};
+}
+const ksExpansao = new Map();
+let abaPainel = 'hunt', sessaoPainel = null, assinaturaKS = null;
+const ksVistos = new Set(), rascunhosKS = new Map();
+const chaveKS = ep => JSON.stringify([sessaoPainel,ep.id,ep.inicio]);
+function lePreferencia(chave) { try { return JSON.parse(localStorage.getItem(chave)); } catch { return null; } }
+function guardaPreferencia(chave, valor) { try { localStorage.setItem(chave,JSON.stringify(valor)); return true; } catch { return false; } }
+function renderAbaPainel() {
+  const id = D.estado?.id || D.estado?.sessao || [D.sessao?.data,D.sessao?.inicio,D.sessao?.char].join('|');
+  const eps = D.ks?.episodios || [];
+  if (id !== sessaoPainel) {
+    sessaoPainel = id; ksVistos.clear(); assinaturaKS = null;
+    for (const chave of lePreferencia('hunt:ks-vistos:'+id) || []) ksVistos.add(chave);
+    const salva = lePreferencia('hunt:aba:'+id);
+    abaPainel = salva === 'ks' ? 'ks' : 'hunt';
+    // Histórico já conhecido respeita a escolha salva; uma detecção nova ao vivo abre KS.
+    if (D.estado?.historico && salva) for (const ep of eps) ksVistos.add(chaveKS(ep));
+  }
+  for (const ep of eps) if (!ksVistos.has(chaveKS(ep))) {
+    ksVistos.add(chaveKS(ep)); abaPainel = 'ks';
+    guardaPreferencia('hunt:ks-vistos:'+id,[...ksVistos]);
+  }
+  $('#painel').hidden = abaPainel !== 'hunt'; $('#ksPainel').hidden = abaPainel !== 'ks';
+  for (const [id,aba] of [['abaHunt','hunt'],['abaKS','ks']]) {
+    const b = $('#'+id), selecionada = abaPainel === aba;
+    b.setAttribute('aria-selected',String(selecionada)); b.tabIndex = selecionada ? 0 : -1;
+    b.onclick = () => { abaPainel = aba; guardaPreferencia('hunt:aba:'+sessaoPainel,aba); renderAbaPainel(); renderKS(); };
+    b.onkeydown = e => { if (['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) {
+      e.preventDefault(); const alvo = $('#'+(e.key === 'Home' ? 'abaHunt' : e.key === 'End' ? 'abaKS' : aba === 'hunt' ? 'abaKS' : 'abaHunt')); alvo.click(); alvo.focus();
+    } };
+  }
+  $('#abaKS').textContent = 'KS';
+  $('.painel-alternavel').classList.toggle('aba-ks',abaPainel === 'ks');
+  $('#abaKS').classList.toggle('ks-alerta',eps.some(e => e.aberto));
+}
+
+function registroGuilda(ep) {
+  const chave = 'hunt:ks-guilda:'+chaveKS(ep);
+  let edicoes = rascunhosKS.get(chave);
+  if (!edicoes) { edicoes = lePreferencia(chave) || {}; rascunhosKS.set(chave,edicoes); }
+  const segundo = h => (h || '00:00:00').split(':').reduce((s,n)=>s*60+Number(n),0);
+  const g = ep.ganhos, ganhos = g && Math.abs(g.inicio_t-segundo(ep.inicio)) <= 5 && Math.abs(g.fim_t-ep.ultimo_t) <= 5 ? g : null;
+  const base = {chars:Object.keys(ep.dano?.fora || {}).join(', '), hunted:'', respawn:D.sessao?.hunt || '',
+    raw:ganhos?.xp_raw ?? '', gold:ganhos?.loot ?? '', inicio:(ep.inicio || '').slice(0,5),
+    fim:(ep.fim || ep.ultimo_evento?.ts || '').slice(0,5), descricao:'', tankando:false};
+  const valores = {...base,...edicoes}, form = el('div','ks-guilda');
+  form.append(el('div','rotulo','Dados para a guilda'));
+  const status = el('p','ks-note'); status.setAttribute('role','status');
+  const altera = (key,value) => { edicoes[key] = value; valores[key] = value;
+    status.textContent = guardaPreferencia(chave,edicoes) ? 'Rascunho salvo neste navegador.' : 'Rascunho mantido nesta tela; o navegador não permitiu salvar.'; };
+  function campo(key,label,tipo='text',nota='') {
+    const wrap = el('label','ks-campo'), input = el(tipo === 'textarea' ? 'textarea' : 'input');
+    input.setAttribute('aria-label',label);
+    wrap.append(el('span',null,label));
+    if (tipo !== 'textarea') input.type = tipo;
+    input.value = valores[key];
+    if (tipo === 'number') { input.min = '0'; input.step = '1'; input.placeholder = 'Sem leitura · preencher'; }
+    if (tipo === 'textarea') input.maxLength = 500;
+    input.addEventListener('input',() => { altera(key,input.value); if (key === 'descricao') ajuda.textContent = `${input.value.length}/500 caracteres`;
+      else if (tipo === 'number') ajuda.textContent = 'Informado por você.'; });
+    const ajuda = el('small',null,key === 'descricao' ? `${String(valores[key]).length}/500 caracteres`
+      : tipo === 'number' ? key in edicoes ? 'Informado por você.' : valores[key] === '' ? 'Sem leitura desse período.' : 'Leitura dos painéis.' : nota);
+    wrap.append(input,ajuda); return wrap;
+  }
+  form.append(campo('chars','Chars da PT que deu KS','text','Nomes detectados no dano de fora da party. Separe os nomes por vírgula.'),
+    campo('hunted','Chars oprimidos (hunted)','text','Preencha se houver. Pode informar mais de um.'),campo('respawn','Respawn'));
+  const camposGanhos = el('div','ks-dupla'); camposGanhos.append(campo('raw','Raw XP Gain','number'),campo('gold','Gold total','number')); form.append(camposGanhos,
+    el('p','ks-note','XP raw do seu personagem e gold (loot) da sua party/solo durante o KS. Leituras automáticas usam quadros próximos dos horários, com até 5 s de diferença em cada ponta. Sem leitura, preencha pelos painéis do jogo.'));
+  const horas = el('div','ks-dupla'); horas.append(campo('inicio','Início do KS','time'),campo('fim','Término do KS','time',ep.aberto ? 'Horário do último dano registrado; acompanha novos golpes.' : 'Horário do último dano registrado na prova.')); form.append(horas,campo('descricao','Descrição','textarea'));
+  if (ganhos?.limite) form.append(el('p','ks-note',ganhos.limite));
+  const tank = el('label','ks-tank'), check = el('input'); check.type='checkbox'; check.checked=Boolean(valores.tankando);
+  check.addEventListener('change',() => altera('tankando',check.checked)); tank.append(check,'Estava tankando o KS'); form.append(tank);
+  const copiar = el('button','ks-proof ks-copy','Copiar dados para a guilda'); copiar.type='button';
+  copiar.onclick = async () => {
+    for (const input of form.querySelectorAll('input')) if (!input.reportValidity()) return;
+    const campos = [['Chars da PT que deu KS',valores.chars],['Chars oprimidos (hunted)',valores.hunted],['Respawn',valores.respawn],
+      ['Raw XP Gain',valores.raw],['Gold total',valores.gold],['Início do KS',valores.inicio],['Término do KS',valores.fim || 'Sem leitura'],['Descrição',valores.descricao],['Tankando KS',valores.tankando ? 'Sim' : 'Não marcado']];
+    const texto = [`Data: ${D.sessao?.data || '—'}`,...campos.map(([k,v]) => `${k}: ${v === '' ? 'Não informado' : v}`),
+      ...['party','fora'].map(g => `Dano observado — ${g === 'party' ? 'sua party' : 'fora da party'}: ${Object.values(ep.dano?.[g] || {}).reduce((s,p)=>s+p.dano,0).toLocaleString('pt-BR')}`),
+      'Dano parcial: golpes legíveis do Server Log.',ganhos?.limite || 'XP/gold: confira os painéis do período.',
+      ...['prova_inicio',ep.prova_fim ? 'prova_fim' : 'prova_ultimo'].filter(k=>ep[k]?.print).map(k=>`${k === 'prova_inicio' ? 'Print do início' : ep.prova_fim ? 'Print do fim' : 'Print do último golpe'}: anexar ${ep[k].print.split('/').pop()}`)].join('\n');
+    try { await navigator.clipboard.writeText(texto); status.textContent='Dados copiados. Os prints podem ser baixados abaixo.'; }
+    catch { const area=el('textarea');area.value=texto;area.setAttribute('aria-label','Dados para copiar');form.append(area);area.focus();area.select();status.textContent='Selecione e copie os dados abaixo.'; }
+  };
+  form.append(copiar,status); return form;
+}
+function renderPartyDano() {
+  const kk = ksNumero;
+  const painel = $('#partyDano'), k = D.ks || {};
+  const stats = k.estatisticas_party || {}, pessoas = [...(stats.jogadores || [])];
+  const roster = [...(k.party || []), ...(k.sessoes || []).flatMap(s => s.party || [])];
+  const chaveNome = n => n.replace(/\s+/g, '').toLocaleLowerCase();
+  for (const nome of roster) if (!pessoas.some(p => chaveNome(p.nome) === chaveNome(nome))) pessoas.push({nome});
+  painel.hidden = !pessoas.some(p => p.dano != null || p.dano_observado != null);
+  if (painel.hidden) { painel.replaceChildren(); return; }
+  const titulo = el('div', 'secao-tit');
+  titulo.append(el('h2', null, 'Dano individual da party'), el('span', 'sub', 'acumulado do Party Hunt · extras do Server Log'));
+  const filhos = [titulo];
+  const numero = v => v == null ? '—' : v.toLocaleString('pt-BR');
+  const porcento = v => v == null ? '—' : v.toLocaleString('pt-BR', {maximumFractionDigits:1}) + '%';
+  if (pessoas.length) {
+    const wrap = el('div', 'rolagem'), tabela = el('table'), head = el('thead'), linha = el('tr');
+    for (const nome of ['Jogador','Dano · painel','Participação','Profit · painel','Cura · painel','Golpes lidos','Críticos','Críticos %','Fatais','Fatais %','Maior golpe lido']) linha.append(el('th',null,nome));
+    head.append(linha); tabela.append(head);
+    const corpo = el('tbody');
+    for (const p of pessoas) {
+      const tr = el('tr');
+      for (const v of [p.nome, p.dano == null ? '—' : kk(p.dano), porcento(p.participacao), p.profit == null ? '—' : kk(p.profit), p.cura == null ? '—' : kk(p.cura), numero(p.golpes), numero(p.criticos), porcento(p.criticos_pct), numero(p.fatais), porcento(p.fatais_pct), p.maior_golpe == null ? '—' : kk(p.maior_golpe)]) tr.append(el('td',null,v));
+      tr.title = `Dano dos golpes críticos: ${p.dano_critico == null ? 'sem leitura' : kk(p.dano_critico)} · Dano dos golpes fatais: ${p.dano_fatal == null ? 'sem leitura' : kk(p.dano_fatal)}`;
+      corpo.append(tr);
+    }
+    tabela.append(corpo); wrap.append(tabela); filhos.push(wrap);
+  } else filhos.push(el('p','sub','Aguardando a identificação da party e golpes legíveis no Server Log.'));
+  const totais = ['loot','supplies','profit'].filter(c => stats[c] != null).map(c => `${{loot:'Loot da pt',supplies:'Supplies da pt',profit:'Profit da pt'}[c]}: ${kk(stats[c])}`);
+  if (totais.length) filhos.push(el('p','sub',totais.join(' · ') + (stats.tipo ? ` · ${stats.tipo}` : '')));
+  filhos.push(el('p','sub','Dano, participação, profit e cura vêm do Party Hunt visível, incluindo o acumulado anterior à abertura do analisador. Críticos, fatais (Onslaught), golpes e maior golpe vêm apenas das linhas lidas no Server Log; são parciais e contam por alvo. Crítico e fatal podem ocorrer juntos. — indica informação não medida.'));
+  painel.replaceChildren(...filhos);
+}
+function renderKS() {
+  const painel = $('#ksPainel'), k = D?.ks || {}, eps = k.episodios || [];
+  const assinatura = JSON.stringify([sessaoPainel,eps,D.sessao?.hunt,D.sessao?.data,D.estado?.gravando,D.estado?.historico]);
+  if (assinatura === assinaturaKS || document.activeElement?.closest('.ks-guilda')) return;
+  assinaturaKS = assinatura;
+  const filhos = [];
+  const kk = ksNumero;
+  if (!eps.length) filhos.push(el('div','painel', 'Nenhum KS identificado nesta hunt. A aba abre automaticamente quando um novo KS é detectado; você pode voltar para Hunt quando quiser.'));
+  for (const ep of [...eps].reverse()) {
+    const chaveExpansao = chaveKS(ep);
+    const card = el('details', 'ks-card'), head = el('summary', 'ks-head'), intro = el('div');
+    card.open = ksExpansao.get(chaveExpansao) ?? ep === eps[eps.length-1];
+    card.addEventListener('toggle', () => { if (card.isConnected) ksExpansao.set(chaveExpansao, card.open); });
+    intro.append(el('div', 'rotulo', '— INTERFERÊNCIA NA HUNT · KS'), el('h2', null, 'Sua party × fora da party'), el('div', 'sub', `${ep.inicio} → ${ep.fim || 'último golpe: ' + (ep.ultimo_evento?.ts || '—')}`));
+    const totais = ['party','fora'].map(g => Object.values(ep.dano?.[g] || {}).reduce((s,p) => s + p.dano, 0));
+    const encerrada = D.estado?.historico || D.estado?.gravando === false;
+    const comparavel = ['party','fora'].every(g => Object.keys(ep.dano?.[g] || {}).length);
+    const vencedor = !comparavel ? 'Sem leitura' : totais[0] === totais[1] ? 'Empate' : totais[0] > totais[1] ? 'Sua PT' : 'PT inimiga';
+    const destaque = el('div','ks-maior-dano');
+    destaque.append(el('span',null,encerrada ? 'Maior dano: ' : 'Maior dano atual: '),
+      el('strong',comparavel && totais[0] !== totais[1] ? totais[0] > totais[1] ? 'aliada' : 'inimiga' : null,vencedor));
+    destaque.title = 'Comparação do dano observado no Server Log durante este KS.';
+    intro.append(destaque);
+    const acoes = el('div', 'ks-actions'), alternar = el('span', 'ks-toggle');
+    alternar.append(el('span', 'ks-expandir', '▸ Expandir'), el('span', 'ks-recolher', '▾ Recolher'));
+    acoes.append(el('span', 'ks-badge', ep.aberto ? 'KS em acompanhamento' : 'KS encerrado'), alternar);
+    head.append(intro, acoes);
+    card.append(head);
+    const soma = totais[0] + totais[1], grid = el('div', 'ks-grid');
+    for (const [i, grupo, label] of [[0,'party','Sua party'],[1,'fora','Fora da party']]) {
+      const team = el('section', 'ks-team' + (i ? ' rival' : ''));
+      team.append(el('h3', null, label));
+      const pessoas = Object.entries(ep.dano?.[grupo] || {}).sort((a,b) => b[1].dano - a[1].dano);
+      for (const [label, value, atual, outro] of [
+        ['Dano observado',pessoas.length ? kk(totais[i]) : 'Sem leitura',pessoas.length ? totais[i] : null,Object.keys(ep.dano?.[i ? 'party' : 'fora'] || {}).length ? totais[1-i] : null]]) {
+        const row=el('div','ks-metric'), valores=el('div','ks-value'), delta=ksDiferenca(atual,outro,Boolean(i));
+        const badge=el('span','ks-delta '+delta.classe,delta.texto);badge.title=delta.dica;
+        badge.setAttribute('aria-label',delta.dica+' '+delta.texto);
+        valores.append(el(value==='Sem leitura'?'small':'strong',null,value),badge);
+        row.append(el('span',null,label),valores);team.append(row);
+      }
+      const pct=soma ? totais[i]/soma*100 : null;
+      const share=el('div','ks-share');share.append(el('span',null,'Parcela do dano registrado'),el('b',null,pct===null?'—':pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%'));
+      const bar=el('div','ks-bar'),fill=el('span');fill.style.width=(pct || 0)+'%';bar.append(fill);team.append(share,bar);
+      for(const [nome,p] of pessoas){
+        const row=el('div','ks-player');row.append(el('b',null,nome),el('strong',null,kk(p.dano)),el('small',null,`${p.golpes.toLocaleString('pt-BR')} golpes · ${p.criticos.toLocaleString('pt-BR')} críticos`));team.append(row);
+      }
+      if(!pessoas.length)team.append(el('p','ks-note','Nenhum golpe classificado para este time.'));
+      grid.append(team);
+    }
+    card.append(grid);
+    const guilda=el('details','ks-guilda-bloco');
+    guilda.open=ksExpansao.get(chaveExpansao+':guilda') ?? false;
+    guilda.addEventListener('toggle',()=>{if(guilda.isConnected)ksExpansao.set(chaveExpansao+':guilda',guilda.open)});
+    guilda.append(el('summary',null,'Dados para a guilda · preencher e copiar'),registroGuilda(ep));
+    card.append(guilda);
+    const foot=el('div','ks-prints');
+    for(const [key,label] of [['prova_inicio','Ver print do início'],[ep.prova_fim?'prova_fim':'prova_ultimo',ep.prova_fim?'Ver print do fim':'Ver último golpe']]){
+      const p=ep[key]?.print;if(p){const wrap=el('div'),a=el('a','ks-print'),img=el('img');
+        a.href='/api/ks/'+p;a.target='_blank';a.rel='noopener';img.src=a.href;img.alt=label;img.loading='lazy';a.append(img,label);
+        const baixar=el('a','ks-print-download','Baixar print');baixar.href=a.href;baixar.download=p.split('/').pop();wrap.append(a,baixar);foot.append(wrap);}
+    }
+    card.append(foot,el('p','ks-note','Dano parcial do Server Log. ▲▼ compara os times; a participação no dano não representa divisão de XP ou gold.'));
+    const repetidos=Object.keys(ep.dano?.party || {}).filter(n=>n in (ep.dano?.fora || {}));
+    if(repetidos.length)card.append(el('p','ks-note',repetidos.join(', ')+' aparece nos dois lados porque a identificação da party mudou durante a captura.'));
+    filhos.push(card);
+  }
+  painel.replaceChildren(...filhos);
+}
+
+// ------------------------------------------------------------ ao vivo (user, 21/09): o estado vem do /api/hunt
+const pausada = E => E.gravando && E.ultimo_quadro_s > 30;   // a captura só grava com o jogo na frente
+// refil em curso (user, 22/09): o motor marca a pausa quando você para de matar, e a tela diz há quanto
+const refilAberto = () => (D?.refis || []).find(r => r.aberto);
+const haQuanto = () => { const r = refilAberto(); return r ? ` há ${dur(r.dur_s)}` : ''; };
+// mensagem do programa sem nome de exceção nem caminho de arquivo (user, 21/09): corta a parte técnica
+const semJargao = m => { const t = (m || '').replace(/[:\s]*[^:.]*\b\w*(Error|Exception|Traceback|File ")[\s\S]*$/, '').replace(/[\s.:,;]*$/, ''); return t && t + '.'; };
+function renderEstado(vs, E) {
+  $('#jogo').replaceChildren(el('span', 'dot' + (E.jogo ? ' on' : '')), E.fonte?.tipo === 'twitch'
+    ? `Twitch · ${E.fonte.canal} · ${E.jogo ? 'recebendo' : 'sem sinal'} · com atraso`
+    : E.jogo ? `RubinOT aberto${E.char ? ' · ' + E.char : ''}` : 'RubinOT fechado');
+  // 24/09 (user): iniciar/encerrar a hunt aqui mesmo. Reiniciar só faz sentido com a gravação ligada.
+  $('#btnHunt').textContent = E.ativo ? 'Encerrar hunt' : 'Iniciar hunt';
+  $('#btnHunt').title = E.ativo ? 'Para de gravar e guarda esta hunt no histórico; o programa continua aberto'
+                                : 'Começa uma sessão nova e volta a gravar';
+  $('#btnReiniciar').hidden = !E.ativo;
+  const [dot, ...vivo] = semResposta ? ['erro', 'sem resposta do programa']
+    : !E.gravando ? ['', 'gravação parada']
+    : pausada(E) ? ['pausa', E.fonte?.tipo === 'twitch' ? 'live sem quadros recentes' : 'jogo fora da frente, gravação pausada']
+    : E.pausa && E.hunt_comecou ? ['pausa', `pausa ou refill${haQuanto()} · `, el('b', null, `a volta ${E.volta_atual || vs.length + 1} recomeça quando a hunt voltar`)]
+    : ['gravando', 'gravando · ', el('b', null, E.hunt_comecou ? `volta ${E.volta_atual || vs.length + 1} em andamento` : 'aguardando a hunt começar')];
+  const chave = dot + vivo.map(x => x.textContent ?? x).join('');
+  if ($('#aoVivo').dataset.chave !== chave) {   // role=status lê em voz alta cada troca: só troca quando muda
+    $('#aoVivo').dataset.chave = chave;
+    $('#dotVivo').className = 'dot ' + dot;
+    $('#aoVivo').replaceChildren(...vivo);
+  }
+
+  // caixa da espera: os passos mostram onde o programa está de verdade
+  const hora = (E.hunt_comecou || '').slice(0, 5);
+  let rot = '— gravando', tit, txt;
+  if (semResposta) [rot, tit, txt] = ['— hunt analyzer', 'Sem resposta do programa', ['Confira no painel de controle se o analisador está ligado.']];
+  else if (!E.calibrado) {
+    const a = el('a', null, 'tela de calibração'); a.href = '/';
+    [rot, tit, txt] = ['— calibração', 'Calibre primeiro', ['Marque onde fica cada painel na ', a, ' e salve. Depois disso o programa grava e acompanha a hunt sozinho.']];
+  } else if (!E.gravando) [rot, tit, txt] = ['— gravação parada', 'Gravação parada', [semJargao(E.mensagem) || 'A gravação começa quando o RubinOT estiver aberto.']];
+  else if (pausada(E)) [rot, tit, txt] = ['— gravação pausada', E.fonte?.tipo === 'twitch' ? 'Aguardando a transmissão' : 'Traga o jogo para a frente', [semJargao(E.mensagem) || 'O Windows só deixa gravar a janela do RubinOT quando ela está na frente.']];
+  else if (E.pausa && E.hunt_comecou) [rot, tit, txt] = ['— pausa', 'Pausa ou refill', [`Parado${haQuanto()}. A volta recomeça sozinha quando a hunt voltar, e este tempo entra nas estatísticas de refil.`]];
+  else if (E.hunt_comecou) [tit, txt] = ['Aguardando a primeira volta', [`A hunt começou às ${hora}. O mapa, o card e o histórico aparecem quando a primeira volta fechar.`]];
+  else [tit, txt] = ['Aguardando a hunt começar', ['Pode ir caçar: o programa percebe sozinho quando a hunt começa.']];
+  $('#esperaRot').textContent = rot; $('#esperaTit').textContent = tit; $('#esperaTxt').replaceChildren(...txt);
+  const passos = [[E.calibrado, 'calibração salva'], [E.gravando, 'gravando'],
+                  [!!E.hunt_comecou, E.hunt_comecou ? `hunt detectada às ${hora}` : 'aguardando a hunt começar'], [false, 'primeira volta']];
+  const agora = passos.findIndex(p => !p[0]);
+  $('#passos').style.display = semResposta ? 'none' : '';
+  $('#passos').replaceChildren(...passos.map(([feito, t], i) => {
+    const s = el('span', feito ? 'feito' : i === agora ? 'agora' : null);
+    if (feito) s.append('✓ ', t);
+    else if (i === agora && E.gravando && !pausada(E)) s.append(el('span', 'dot gravando'), t);   // acontecendo agora
+    else s.append('○ ', t);
+    return s;
+  }));
+  relogio();
+}
+function relogio() {              // tempo desde o início da hunt (ou da gravação), pelo relógio do PC
+  const E = D?.estado || {}, ref = E.hunt_comecou || E.desde, mostra = !semResposta && E.gravando && !!ref;
+  $('#relogio').style.display = mostra ? '' : 'none';
+  if (!mostra) return;
+  const [h, m, s] = ref.split(':').map(Number), d = new Date();
+  const seg = ((d.getHours() - h) * 3600 + (d.getMinutes() - m) * 60 + d.getSeconds() - s + 86400) % 86400;   // passa da meia-noite
+  $('#relogio').textContent = seg >= 3600 ? hms(seg) : hms(seg).slice(3);
+}
+// ------------------------------------------------------------ monstros (user, 21/09): o programa cataloga sozinho pelo
+// TibiaWiki e separa pelas classes do Bestiary; cada monstro é uma linha que abre com o que ele toma, bate e dropa
+const CATALOGO = {}, abertos = new Set();
+const milhar = v => v == null ? '?' : v.toLocaleString('pt-BR');
+const classeToma = p => p == null || p === 100 ? '' : p === 0 ? 'imune' : p > 100 ? 'fraco' : 'resiste';
+// a MESMA lista do resumo guardado e dos bichos da capa do histórico (ui/taxas.js = ao_vivo.especies)
+const monstrosDaHunt = () => Object.keys(especiesDe(voltasVisiveis()));
+function pedeMonstro(nome) {      // o servidor devolve do catálogo ou busca no TibiaWiki e guarda
+  if (CATALOGO[nome]) return;
+  CATALOGO[nome] = {buscando: true};
+  fetch('/api/monstro?nome=' + encodeURIComponent(nome)).then(r => r.json())
+    .catch(() => ({erro: 'sem resposta do programa'}))
+    .then(e => { CATALOGO[nome] = e; renderMonstros(); });
+}
+const linhaDet = (rot, txt) => { const p = el('p', 'det'); p.append(el('b', null, rot), txt); return p; };
+function detalhe(e) {
+  const d = el('div', 'detalhe'), grade = el('div', 'toma');
+  for (const [elem, p] of Object.entries(e.toma)) {
+    const c = el('div', 'elem ' + classeToma(p));
+    c.append(elem, el('b', null, p == null ? '?' : p === 0 ? 'imune' : p + '%'));
+    grade.append(c);
+  }
+  d.append(el('div', 'rotulo', 'toma de cada elemento'), grade,
+           el('p', 'nota', 'verde = toma mais · âmbar = resiste'));
+  const bate = Object.entries(e.bate), loot = Object.entries(e.loot);
+  d.append(el('div', 'rotulo', 'bate com'), ...(bate.length ? bate.map(([k, a]) => linhaDet(k, a.join(' · '))) : [el('p', 'nota', 'o wiki não lista ataques')]));
+  d.append(el('div', 'rotulo', 'loot'), ...(loot.length ? loot.map(([k, i]) => linhaDet(k, i.join(', '))) : [el('p', 'nota', 'não dropa loot')]));
+  const fonte = el('p', 'nota'), a = el('a', null, 'TibiaWiki');
+  a.href = e.fonte; a.target = '_blank'; a.rel = 'noopener';
+  fonte.append('fonte: ', a, ` · catalogado em ${e.catalogado.split('-').reverse().join('/')}`);
+  d.append(fonte);
+  return d;
+}
+function linhaMonstro(nome) {
+  const e = CATALOGO[nome], aberto = abertos.has(nome), item = el('div', 'monstro' + (aberto ? ' aberto' : ''));
+  const b = el('button', 'linha-monstro'), foto = el('span', 'foto'), txt = el('span', 'txt');
+  if (e.gif) { const img = el('img'); img.src = '/monstros/' + e.gif; img.alt = ''; foto.append(img); }
+  txt.append(el('span', 'nome', e.nome || nome),
+             el('span', 'obs', e.buscando ? 'buscando no TibiaWiki…' : e.erro ? `${e.erro} · clique para tentar de novo` : `${milhar(e.hp)} HP · ${milhar(e.xp)} XP`));
+  b.append(foto, txt, el('span', 'seta', e.erro || e.buscando ? '' : aberto ? '▾' : '▸'));
+  b.setAttribute('aria-expanded', String(aberto));
+  b.onclick = () => {
+    if (e.buscando) return;
+    if (e.erro) { delete CATALOGO[nome]; pedeMonstro(nome); }
+    else if (aberto) abertos.delete(nome); else abertos.add(nome);
+    renderMonstros();
+  };
+  item.append(b);
+  if (aberto && e.toma) item.append(detalhe(e));
+  return item;
+}
+function renderMonstros() {
+  const nomes = monstrosDaHunt();
+  nomes.forEach(pedeMonstro);
+  renderMagiasRTC();
+  $('#monstrosInfo').textContent = nomes.length ? `${nomes.length} espécie${nomes.length > 1 ? 's' : ''} · clique para abrir` : '';
+  if (!nomes.length) $('#listaMonstros').replaceChildren(el('p', 'nota', voltasVisiveis().length ? 'Nenhum monstro lido nas voltas fechadas até agora.' : 'Os monstros aparecem quando a primeira volta fechar.'));
+  else {
+    const grupos = new Map();       // classe do Bestiary → espécies
+    for (const n of nomes) {
+      const c = CATALOGO[n].categoria || (CATALOGO[n].buscando ? 'buscando' : 'sem classe');
+      grupos.set(c, [...(grupos.get(c) || []), n]);
+    }
+    $('#listaMonstros').replaceChildren(...[...grupos].flatMap(([c, ns]) => [el('div', 'classe', `${c} · ${ns.length}`), ...ns.map(linhaMonstro)]));
+  }
+  // bicho de outra hunt (user, 22/09): o programa tirou da conta, mas diz quais eram e de onde são
+  const fora = Object.entries(D.especies_fora || {});
+  if (fora.length) $('#listaMonstros').append(el('p', 'nota', 'Fora da conta, vistos só no caminho ou em poucas voltas: '
+    + fora.map(([n, f]) => `${n} (${f.local?.[0] || 'sem local no wiki'})`).join(' · ') + '.'));
+}
+
+// ------------------------------------------------------------ histórico das hunts guardadas (user, 23/09)
+// "depois da hunt quis fazer a análise dela e não consegui": a sessão já ficava guardada em
+// hunt_data/<hunt>/sessoes/, faltava abrir. Uma seção por hunt, um quadrado por sessão com a data
+// em cima, e o clique abre o MESMO painel da hunt ao vivo com os dados do disco.
+const dataCurta = d => (d || '').split('/').slice(0, 2).join('/');      // "23/09/2026" → "23/09"
+function cartaoSessao(s, capa = {}) {
+  const c = el('div', 'cartao'), q = el('a', 'quadro');
+  c.append(el('div', 'data', [dataCurta(s.data), (s.inicio || '').slice(0, 5)].filter(Boolean).join(' · ') || '—'));
+  q.href = `/hunt?h=${encodeURIComponent(s.id)}`;
+  q.title = `${s.hunt} · ${s.data || ''} ${s.inicio || ''} · abrir a análise desta sessão`;
+  // capa (user, 24/09): os bichos mais mortos da hunt por cima do mapa da sessão, que fica só como
+  // textura no fundo. O desenho do mapa sozinho, em 190 px, não dizia nada.
+  const im = (cls, src) => { const i = el('img', cls); i.alt = ''; i.onerror = () => i.remove(); i.src = src; q.append(i); return i; };
+  // padronização por hunt (user, 24/09): as sessões da mesma hunt usam o MESMO pôster — o mapa
+  // ancorado no mundo mais recente e os bichos da sessão que mais matou. Só os números mudam.
+  const fundo = capa.mapa || (s.mapa && s.id);
+  if (fundo) im('fundo', `/api/historico/${fundo}/mapa.png`);
+  const bichos = (capa.icones || s.icones || []).length ? (capa.icones || s.icones) : (s.icone ? [s.icone] : []);
+  bichos.slice(0, 3).forEach((slug, i) => im(`bicho b${i}`, `/monstros/${slug}.gif`));
+  if (!fundo && !bichos.length) q.append(el('span', 'vazio', '◆'));
+  if (s.pico_xph) {
+    const b = el('span', 'pico', `pico ${virg(s.pico_xph / 1e6, 1)} kk/h`);
+    b.title = 'melhor volta da sessão';
+    q.append(b);
+  }
+  q.append(el('span', 'n-voltas', `${s.voltas} volta${s.voltas === 1 ? '' : 's'}`));
+  const pe = el('div', 'pe');
+  pe.append(el('b', null, durc(s.dur_s || 0)), ` · ${s.pt || s.char || ''}`, el('br'),
+            'raw ', el('b', null, kk(s.xp_raw)), ' · profit ', el('b', null, ouro(s.profit)));
+  if (!s.fechada) pe.append(el('br'), el('span', 'aberta', 'sessão não fechada'));
+  c.append(q, pe);
+  return c;
+}
+function renderLista(ss) {
+  const L = $('#lista');
+  if (!ss.length) return L.replaceChildren(el('p', 'nota', 'Nenhuma hunt guardada ainda. Cada sessão entra aqui sozinha, volta a volta, enquanto você caça.'));
+  const grupos = new Map();   // uma seção por hunt, na ordem da mais recente (a lista já vem assim)
+  for (const s of ss) grupos.set(s.hunt, [...(grupos.get(s.hunt) || []), s]);
+  L.replaceChildren(...[...grupos].map(([hunt, lista]) => {
+    const bloco = el('section', 'hunt-bloco'), tit = el('div', 'secao-tit'), tot = el('div', 'totais');
+    const soma = k => lista.reduce((a, s) => a + (s[k] || 0), 0);
+    tot.append(el('b', null, `${lista.length} ${lista.length > 1 ? 'sessões' : 'sessão'}`),
+               ` · ${durc(soma('dur_s'))} · ${soma('voltas')} voltas · raw `, el('b', null, kk(soma('xp_raw'))),
+               ' · profit ', el('b', null, ouro(soma('profit'))));
+    tit.append(el('h2', null, hunt), tot);
+    const grade = el('div', 'sessoes');
+    // o pôster da hunt: mapa do mundo mais recente (o local tem outra cara) e os bichos de quem mais matou
+    const capa = {mapa: (lista.find(s => s.mapa && s.ancorado) || lista.find(s => s.mapa) || {}).id,
+                  icones: [...lista].sort((a, b) => (b.bichos || 0) - (a.bichos || 0))[0]?.icones};
+    grade.append(...lista.map(s => cartaoSessao(s, capa)));
+    bloco.append(tit, grade);
+    return bloco;
+  }));
+}
+function erroHist(txt) {
+  if (RTC_DANO) $('#recomendacaoMagias').replaceChildren(el('p', 'nota', txt));
+  $('.ao-vivo').hidden = true;   // sem painel não há sessão para datar
+  $('#huntNome').textContent = 'Histórico';
+  $('#huntSub').textContent = txt;
+  $('#lista').hidden = false; $('#conteudo').hidden = true;
+  $('#lista').replaceChildren(el('p', 'nota', txt));
+}
+async function abreLista() {
+  $('#conteudo').hidden = true; $('#lista').hidden = false;
+  let r = null;
+  try { r = await (await fetch('/api/historico', {cache: 'no-store'})).json(); } catch { }
+  if (!r) return erroHist('Sem resposta do programa: confira no painel de controle se o analisador está ligado.');
+  const ss = r.sessoes || [];
+  $('#huntNome').textContent = 'Histórico';
+  $('#huntSub').textContent = ss.length
+    ? `${ss.length} ${ss.length > 1 ? 'sessões guardadas' : 'sessão guardada'} · clique num quadrado para abrir a análise dela`
+    : 'nenhuma hunt guardada ainda';
+  renderLista(ss);
+}
+async function abreSessao(id) {
+  let d = null;
+  try { d = await (await fetch('/api/historico/' + id, {cache: 'no-store'})).json(); } catch { }
+  if (!d?.estado) return erroHist(d?.erro ? `Esta hunt não está mais guardada (${d.erro}).` : 'Sem resposta do programa ao abrir a hunt guardada.');
+  D = Object.fromEntries(Object.entries(VAZIO).map(([k, v]) => [k, d[k] ?? v]));
+  D.voltas = D.voltas.filter(v => (v.tipo || 'volta') === 'volta');
+  await aplicaAjustesMapa(D);
+      await carregaFundos();
+  mostradas = D.voltas.length;
+  tudo();
+}
+async function modoHistorico() {   // a tela inteira em leitura: nada aqui grava nem consulta o jogo
+  $('#navHunt').classList.remove('ativo'); if (!RTC_DANO) $('#navHist').classList.add('ativo');
+  $('.cabeca .rotulo').textContent = '— histórico';
+  $('#jogo').hidden = true; $('#btnReiniciar').hidden = true; $('#btnHunt').hidden = true;
+  $('#btnVoltarHist').hidden = !HIST;
+  $('.ao-vivo').hidden = !HIST;
+  return HIST ? abreSessao(HIST) : abreLista();
+}
+
+function tudo(novaN) {
+  renderCabeca(); renderFiltros(); renderTiles(); renderTempo();
+  const cels = renderMapas();
+  renderPainel(); renderMonstros(); renderHistorico(novaN); renderTabela(cels);
+}
+
+// ------------------------------------------------------------ prévia: simula as voltas fechando
+document.querySelectorAll('[data-previa]').forEach(b => b.onclick = () => {
+  const alvo = b.dataset.previa, antes = mostradas;
+  mostradas = alvo === 'todas' ? D.voltas.length : alvo === '+1' ? Math.min(D.voltas.length, mostradas + 1) : Number(alvo);
+  selN = null; if (!mostradas) recorte = 'sessao';
+  tudo(mostradas > antes ? D.voltas[mostradas - 1].n : null);
+});
+let inicioRelogio = Date.now();
+setInterval(() => {
+  if (!PREVIA) return relogio();
+  const s = Math.floor((Date.now() - inicioRelogio) / 1000) + 47; $('#relogio').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}, 1000);
+
+const fundos = {}, fundoSrc = {};
+function carregaFundos() {        // só baixa o fundo do andar que chegou novo ou mudou
+  return Promise.all(Object.entries(D.andares).filter(([z, A]) => A.fundo && fundoSrc[z] !== A.fundo).map(([z, A]) => new Promise(ok => {
+    const i = new Image();
+    i.onload = () => { fundos[z] = i; fundoSrc[z] = A.fundo; ok(); };
+    i.onerror = ok;
+    i.src = A.fundo;
+  })));
+}
+window.addEventListener('resize', () => D && renderMapas());
+ligaDica('perm'); ligaDica('dens');
+
+// ------------------------------------------------------------ ao vivo: pergunta ao programa a cada 5 s
+const VAZIO = {estado: null, sessao: {}, andares: {}, voltas: [], amostras: [],
+               refis: [], refil: {}, trechos: [], entradas: [], especies_fora: {}, ks: {}, sessoes_origem: [], intervalos_gravacao: []};
+const ajustesMapa=fetch('/ui/mapa_ajustes.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}));
+async function aplicaAjustesMapa(dados){
+  const ajuste=(await ajustesMapa).sessoes?.[dados.estado?.sessao];
+  if(!ajuste||ajuste.char!==dados.sessao?.char)return dados;
+  const porTempo=new Map(ajuste.correcoes.map(c=>[c.t,c]));
+  dados.amostras=dados.amostras.map(a=>{const c=porTempo.get(a[0]);return c&&c.antes.every((n,i)=>n===a[i+1])?[a[0],...c.depois,...a.slice(4)]:a;});
+  for(const [z,A] of Object.entries(ajuste.andares||{}))if(dados.andares[z])dados.andares[z]=A;
+  return dados;
+}
+let semResposta = false, assinatura = null, desligou = false;
+async function busca() {
+  if (desligou) return;
+  try {
+    let novo = null;
+    try { novo = await (await fetch('/api/hunt', {cache: 'no-store'})).json(); } catch { }
+    semResposta = !novo?.estado;
+    if (novo?.estado) {             // campo null vira vazio; sem resposta: fica com o que tem
+      D = Object.fromEntries(Object.entries(VAZIO).map(([k, v]) => [k, novo[k] ?? v]));
+      // deslocamento e refil não são volta (user, 22/09): o motor já separa, isto é a garantia da tela
+      D.voltas = D.voltas.filter(v => (v.tipo || 'volta') === 'volta');
+      await aplicaAjustesMapa(D);
+      await carregaFundos();
+    }
+    else D = D || VAZIO;
+    const antes = mostradas, v = D.voltas, fim = v.length ? v[v.length - 1].fim : -1;
+    // só o que aparece na tela: amostra depois da última volta fechada não entra nos mapas, então não redesenha
+    const sig = JSON.stringify([v.length, v[v.length - 1], D.amostras.filter(a => a[0] <= fim).length, Object.keys(D.andares), D.sessao]);
+    mostradas = v.length;
+    if (sig !== assinatura) {
+      // volta nova não tira a volta escolhida (user, 21/09): sem escolha (selN null), o card já segue a mais nova
+      const nova = assinatura != null && mostradas > antes;   // na 1ª leitura nada entra animado
+      tudo(nova ? v[mostradas - 1].n : null);
+      assinatura = sig;                                       // só depois do desenho: se falhar, tenta de novo
+    } else renderCabeca();                                    // só o estado mudou (jogo, frames, relógio)
+  } catch (e) {
+    console.error(e);                                         // um desenho que falha não pode parar a consulta
+  } finally {
+    setTimeout(busca, 5000);
+  }
+}
+
+let tToast = null;
+function aviso(txt) {     // resposta do programa a um botão, sem travar a tela com um alert
+  const t = $('#toast');
+  t.textContent = txt; t.hidden = false;
+  clearTimeout(tToast); tToast = setTimeout(() => t.hidden = true, 9000);
+}
+// reiniciar a análise (user, 22/09): fecha a sessão, guarda o histórico e volta a esperar a hunt —
+// antes disso só dava para fechar e abrir o programa, e aí ele retomava a mesma sessão errada
+$('#btnReiniciar').onclick = async () => {
+  if (PREVIA) return aviso('Esta é a prévia do design: aqui o botão não reinicia nada.');
+  if (!confirm('Reiniciar a análise?\n\nA sessão de agora é fechada e guardada no histórico, e o programa começa outra do zero, esperando a hunt começar de novo. A gravação continua ligada.')) return;
+  let r = null;
+  try { r = await (await fetch('/api/reiniciar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'})).json(); } catch { }
+  if (!r) return aviso('Sem resposta do programa: a análise não reiniciou.');
+  if (!r.ok) return aviso(`Não deu para reiniciar: ${r.erro || 'o programa não disse o motivo'}.`);
+  D = null; mostradas = 0; selN = null; recorte = 'sessao'; assinatura = null; abertos.clear();
+  aviso(`Análise reiniciada na sessão ${r.sessao}. A tela volta a esperar a hunt começar; a sessão anterior ficou guardada no histórico.`);
+};
+
+// iniciar/encerrar a hunt (user, 24/09): "hoje eu tive que desligar, o programa fechou, para depois
+// abrir novamente". Encerrar para a gravação e guarda a sessão; Iniciar abre uma sessão NOVA (a de
+// menos de 1 h só é retomada quando o programa sobe sozinho, não quando alguém pediu hunt nova).
+$('#btnHunt').onclick = async () => {
+  if (PREVIA) return aviso('Esta é a prévia do design: aqui o botão não grava nada.');
+  const ligar = !D?.estado?.ativo;
+  if (!ligar && !confirm('Encerrar a hunt?\n\nA gravação para e a sessão é guardada no histórico. O programa continua aberto: é só clicar em Iniciar hunt quando quiser gravar de novo.')) return;
+  const b = $('#btnHunt');
+  b.disabled = true;
+  let r = null;
+  try { r = await (await fetch('/api/gravacao', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ligar})})).json(); } catch { }
+  b.disabled = false;
+  if (!r) return aviso('Sem resposta do programa.');
+  if (!r.ok) return aviso(`Não deu para ${ligar ? 'iniciar' : 'encerrar'}: ${r.erro || 'o programa não disse o motivo'}.`);
+  D = null; mostradas = 0; selN = null; recorte = 'sessao'; assinatura = null; abertos.clear();
+  aviso(ligar ? `Gravando de novo na sessão ${r.sessao}. A tela espera a hunt começar.`
+              : 'Hunt encerrada e guardada no histórico. Clique em Iniciar hunt para gravar a próxima.');
+};
+
+$('#btnDesligar').onclick = async () => {    // igual ao da calibração
+  if (PREVIA) return;
+  if (!confirm('Desligar o analisador? Todos os processos dele serão encerrados.')) return;
+  desligou = true;
+  await fetch('/api/desligar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'}).catch(() => null);
+  $('#desligado').classList.add('on');
+};
+
+iniciaPainelDano();
+(async () => {
+  if (HIST !== null) return modoHistorico();   // ?h = histórico guardado, sem consultar a hunt ao vivo
+  const mock = PREVIA && await fetch('/ui/mock_hunt.json').catch(() => null);
+  if (!mock?.ok) { PREVIA = false; return busca(); }   // sem o mock (instalação dos amigos): a tela de verdade
+  $('.previa').hidden = false;
+  $('#btnDesligar').title = 'Na prévia este botão não desliga nada';
+  $('#jogo').replaceChildren(el('span', 'dot on'), 'RubinOT aberto · prévia');
+  D = await mock.json();
+  await aplicaAjustesMapa(D);
+      await carregaFundos();
+  mostradas = 0;
+  tudo();
+})();
+</script>
+</body>
+</html>

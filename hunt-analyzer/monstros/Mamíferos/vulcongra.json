@@ -1,0 +1,61 @@
+{
+ "nome": "Vulcongra",
+ "categoria": "Mamíferos",
+ "hp": 1600,
+ "xp": 1100,
+ "toma": {
+  "físico": 100,
+  "terra": 0,
+  "fogo": 0,
+  "morte": 95,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 105,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-220)"
+  ],
+  "fogo": [
+   "Berserk causando Burning em 10 hp/turno",
+   "Strike (150-200)Beam (110-360)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-107 Gold Coins"
+  ],
+  "incomum": [
+   "Strong Health Potion",
+   "Strong Mana Potion",
+   "Platinum Coin",
+   "0-10 Bananas",
+   "Fiery Heart",
+   "Magma Clump",
+   "Blazing Bone"
+  ],
+  "semi-raro": [
+   "Wand of Inferno",
+   "Sword Ring",
+   "Brown Crystal Splinter",
+   "Red Crystal Fragment"
+  ],
+  "raro": [
+   "Magma Amulet",
+   "Coal"
+  ],
+  "muito raro": [
+   "Magma Coat",
+   "Fire Sword"
+  ]
+ },
+ "gif": "vulcongra.gif",
+ "local": [
+  "Gnomegate Lava Hot Spot",
+  "Lower Glooth Factory",
+  "Lower Spike"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Vulcongra",
+ "catalogado": "2026-09-26"
+}

@@ -1,0 +1,50 @@
+{
+ "nome": "Vampire Viscount",
+ "categoria": "Mortos-Vivos",
+ "hp": 1200,
+ "xp": 800,
+ "toma": {
+  "físico": 90,
+  "terra": 0,
+  "fogo": 105,
+  "morte": 0,
+  "energia": 100,
+  "sagrado": 125,
+  "gelo": 90,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "0-50 Gold Coins"
+  ],
+  "incomum": [
+   "0-1 Strong Health Potion",
+   "0-1 Strong Mana Potion",
+   "Vampire Teeth"
+  ],
+  "semi-raro": [
+   "0-2 Small Rubies",
+   "Black Pearl",
+   "Blood Preservation",
+   "Tooth File",
+   "Vampire's Cape Chain"
+  ],
+  "raro": [
+   "Ice Rapier"
+  ],
+  "muito raro": [
+   "Red Gem",
+   "Red Piece of Cloth",
+   "Stone Skin Amulet",
+   "Vampire Shield"
+  ]
+ },
+ "gif": "vampire_viscount.gif",
+ "local": [
+  "Drefia Vampire Crypts",
+  "Edron Undead Lairs"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Vampire_Viscount",
+ "catalogado": "2026-09-22"
+}

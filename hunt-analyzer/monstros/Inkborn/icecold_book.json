@@ -1,0 +1,66 @@
+{
+ "nome": "Icecold Book",
+ "categoria": "Inkborn",
+ "hp": 21000,
+ "xp": 12750,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 110,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 0,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-700)"
+  ],
+  "gelo": [
+   "Ice Berserk (700-900)",
+   "Ice Strike (700-850)",
+   "Ice Beam (800-1350)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-8 Platinum Coins",
+   "0-5 Small Sapphires",
+   "Book Page",
+   "Small Diamond"
+  ],
+  "incomum": [
+   "0-1 Ultimate Health Potion",
+   "0-1 Ultimate Mana Potion",
+   "Diamond Sceptre",
+   "Frosty Heart",
+   "Glacier Mask",
+   "Ice Rapier",
+   "Quill",
+   "Silken Bookmark"
+  ],
+  "semi-raro": [
+   "Crystal Mace",
+   "Glacier Kilt",
+   "Glacier Robe",
+   "Glacier Shoes",
+   "Ice Cube",
+   "Sapphire Hammer",
+   "Strange Helmet"
+  ],
+  "raro": [
+   "Crystalline Armor",
+   "Glacial Rod"
+  ],
+  "muito raro": [
+   "Leviathan's Amulet"
+  ]
+ },
+ "gif": "icecold_book.gif",
+ "local": [
+  "Secret Library Ice Section"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Icecold_Book",
+ "catalogado": "2026-09-22"
+}

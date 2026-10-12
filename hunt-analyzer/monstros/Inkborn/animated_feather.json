@@ -1,0 +1,61 @@
+{
+ "nome": "Animated Feather",
+ "categoria": "Inkborn",
+ "hp": 13000,
+ "xp": 9860,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 118,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 0,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-650)"
+  ],
+  "gelo": [
+   "Ball 3x3 no alvo (475-875), Berserk (680-740), Strike (540-740), Wave 1-3-3 sqm (825-1090)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins",
+   "0-? Small Sapphires",
+   "0-? Glowing Runes"
+  ],
+  "incomum": [
+   "Glacier Mask",
+   "Energy Ring",
+   "Ice Cube",
+   "0-? Ultimate Mana Potions",
+   "Quill"
+  ],
+  "semi-raro": [
+   "Glacier Amulet",
+   "Golden Mug",
+   "0-? Small Diamonds",
+   "Life Crystal",
+   "Hailstorm Rod",
+   "Crystal Mace",
+   "Diamond Sceptre"
+  ],
+  "raro": [
+   "Sapphire Hammer",
+   "Glacial Rod"
+  ],
+  "muito raro": [
+   "Crystalline Armor",
+   "Leviathan's Amulet"
+  ]
+ },
+ "gif": "animated_feather.gif",
+ "local": [
+  "Secret Library Ice Section"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Animated_Feather",
+ "catalogado": "2026-09-22"
+}

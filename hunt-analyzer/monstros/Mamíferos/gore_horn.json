@@ -1,0 +1,38 @@
+{
+ "nome": "Gore Horn",
+ "categoria": "Mamíferos",
+ "hp": 20620,
+ "xp": 13540,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 110,
+  "morte": 100,
+  "energia": 50,
+  "sagrado": 100,
+  "gelo": 90,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Crystal Coin",
+   "Gore Horn (Item)"
+  ],
+  "semi-raro": [
+   "Dwarven Ring",
+   "Big Bone",
+   "Hammer of Wrath",
+   "Knight Legs",
+   "Doublet",
+   "Diamond Sceptre",
+   "Metal Spats"
+  ]
+ },
+ "gif": "gore_horn.gif",
+ "local": [
+  "Sparkling Pools"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Gore_Horn",
+ "catalogado": "2026-09-22"
+}

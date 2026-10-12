@@ -1,0 +1,55 @@
+{
+ "nome": "Hawk Hopper",
+ "categoria": "Inkborn",
+ "hp": 2180,
+ "xp": 2250,
+ "toma": {
+  "físico": 105,
+  "terra": 85,
+  "fogo": 110,
+  "morte": 105,
+  "energia": 90,
+  "sagrado": 100,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Arranhão (200-240)"
+  ],
+  "terra": [
+   "Strike (150-200), Stone Shower (190 -230)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "1+ Gold Coins",
+   "1+ Platinum Coins"
+  ],
+  "incomum": [
+   "1+ Earth Arrows",
+   "1+ Small Topaz",
+   "1+ Rainbow Quartz",
+   "Pressed Flower"
+  ],
+  "semi-raro": [
+   "1+ Fish",
+   "1+ Carrots",
+   "Opal",
+   "1+ Royal Star"
+  ],
+  "raro": [
+   "Butterfly Ring",
+   "Etcher"
+  ],
+  "muito raro": [
+   "Elvish Bow"
+  ]
+ },
+ "gif": "hawk_hopper.gif",
+ "local": [
+  "Book World"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Hawk_Hopper",
+ "catalogado": "2026-09-21"
+}

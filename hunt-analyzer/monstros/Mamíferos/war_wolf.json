@@ -1,0 +1,47 @@
+{
+ "nome": "War Wolf",
+ "categoria": "Mamíferos",
+ "hp": 140,
+ "xp": 55,
+ "toma": {
+  "físico": 100,
+  "terra": 80,
+  "fogo": 100,
+  "morte": 110,
+  "energia": 100,
+  "sagrado": 90,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Ham"
+  ],
+  "semi-raro": [
+   "Warwolf Fur"
+  ],
+  "raro": [
+   "Wolf Paw"
+  ],
+  "muito raro": [
+   "Wolf Trophy"
+  ]
+ },
+ "gif": "war_wolf.gif",
+ "local": [
+  "Magician Tower",
+  "Orc Lands",
+  "Orc Peninsula",
+  "Plains of Havoc",
+  "Poacher Lair",
+  "Rorc Plains",
+  "Thais",
+  "Ulderek's Rock",
+  "Vengoth",
+  "Wolf Dungeon",
+  "Zao Steppe"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/War_Wolf",
+ "catalogado": "2026-09-22"
+}

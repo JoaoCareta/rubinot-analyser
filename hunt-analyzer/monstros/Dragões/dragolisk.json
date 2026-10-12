@@ -1,0 +1,46 @@
+{
+ "nome": "Dragolisk",
+ "categoria": "Dragões",
+ "hp": 6180,
+ "xp": 4650,
+ "toma": {
+  "físico": 85,
+  "terra": 110,
+  "fogo": 60,
+  "morte": 110,
+  "energia": 100,
+  "sagrado": 115,
+  "gelo": 105,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins"
+  ],
+  "incomum": [
+   "Giant Shimmering Pearl",
+   "Red Gem",
+   "Nimmersatt's Seal",
+   "Dragolisk Eye",
+   "Dragolisk Poison Gland"
+  ],
+  "semi-raro": [
+   "Green Gem",
+   "Ultimate Health Potion",
+   "Dragon's Tail"
+  ],
+  "raro": [
+   "Ultimate Mana Potion"
+  ],
+  "muito raro": [
+   "Dragon Shield"
+  ]
+ },
+ "gif": "dragolisk.gif",
+ "local": [
+  "Nimmersatt's Breeding Ground"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Dragolisk",
+ "catalogado": "2026-09-28"
+}

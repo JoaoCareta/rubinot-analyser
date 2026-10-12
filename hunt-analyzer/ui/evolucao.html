@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunt Analyzer · Evolução</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;   /* o calendário nativo do <input type=date> nasce escuro */
+    --bg: #0b0c10; --barra: #0e1015; --painel: #11141b; --card: #161a23; --card-sel: #1b1f2b;
+    --borda: #262b36; --borda-forte: #353b49;
+    --texto: #ece6d8; --suave: #9aa1ad; --apagado: #6b7280;
+    --ouro: #d6a84e; --ouro-claro: #f0cf85; --verde: #6fdc8c; --ambar: #f2b44a; --vermelho: #ef6b6b; --roxo: #b06cf5;
+    /* séries dos gráficos: os mesmos dourado e azul dos mapas (CLAUDE.md, 21/09). O par separa
+       bem em qualquer daltonismo — conferido no validador: ΔE 23,8 protan e 28,2 na visão normal. */
+    --serie-a: #dcb455; --serie-b: #3a91c8;
+    --serif: "Cinzel", Georgia, serif; --sans: "Inter", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--texto); font: 14px/1.5 var(--sans); }
+  button, input, select { font: inherit; }
+
+  .topo { display: flex; align-items: center; gap: 28px; padding: 14px 28px; background: var(--barra); border-bottom: 1px solid var(--borda); }
+  .marca { font: 600 14px var(--serif); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  nav { display: flex; gap: 18px; }
+  nav a { font-size: 13px; color: var(--suave); padding-bottom: 4px; border-bottom: 1px solid transparent; text-decoration: none; }
+  nav a.ativo { color: var(--texto); border-bottom-color: var(--ouro); }
+  .jogo { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--suave); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--apagado); display: inline-block; flex: none; }
+  .dot.on { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+  .dot.erro { background: var(--vermelho); }
+  .desligado { display: none; position: fixed; inset: 0; z-index: 30; background: rgba(11, 12, 16, .96);
+               align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .desligado.on { display: flex; }
+  .botao { font: 600 13px var(--sans); letter-spacing: .03em; color: var(--ouro-claro); background: transparent;
+           border: 1px solid var(--ouro); border-radius: 999px; padding: 7px 18px; cursor: pointer; white-space: nowrap; }
+  .botao.discreto { color: var(--suave); border-color: var(--borda-forte); }
+  .botao.discreto:hover { color: var(--texto); background: rgba(255, 255, 255, .04); }
+  .botao.pequeno { padding: 5px 14px; font-size: 12px; }
+
+  main { max-width: 1520px; margin: 0 auto; padding: 24px 28px 48px; }
+  .rotulo { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  h1 { font: 600 32px/1.2 var(--serif); color: #efe7d6; margin: 6px 0 4px; }
+  .sub { color: var(--suave); margin: 0 0 18px; }
+
+  /* filtros numa linha só, acima dos gráficos */
+  .filtros { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 12px 16px; margin-bottom: 14px;
+             background: var(--painel); border: 1px solid var(--borda); border-radius: 10px; }
+  .filtros label { display: inline-flex; align-items: center; gap: 7px; font: 11px var(--mono); letter-spacing: .1em;
+                   text-transform: uppercase; color: var(--apagado); }
+  .filtros input, .filtros select { font: 12px var(--mono); color: var(--texto); background: var(--card);
+                                    border: 1px solid var(--borda-forte); border-radius: 7px; padding: 5px 9px; }
+  .filtros input:focus, .filtros select:focus { outline: none; border-color: var(--ouro); }
+  .fseg { display: inline-flex; gap: 2px; padding: 3px; background: var(--card); border: 1px solid var(--borda); border-radius: 999px; }
+  .fseg button { font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--suave);
+                 background: transparent; border: 0; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .fseg button:hover { color: var(--texto); }
+  .fseg button.on { background: rgba(214, 168, 78, .14); color: var(--ouro-claro); }
+  .conta { margin-left: auto; font: 11px var(--mono); color: var(--apagado); }
+  .conta b { color: var(--texto); font-weight: 500; }
+
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 16px; }
+  .tile { background: var(--card); border: 1px solid var(--borda); border-radius: 8px; padding: 11px 14px; min-width: 0; }
+  .tile .num { font: 600 20px var(--mono); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .obs { font: 11px var(--mono); color: var(--apagado); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .graficos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  figure { position: relative; margin: 0; padding: 14px 16px 10px; background: var(--painel); border: 1px solid var(--borda); border-radius: 10px; }
+  figcaption { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  figcaption .t { font: 600 14px var(--serif); color: var(--ouro-claro); }
+  figcaption .u { font: 11px var(--mono); color: var(--apagado); }
+  .legenda { margin-left: auto; display: flex; gap: 12px; font: 11px var(--mono); color: var(--suave); }
+  .legenda i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
+  svg.gr { width: 100%; height: auto; display: block; overflow: visible; }
+  svg.gr text { font: 10px var(--mono); fill: var(--apagado); }
+  svg.gr .eixo { stroke: var(--borda); stroke-width: 1; }
+  svg.gr .linha { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  svg.gr .ponto { stroke: var(--painel); stroke-width: 2; }   /* anel da cor do fundo: pontos colados não viram borrão */
+  svg.gr .alvo { fill: transparent; cursor: pointer; }
+  svg.gr .marca { stroke: var(--borda-forte); stroke-width: 1; stroke-dasharray: 3 3; }
+  .dica { position: absolute; z-index: 5; pointer-events: none; background: rgba(11, 12, 16, .96); border: 1px solid var(--borda-forte);
+          border-radius: 8px; padding: 7px 10px; font: 11px var(--mono); color: var(--suave); white-space: nowrap; }
+  .dica b { color: var(--texto); font-weight: 500; }
+  .vazio { padding: 26px 0; text-align: center; font: 12px var(--mono); color: var(--apagado); }
+
+  .tabela { background: var(--painel); border: 1px solid var(--borda); border-radius: 10px; padding: 14px 16px; }
+  table { width: 100%; border-collapse: collapse; font: 12px var(--mono); }
+  th { text-align: right; font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--apagado);
+       padding: 4px 8px; border-bottom: 1px solid var(--borda); }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  td { padding: 5px 8px; border-bottom: 1px solid rgba(38, 43, 54, .5); color: var(--suave); }
+  td b { color: var(--texto); font-weight: 500; }
+  tbody tr:hover td { background: rgba(255, 255, 255, .03); }
+  td a { color: var(--ouro-claro); text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+
+  @media (max-width: 1100px) { .tiles { grid-template-columns: repeat(3, 1fr); } .graficos { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="topo">
+  <span class="marca">Hunt Analyzer</span>
+  <nav><a href="/">calibração</a><a href="/hunt">hunt</a><a href="/hunt?h">histórico</a><a class="ativo" href="/evolucao">evolução</a><a href="/auxiliadores">auxiliadores</a></nav>
+  <span class="jogo" id="jogo"><span class="dot"></span>procurando o jogo…</span>
+  <button class="botao discreto pequeno" id="btnDesligar">Desligar</button>
+</header>
+<script src="/ui/navegacao.js"></script>
+<div id="desligado" class="desligado"><div>
+  <div class="rotulo">— hunt analyzer</div>
+  <h1>Analisador desligado</h1>
+  <p class="sub">Todos os processos foram encerrados. Pode fechar esta janela; para ligar de novo, use o painel de controle.</p>
+</div></div>
+
+<main>
+  <div class="rotulo">— evolução</div>
+  <h1>Evolução</h1>
+  <p class="sub" id="sub">—</p>
+
+  <section class="filtros">
+    <div class="fseg" id="presets">
+      <button type="button" data-dias="0" class="on">tudo</button>
+      <button type="button" data-dias="7">7 dias</button>
+      <button type="button" data-dias="30">30 dias</button>
+    </div>
+    <label>de <input type="date" id="de"></label>
+    <label>até <input type="date" id="ate"></label>
+    <label>hunt <select id="fhunt"><option value="">todas</option></select></label>
+    <label>quem <select id="fquem"><option value="">todos</option></select></label>
+    <span class="conta" id="conta">—</span>
+  </section>
+
+  <section class="tiles" id="tiles"></section>
+  <section class="graficos" id="graficos"></section>
+
+  <section class="tabela">
+    <div class="rotulo">— sessões do período</div>
+    <table id="tabela"></table>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+const virg = (v, c = 2) => v.toFixed(c).replace('.', ',');
+const kk = v => v == null ? '–' : `${virg(v / 1e6)} kk`;
+const ouro = v => v == null ? '–' : (Math.abs(v) >= 1e6 ? `${virg(v / 1e6)} kk` : `${Math.round(v / 1000)}k`);
+const durc = s => s >= 3600 ? `${Math.floor(s / 3600)}h${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}`
+                            : `${Math.floor(s / 60)}m${String(Math.round(s % 60)).padStart(2, '0')}`;
+// o id da sessão traz a data: "unhallowed_crypt/20260924_0628"
+const diaDe = s => (s.id.split('/')[1] || '').slice(0, 8);
+const iso = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+const ddmm = d => `${d.slice(6, 8)}/${d.slice(4, 6)}`;
+
+let TODAS = [], preset = 0;
+
+// ------------------------------------------------------------ gráfico (SVG na mão: o programa roda sem internet)
+// Uma medida por gráfico, nunca dois eixos y. Linha de 2 px, ponto de 8 px com anel do fundo,
+// grade recessiva e dica no mouse; com 2 séries entra a legenda e os rótulos diretos nas pontas.
+const W = 560, H = 210, MG = {e: 52, d: 14, c: 12, b: 26};
+function grafico(fig, series, fmt) {
+  const cx = fig.querySelector('.plot');
+  cx.replaceChildren();
+  const pts = series[0].v.length;
+  if (!pts) return cx.append(el('div', 'vazio', 'Nenhuma sessão no período escolhido.'));
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'gr');
+  const ns = (t, a) => { const n = document.createElementNS('http://www.w3.org/2000/svg', t); for (const k in a) n.setAttribute(k, a[k]); return n; };
+  const alto = Math.max(...series.flatMap(s => s.v.map(p => p.y)), 0);
+  const topo = alto > 0 ? Math.pow(10, Math.floor(Math.log10(alto))) * Math.ceil(alto / Math.pow(10, Math.floor(Math.log10(alto))) * 2) / 2 : 1;
+  const X = i => MG.e + (pts === 1 ? (W - MG.e - MG.d) / 2 : i * (W - MG.e - MG.d) / (pts - 1));
+  const Y = y => MG.c + (1 - y / topo) * (H - MG.c - MG.b);
+  for (let i = 0; i <= 2; i++) {          // grade: três níveis e nada mais
+    const y = Y(topo * i / 2);
+    svg.append(ns('line', {x1: MG.e, x2: W - MG.d, y1: y, y2: y, class: 'eixo'}));
+    const t = ns('text', {x: MG.e - 8, y: y + 3.5, 'text-anchor': 'end'});
+    t.textContent = i ? fmt(topo * i / 2) : '0';   // o zero é só "0" em qualquer unidade
+    svg.append(t);
+  }
+  const passo = Math.ceil(pts / 8);       // datas: só as que cabem
+  series[0].v.forEach((p, i) => {
+    if (i % passo && i !== pts - 1) return;
+    const t = ns('text', {x: X(i), y: H - 8, 'text-anchor': 'middle'}); t.textContent = ddmm(diaDe(p.s)); svg.append(t);
+  });
+  for (const s of series) {
+    svg.append(ns('path', {class: 'linha', stroke: s.cor, d: s.v.map((p, i) => `${i ? 'L' : 'M'}${X(i)} ${Y(p.y)}`).join(' ')}));
+    s.v.forEach((p, i) => svg.append(ns('circle', {class: 'ponto', cx: X(i), cy: Y(p.y), r: 4, fill: s.cor})));
+  }
+  // alvo de 11 px por sessão: pega o mouse em todas as séries daquela data de uma vez
+  series[0].v.forEach((p, i) => {
+    const alvo = ns('rect', {class: 'alvo', x: X(i) - 11, y: 0, width: 22, height: H});
+    alvo.onmouseenter = () => mostraDica(fig, X(i) / W, series, i, fmt);
+    alvo.onmouseleave = () => fig.querySelector('.dica')?.remove();
+    svg.append(alvo);
+  });
+  cx.append(svg);
+}
+function mostraDica(fig, fx, series, i, fmt) {
+  fig.querySelector('.dica')?.remove();
+  const s = series[0].v[i].s, d = el('div', 'dica');
+  d.append(el('b', null, `${ddmm(diaDe(s))} · ${s.hunt}`), el('br'));
+  series.forEach((se, k) => {
+    if (k) d.append(el('br'));
+    const sw = el('i'); sw.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${se.cor}`;
+    d.append(sw, series.length > 1 ? se.nome + ' ' : '', el('b', null, fmt(se.v[i].y, true)));
+  });
+  const plot = fig.querySelector('.plot'), largura = plot.clientWidth;
+  d.style.left = plot.offsetLeft + Math.max(0, Math.min(largura - 160, fx * largura - 60)) + 'px';
+  d.style.top = '44px';
+  fig.append(d);
+}
+
+// ------------------------------------------------------------ filtro
+function filtradas() {
+  const de = $('#de').value.replaceAll('-', ''), ate = $('#ate').value.replaceAll('-', '');
+  const hunt = $('#fhunt').value, quem = $('#fquem').value;
+  return TODAS.filter(s => {
+    const d = diaDe(s);
+    return (!de || d >= de) && (!ate || d <= ate) && (!hunt || s.hunt === hunt) && (!quem || (s.pt || s.char || '') === quem);
+  });
+}
+const limpaPreset = () => document.querySelectorAll('#presets button').forEach(b => b.classList.remove('on'));
+function aplicaPreset(dias) {
+  preset = dias;
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', +b.dataset.dias === dias));
+  if (!dias) { $('#de').value = $('#ate').value = ''; return; }
+  const hoje = new Date(), inicio = new Date(hoje.getTime() - (dias - 1) * 864e5);
+  $('#de').value = inicio.toISOString().slice(0, 10);
+  $('#ate').value = hoje.toISOString().slice(0, 10);
+}
+
+// ------------------------------------------------------------ desenho
+// por hora vem pronto do programa (ao_vivo._taxas): a conta só usa as voltas em que a medida foi
+// lida. Dividir o total pelo tempo inteiro dava 12,10 kk/h numa hunt de 13,82, porque 4 voltas
+// ficaram sem leitura do painel e entravam no tempo com raw zero.
+const taxa = (s, k) => (k === 'raw_h' ? s.taxas?.raw_h : s.taxas?.taxa?.[k]) ?? null;
+const media = (ss, k) => { const v = ss.map(s => taxa(s, k)).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+function desenha() {
+  const ss = [...filtradas()].reverse();   // a lista vem da mais nova; no gráfico o tempo anda para a direita
+  $('#conta').replaceChildren(el('b', null, String(ss.length)), ` de ${TODAS.length} sessões`);
+  const soma = k => ss.reduce((a, s) => a + (s[k] || 0), 0);
+  const tempo = soma('dur_s'), raw = soma('xp_raw');
+  const melhor = ss.length ? ss.reduce((a, s) => (taxa(s, 'raw_h') || 0) > (taxa(a, 'raw_h') || 0) ? s : a) : null;
+  const buracos = ss.reduce((a, s) => a + (s.taxas ? s.taxas.voltas - s.taxas.voltas_raw : 0), 0);   // voltas limpas sem leitura do painel
+  const mRaw = media(ss, 'raw_h');
+  $('#tiles').replaceChildren(...[
+    ['sessões', ss.length || '—', ss.length ? `${soma('voltas')} voltas` : 'nada no período'],
+    ['tempo caçando', tempo ? durc(tempo) : '—', 'só as voltas fechadas'],
+    ['raw no período', raw ? kk(raw) : '—',
+     buracos ? `${buracos} volta${buracos > 1 ? 's' : ''} sem leitura do painel` : 'todas as voltas lidas'],
+    ['raw/h típica', mRaw ? `${virg(mRaw / 1e6)} kk/h` : '—', `média de ${ss.length} sessõe${ss.length === 1 ? '' : 's'}`],
+    ['profit no período', ss.length ? ouro(soma('profit')) : '—', media(ss, 'profit_h') ? `${ouro(media(ss, 'profit_h'))}/h de média` : ''],
+    ['melhor sessão', melhor && taxa(melhor, 'raw_h') ? `${virg(taxa(melhor, 'raw_h') / 1e6)} kk/h` : '—', melhor ? `${ddmm(diaDe(melhor))} · ${melhor.hunt}` : ''],
+  ].map(([r, n, o]) => {
+    const t = el('div', 'tile');
+    t.append(el('div', 'rotulo', r), el('div', 'num', String(n)), el('div', 'obs', o));
+    return t;
+  }));
+
+  const A = getComputedStyle(document.documentElement).getPropertyValue('--serie-a').trim();
+  const B = getComputedStyle(document.documentElement).getPropertyValue('--serie-b').trim();
+  const serie = (k, cor, nome) => [{nome, cor, v: ss.map(s => ({s, y: taxa(s, k) || 0}))}];
+  // cheio = a dica do mouse (com unidade); curto = o eixo, que já tem a unidade no título do gráfico
+  const kkh = (v, cheio) => cheio ? `${virg(v / 1e6)} kk/h` : virg(v / 1e6, 1);
+  const ouroh = (v, cheio) => cheio ? `${ouro(v)}/h` : (v >= 1e6 ? `${virg(v / 1e6, 1)} kk` : `${Math.round(v / 1000)}k`);
+  const conta = (v, cheio) => cheio ? `${Math.round(v)} bichos/h` : String(Math.round(v));
+  for (const [id, series, fmt] of [
+    ['raw', serie('raw_h', A), kkh],
+    ['profit', serie('profit_h', A), ouroh],
+    ['sup', [{nome: 'da pt', cor: A, v: ss.map(s => ({s, y: taxa(s, 'sup_pt_h') || 0}))},
+             {nome: 'seus', cor: B, v: ss.map(s => ({s, y: taxa(s, 'sup_eu_h') || 0}))}], ouroh],
+    ['bichos', serie('bichos_h', A), conta],
+  ]) grafico($('#g_' + id), series, fmt);
+
+  // tabela do período: os mesmos números dos gráficos em texto (e cada linha abre a sessão)
+  const cab = el('tr'), thead = el('thead'), tbody = el('tbody');
+  ['data', 'hunt', 'quem', 'duração', 'voltas', 'raw/h', 'profit/h', 'sup. da pt/h', 'seus sup./h', 'bichos']
+    .forEach(h => cab.append(el('th', null, h)));
+  thead.append(cab);
+  tbody.append(...[...ss].reverse().map(s => {
+    const l = el('tr'), td1 = el('td'), a = el('a', null, `${ddmm(diaDe(s))} · ${(s.inicio || '').slice(0, 5)}`);
+    a.href = `/hunt?h=${encodeURIComponent(s.id)}`; a.title = 'abrir a análise desta sessão';
+    td1.append(a);
+    const raw = el('td'); raw.append(el('b', null, taxa(s, 'raw_h') ? `${virg(taxa(s, 'raw_h') / 1e6)} kk` : '–'));
+    const falta = s.taxas ? s.taxas.voltas - s.taxas.voltas_raw : 0;
+    const vts = el('td', null, String(s.voltas));
+    if (falta) { vts.title = `${falta} volta(s) sem leitura do painel: ficam fora da raw/h`; vts.textContent += ` (−${falta})`; }
+    // supplies: da pt e seus em colunas separadas — uma coluna só trocava de significado entre
+    // sessões em pt e solo sem dizer nada (user, 24/09: tudo da mesma fonte)
+    l.append(td1, el('td', null, s.hunt), el('td', null, s.pt || s.char || '—'),
+             el('td', null, durc(s.dur_s || 0)), vts, raw,
+             el('td', null, ouro(taxa(s, 'profit_h'))),
+             el('td', null, ouro(taxa(s, 'sup_pt_h'))),
+             el('td', null, ouro(taxa(s, 'sup_eu_h'))),
+             el('td', null, String(s.bichos || 0)));
+    return l;
+  }));
+  $('#tabela').replaceChildren(thead, tbody);
+}
+
+// ------------------------------------------------------------ início
+for (const f of ['#de', '#ate', '#fhunt', '#fquem']) $(f).onchange = () => {
+  if (f === '#de' || f === '#ate') limpaPreset();   // data escolhida na mão desliga o preset, sem mexer nas datas
+  desenha();
+};
+document.querySelectorAll('#presets button').forEach(b => b.onclick = () => { aplicaPreset(+b.dataset.dias); desenha(); });
+
+async function vigiaJogo() {
+  try {
+    const s = await (await fetch('/api/status', {cache: 'no-store'})).json();
+    $('#jogo').replaceChildren(el('span', 'dot' + (s.jogo ? ' on' : '')), s.jogo ? `RubinOT aberto${s.char ? ' · ' + s.char : ''}` : 'RubinOT fechado');
+  } catch {
+    $('#jogo').replaceChildren(el('span', 'dot erro'), 'programa fechado');
+  }
+}
+setInterval(vigiaJogo, 5000);
+$('#btnDesligar').onclick = async () => {
+  if (!confirm('Desligar o analisador? Todos os processos dele serão encerrados.')) return;
+  await fetch('/api/desligar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'}).catch(() => null);
+  $('#desligado').classList.add('on');
+};
+
+(async () => {
+  $('#graficos').replaceChildren(...[
+    ['raw', 'XP raw/h', 'kk/h · raw ÷ tempo caçando'],
+    ['profit', 'Profit/h', 'balance ÷ tempo caçando'],
+    ['sup', 'Supplies/h', 'gasto por hora'],
+    ['bichos', 'Bichos/h', 'mortos por hora'],
+  ].map(([id, tit, uni]) => {
+    const f = el('figure'); f.id = 'g_' + id;
+    const cap = el('figcaption');
+    cap.append(el('span', 't', tit), el('span', 'u', uni));
+    if (id === 'sup') {   // duas séries: legenda sempre (a cor sozinha nunca diz quem é quem)
+      const lg = el('span', 'legenda');
+      for (const [nome, v] of [['da pt', '--serie-a'], ['seus', '--serie-b']]) {
+        const s = el('span'), i = el('i');
+        i.style.background = `var(${v})`;
+        s.append(i, nome); lg.append(s);
+      }
+      cap.append(lg);
+    }
+    f.append(cap, el('div', 'plot'));
+    return f;
+  }));
+  vigiaJogo();
+  let r = null;
+  try { r = await (await fetch('/api/historico', {cache: 'no-store'})).json(); } catch { }
+  TODAS = r?.sessoes || [];
+  $('#sub').textContent = TODAS.length
+    ? `${TODAS.length} ${TODAS.length > 1 ? 'sessões guardadas' : 'sessão guardada'} · filtre por período e hunt para ver a pt evoluindo`
+    : 'Nenhuma hunt guardada ainda: cada sessão entra aqui sozinha quando a hunt acaba.';
+  for (const [sel, chave] of [['#fhunt', s => s.hunt], ['#fquem', s => s.pt || s.char]]) {
+    [...new Set(TODAS.map(chave).filter(Boolean))].sort().forEach(v => $(sel).append(el('option', null, v)));
+  }
+  desenha();
+})();
+</script>
+</body>
+</html>

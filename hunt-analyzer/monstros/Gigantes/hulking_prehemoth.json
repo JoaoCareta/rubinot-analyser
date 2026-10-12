@@ -1,0 +1,41 @@
+{
+ "nome": "Hulking Prehemoth",
+ "categoria": "Gigantes",
+ "hp": 20700,
+ "xp": 13640,
+ "toma": {
+  "físico": 95,
+  "terra": 120,
+  "fogo": 60,
+  "morte": 110,
+  "energia": 70,
+  "sagrado": 115,
+  "gelo": 115,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Crystal Coin"
+  ],
+  "incomum": [
+   "Furry Club",
+   "Ultimate Health Potion",
+   "Prehemoth Horns",
+   "0-X Prehemoth Claws"
+  ],
+  "semi-raro": [
+   "Emerald Bangle",
+   "Silver Brooch",
+   "War Hammer",
+   "War Axe",
+   "Doublet"
+  ]
+ },
+ "gif": "hulking_prehemoth.gif",
+ "local": [
+  "Sparkling Pools"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Hulking_Prehemoth",
+ "catalogado": "2026-09-22"
+}

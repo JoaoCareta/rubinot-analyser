@@ -1,0 +1,89 @@
+{
+ "nome": "Dragon Lord",
+ "categoria": "Dragões",
+ "hp": 1900,
+ "xp": 2100,
+ "toma": {
+  "físico": 100,
+  "terra": 20,
+  "fogo": 0,
+  "morte": 100,
+  "energia": 80,
+  "sagrado": 100,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-200)"
+  ],
+  "fogo": [
+   "Ball 3x3 no alvo (100-180), Wave (150-280), Firebomb causando Burning em 20hp/turno,"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-250 Gold Coins",
+   "0-5 Dragon Hams"
+  ],
+  "incomum": [
+   "Gemmed Book",
+   "0-7 Power Bolts",
+   "Green Mushroom",
+   "0-3 Royal Spear"
+  ],
+  "semi-raro": [
+   "Golden Mug",
+   "Small Sapphire",
+   "Energy Ring",
+   "Red Dragon Scale"
+  ],
+  "raro": [
+   "Strong Health Potion",
+   "Life Crystal",
+   "Red Dragon Leather"
+  ],
+  "muito raro": [
+   "Strange Helmet",
+   "Fire Sword",
+   "Dragon Scale Mail",
+   "Tower Shield",
+   "Dragon Lord Trophy",
+   "Royal Helmet",
+   "Dragon Slayer"
+  ]
+ },
+ "gif": "dragon_lord.gif",
+ "local": [
+  "Ankrahmun Pharaoh Tombs (Shadow)",
+  "Banshee Temple",
+  "Beregar Mines",
+  "Cyclopolis",
+  "Darama Dragon Lair",
+  "Dawnport Underground Dungeons North",
+  "Draconia",
+  "Dragonblaze Peaks",
+  "Dragon Lair (Ankrahmun)",
+  "Dragon Lair (Fenrock)",
+  "Dragon Lair (Goroma)",
+  "Dragon Lair (Kazordoon)",
+  "Dragon Lair (Kazordoon Dwarf Mines)",
+  "Dragon Lair (Kha'zeel)",
+  "Dragon Lair (Pits of Inferno)",
+  "Dragon Lair (Thais)",
+  "Edron Dragon Lair",
+  "Fibula Dungeon",
+  "Fury Hell",
+  "Gnomegate Lava Hot Spot",
+  "Hellgorge",
+  "Isle of the Kings",
+  "Krailos Steppe",
+  "Maze of the Lost Souls",
+  "Plains of Havoc",
+  "The First Dragon's Lair",
+  "Venore Dragon Lair",
+  "Yalahar Arena Quarter"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Dragon_Lord",
+ "catalogado": "2026-09-26"
+}

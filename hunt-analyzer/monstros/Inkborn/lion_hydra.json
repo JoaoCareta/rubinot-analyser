@@ -1,0 +1,54 @@
+{
+ "nome": "Lion Hydra",
+ "categoria": "Inkborn",
+ "hp": 2760,
+ "xp": 2600,
+ "toma": {
+  "físico": 100,
+  "terra": 105,
+  "fogo": 100,
+  "morte": 110,
+  "energia": 100,
+  "sagrado": 105,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "fogo": [
+   "Corpo a corpo (80-200), Flam Strike (210-280), Arranhão (220-280)"
+  ],
+  "sagrado": [
+   "Explosão (230-290)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "1+ Gold Coins",
+   "1+ Platinum Coins"
+  ],
+  "incomum": [
+   "Sealing Wax"
+  ],
+  "semi-raro": [
+   "Silver Brooch",
+   "1+ Small Diamonds",
+   "1+ Ham",
+   "Hydra Head",
+   "Onyx Chip"
+  ],
+  "raro": [
+   "Titan Axe",
+   "Sacred Tree Amulet"
+  ],
+  "muito raro": [
+   "Medusa Shield",
+   "Gold Ingot"
+  ]
+ },
+ "gif": "lion_hydra.gif",
+ "local": [
+  "Book World"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Lion_Hydra",
+ "catalogado": "2026-09-28"
+}

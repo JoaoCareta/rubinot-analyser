@@ -1,0 +1,93 @@
+{
+ "nome": "Dragon",
+ "categoria": "Dragões",
+ "hp": 1000,
+ "xp": 700,
+ "toma": {
+  "físico": 100,
+  "terra": 20,
+  "fogo": 0,
+  "morte": 100,
+  "energia": 80,
+  "sagrado": 100,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-130)"
+  ],
+  "fogo": [
+   "Wave (100-170), Ball 3x3 no alvo (60-110)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-110 Gold Coins",
+   "0-3 Dragon Hams"
+  ],
+  "incomum": [
+   "Crossbow",
+   "Steel Shield",
+   "0-12 Burst Arrows",
+   "Dragon's Tail"
+  ],
+  "semi-raro": [
+   "Longsword",
+   "Broadsword",
+   "Steel Helmet",
+   "Plate Legs"
+  ],
+  "raro": [
+   "Strong Health Potion",
+   "Wand of Inferno",
+   "Double Axe",
+   "Serpent Sword",
+   "Dragon Hammer",
+   "Green Dragon Leather",
+   "Green Dragon Scale"
+  ],
+  "muito raro": [
+   "Small Diamond",
+   "Dragon Shield",
+   "Dragon Trophy",
+   "Dragonbone Staff",
+   "Life Crystal"
+  ]
+ },
+ "gif": "dragon.gif",
+ "local": [
+  "Ancient Temple",
+  "Ankrahmun Pharaoh Tombs (Shadow)",
+  "Beregar Mines",
+  "Cyclopolis",
+  "Darama Dragon Lair",
+  "Dawnport Underground Dungeons North",
+  "Draconia",
+  "Dragonblaze Peaks",
+  "Dragon Lair (Ankrahmun)",
+  "Dragon Lair (Fenrock)",
+  "Dragon Lair (Kazordoon)",
+  "Dragon Lair (Kazordoon Dwarf Mines)",
+  "Dragon Lair (Kha'zeel)",
+  "Dragon Lair (Mount Sternum)",
+  "Dragon Lair (Pits of Inferno)",
+  "Edron Dragon Lair",
+  "Edron Northern Ruins",
+  "Elvenbane",
+  "Fibula Dungeon",
+  "Hellgorge",
+  "Kazordoon",
+  "Krailos Steppe",
+  "Maze of the Lost Souls",
+  "Mintwallin",
+  "Plains of Havoc",
+  "Shadowthorn",
+  "The First Dragon's Lair",
+  "Ulderek's Rock",
+  "Venore Dragon Lair",
+  "Yalahar Foreigner Quarter"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Dragon",
+ "catalogado": "2026-09-29"
+}

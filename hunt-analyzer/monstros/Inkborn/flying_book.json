@@ -1,0 +1,33 @@
+{
+ "nome": "Flying Book",
+ "categoria": "Inkborn",
+ "hp": 500,
+ "xp": 200,
+ "toma": {
+  "físico": 90,
+  "terra": 50,
+  "fogo": 85,
+  "morte": 80,
+  "energia": 95,
+  "sagrado": 10,
+  "gelo": 70,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-60)"
+  ],
+  "energia": [
+   "Energy Strike (40-63)"
+  ]
+ },
+ "loot": {},
+ "gif": "flying_book.gif",
+ "fonte": "https://www.tibiawiki.com.br/wiki/Flying_Book",
+ "catalogado": "2026-09-21",
+ "local": [
+  "Secret Library Energy Section",
+  "Secret Library Fire Section",
+  "Secret Library Ice Section"
+ ]
+}

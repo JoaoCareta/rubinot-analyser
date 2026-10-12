@@ -1,0 +1,56 @@
+{
+ "nome": "Mega Dragon",
+ "categoria": "Dragões",
+ "hp": 7920,
+ "xp": 7180,
+ "toma": {
+  "físico": 100,
+  "terra": 110,
+  "fogo": 80,
+  "morte": 80,
+  "energia": 110,
+  "sagrado": 110,
+  "gelo": 80,
+  "cura": 100
+ },
+ "bate": {
+  "fogo": [
+   "Fire Strike (?-?), Grand Fire Wave (?-?)"
+  ],
+  "morte": [
+   "Death Strike (?-?)"
+  ],
+  "gelo": [
+   "Ice Strike (?-?), Ice Ball (?-?)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins",
+   "Dragon Blood"
+  ],
+  "incomum": [
+   "Nimmersatt's Seal",
+   "Molten Dragon Essence"
+  ],
+  "semi-raro": [
+   "Violet Gem",
+   "Red Gem",
+   "Blue Gem",
+   "Ultimate Health Potion",
+   "Ultimate Mana Potion",
+   "Prismatic Quartz",
+   "0-? Rainbow Quartzes",
+   "Mega Dragon Heart"
+  ],
+  "muito raro": [
+   "Dragon Slayer"
+  ]
+ },
+ "gif": "mega_dragon.gif",
+ "local": [
+  "Nimmersatt's Breeding Ground"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Mega_Dragon",
+ "catalogado": "2026-09-28"
+}

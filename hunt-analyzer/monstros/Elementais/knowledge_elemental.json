@@ -1,0 +1,69 @@
+{
+ "nome": "Knowledge Elemental",
+ "categoria": "Elementais",
+ "hp": 10500,
+ "xp": 10603,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 100,
+  "morte": 120,
+  "energia": 0,
+  "sagrado": 50,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-600)"
+  ],
+  "energia": [
+   "Strike (850-1000)",
+   "Cross (600-800)"
+  ],
+  "sagrado": [
+   "Beam (500-600)",
+   "Berserk (600-800)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-9 Platinum Coins",
+   "0-6 Book Pages",
+   "0-8 Small Amethysts",
+   "0-? Glowing Runes",
+   "Silken Bookmark"
+  ],
+  "incomum": [
+   "0-6 Flash Arrows",
+   "0-5 Throwing Stars",
+   "Energy Ring",
+   "Guardian Shield",
+   "Mana Potion",
+   "0-? Ultimate Health Potions",
+   "Ultimate Mana Potion",
+   "Quill"
+  ],
+  "semi-raro": [
+   "Lightning Pendant",
+   "Crystal Ring",
+   "Silver Amulet",
+   "Wand of Cosmic Energy",
+   "Obsidian Lance",
+   "Crystal Sword",
+   "Wand of Defiance"
+  ],
+  "raro": [
+   "Might Ring"
+  ],
+  "muito raro": [
+   "Spellweaver's Robe"
+  ]
+ },
+ "gif": "knowledge_elemental.gif",
+ "local": [
+  "Secret Library Energy Section"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Knowledge_Elemental",
+ "catalogado": "2026-09-22"
+}

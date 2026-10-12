@@ -1,0 +1,63 @@
+{
+ "nome": "Ink Blob",
+ "categoria": "Inkborn",
+ "hp": 9500,
+ "xp": 14450,
+ "toma": {
+  "físico": 100,
+  "terra": 0,
+  "fogo": 100,
+  "morte": 100,
+  "energia": 108,
+  "sagrado": 100,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-705; causa poison até 45/turno)"
+  ],
+  "terra": [
+   "Ball 3x3 no alvo (850-1015), Ball 5x5 em si mesmo (800-985), Ball 9x9 em si mesmo (630-830), Wave 1-3-3 sqm (885-1635)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-3 Platinum Coins",
+   "0-15 Envenomed Arrows",
+   "0-2 Inkwell (Black)",
+   "0-3 Poisonous Slime",
+   "0-2 Small Diamonds",
+   "0-2 Small Topazes"
+  ],
+  "incomum": [
+   "Blue Gem",
+   "Giant Shimmering Pearl",
+   "Terra Boots",
+   "Terra Hood"
+  ],
+  "semi-raro": [
+   "Protection Amulet",
+   "Sacred Tree Amulet",
+   "Stone Skin Amulet",
+   "Terra Legs"
+  ],
+  "raro": [
+   "Terra Mantle",
+   "Springsprout Rod",
+   "Clay Lump"
+  ],
+  "muito raro": [
+   "Swamplair Armor",
+   "Terra Amulet"
+  ]
+ },
+ "gif": "ink_blob.gif",
+ "fonte": "https://www.tibiawiki.com.br/wiki/Ink_Blob",
+ "catalogado": "2026-09-21",
+ "local": [
+  "Secret Library Earth Section",
+  "Secret Library Fire Section",
+  "Secret Library Ice Section"
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "nome": "Sulphider",
+ "categoria": "Vermes",
+ "hp": 21000,
+ "xp": 14330,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 80,
+  "morte": 80,
+  "energia": 100,
+  "sagrado": 110,
+  "gelo": 120,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Sulphider Shell",
+   "Sulphur Powder"
+  ],
+  "incomum": [
+   "0-X Crystal Coins",
+   "Ultimate Mana Potion"
+  ],
+  "semi-raro": [
+   "Magma Boots",
+   "White Pearl",
+   "Fire Axe",
+   "Crown Shield",
+   "Amber Staff"
+  ],
+  "raro": [
+   "Amulet of Loss"
+  ]
+ },
+ "gif": "sulphider.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Sulphider",
+ "catalogado": "2026-10-08"
+}

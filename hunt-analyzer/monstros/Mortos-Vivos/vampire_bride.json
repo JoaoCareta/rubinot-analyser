@@ -1,0 +1,56 @@
+{
+ "nome": "Vampire Bride",
+ "categoria": "Mortos-Vivos",
+ "hp": 1200,
+ "xp": 1050,
+ "toma": {
+  "físico": 100,
+  "terra": 80,
+  "fogo": 110,
+  "morte": 0,
+  "energia": 90,
+  "sagrado": 110,
+  "gelo": 80,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "0-149 Gold Coins"
+  ],
+  "incomum": [
+   "0-1 Platinum Coin",
+   "0-1 Strong Mana Potion",
+   "Vampire Teeth"
+  ],
+  "semi-raro": [
+   "0-1 Strong Health Potion",
+   "Blood Preservation",
+   "Moonlight Rod"
+  ],
+  "raro": [
+   "0-2 Small Diamonds",
+   "Emerald Bangle",
+   "Hibiscus Dress",
+   "Rusted Armor",
+   "Velvet Tapestry"
+  ],
+  "muito raro": [
+   "Blood Goblet",
+   "Boots of Haste",
+   "Flower Bouquet",
+   "Leather Whip",
+   "Mysterious Voodoo Skull",
+   "Stone Skin Amulet"
+  ]
+ },
+ "gif": "vampire_bride.gif",
+ "local": [
+  "Ankrahmun Pharaoh Tombs (Peninsula)",
+  "Drefia Vampire Crypts",
+  "Edron Undead Lairs",
+  "Vengoth"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Vampire_Bride",
+ "catalogado": "2026-09-22"
+}

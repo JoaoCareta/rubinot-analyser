@@ -1,0 +1,59 @@
+{
+ "nome": "Guardian Of Tales",
+ "categoria": "Inkborn",
+ "hp": 15000,
+ "xp": 10600,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 0,
+  "morte": 50,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 112,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-500)"
+  ],
+  "fogo": [
+   "Fire Berserk (650-750)",
+   "Blood Beam (700-900)",
+   "Energy Ball (600-700)"
+  ],
+  "morte": [
+   "Energy Strike (1000-1700)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins",
+   "0-? Book Pages",
+   "0-? Glowing Runes",
+   "0-? Small Diamonds",
+   "Burnt Scroll"
+  ],
+  "incomum": [
+   "Soul Orb",
+   "Wand of Inferno"
+  ],
+  "semi-raro": [
+   "Fire Axe",
+   "Fire Sword",
+   "Magma Coat",
+   "Magma Legs",
+   "Piece of Hellfire Armor",
+   "Spellbook of Warding"
+  ],
+  "muito raro": [
+   "Coal"
+  ]
+ },
+ "gif": "guardian_of_tales.gif",
+ "fonte": "https://www.tibiawiki.com.br/wiki/Guardian_Of_Tales",
+ "catalogado": "2026-09-21",
+ "local": [
+  "Secret Library Fire Section"
+ ]
+}

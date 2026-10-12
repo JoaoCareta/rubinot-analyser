@@ -1,0 +1,44 @@
+{
+ "nome": "Nighthunter",
+ "categoria": "Mamíferos",
+ "hp": 19200,
+ "xp": 13600,
+ "toma": {
+  "físico": 110,
+  "terra": 85,
+  "fogo": 100,
+  "morte": 80,
+  "energia": 105,
+  "sagrado": 115,
+  "gelo": 105,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Crystal Coin",
+   "0-X Nighthunter Wing"
+  ],
+  "incomum": [
+   "Ultimate Health Potion"
+  ],
+  "semi-raro": [
+   "Cyan Crystal Fragment",
+   "Crystal Sword",
+   "Green Crystal Shard",
+   "Red Crystal Fragment",
+   "Warrior's Axe",
+   "Yellow Gem"
+  ],
+  "raro": [
+   "Spellbook of Mind Control",
+   "Stone Skin Amulet"
+  ]
+ },
+ "gif": "nighthunter.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Nighthunter",
+ "catalogado": "2026-10-08"
+}

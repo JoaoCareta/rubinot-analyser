@@ -1,0 +1,57 @@
+{
+ "nome": "Corym Vanguard",
+ "categoria": "Humanóides",
+ "hp": 700,
+ "xp": 490,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 100,
+  "morte": 100,
+  "energia": 80,
+  "sagrado": 100,
+  "gelo": 90,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-140+)"
+  ],
+  "morte": [
+   "Death Damage (40-60)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "1-120 Gold Coins"
+  ],
+  "incomum": [
+   "Cheese",
+   "Bola",
+   "Cheese Cutter",
+   "Earflap",
+   "Soft Cheese",
+   "Rat Cheese"
+  ],
+  "semi-raro": [
+   "Spike Shield",
+   "Ratana",
+   "Life Preserver",
+   "Cheesy Figurine",
+   "Leather Harness",
+   "Spiky Club"
+  ],
+  "muito raro": [
+   "Rat God Doll"
+  ]
+ },
+ "gif": "corym_vanguard.gif",
+ "local": [
+  "Corym Black Market",
+  "Kazordoon Corym Dungeons",
+  "Port Hope Corym Dungeons",
+  "Venore Corym Dungeons"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Corym_Vanguard",
+ "catalogado": "2026-09-22"
+}

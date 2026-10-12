@@ -1,0 +1,24 @@
+{
+ "nome": "Primal Pack Beast",
+ "categoria": "Constructos",
+ "hp": null,
+ "xp": null,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 100,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {},
+ "gif": "primal_pack_beast.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Primal_Pack_Beast",
+ "catalogado": "2026-10-10"
+}

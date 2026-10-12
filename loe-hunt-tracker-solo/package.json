@@ -1,0 +1,12 @@
+{
+  "name": "loe-hunt-tracker-solo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tracker local das hunts do grupo Johanes Characters (somente 127.0.0.1)",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "check": "node --disable-warning=ExperimentalWarning check.js"
+  }
+}

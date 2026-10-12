@@ -1,0 +1,43 @@
+{
+ "nome": "Crypt Fiend",
+ "categoria": "Mortos-Vivos",
+ "hp": 30000,
+ "xp": 19070,
+ "toma": {
+  "físico": 106,
+  "terra": 112,
+  "fogo": 109,
+  "morte": 100,
+  "energia": 85,
+  "sagrado": 103,
+  "gelo": 91,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Crystal Coin"
+  ],
+  "semi-raro": [
+   "Small Sapphires",
+   "Blue Crystal Shard",
+   "Cyan Crystal Fragments",
+   "Amber (Item)",
+   "Necromantic Core",
+   "Giant Tusk",
+   "Crystallized Death"
+  ],
+  "raro": [
+   "Blue Gem",
+   "Amber with a Bug",
+   "Amber with a Dragonfly",
+   "Cluster of Crystallized Death"
+  ]
+ },
+ "gif": "crypt_fiend.gif",
+ "local": [
+  "Unhallowed Crypt"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Crypt_Fiend",
+ "catalogado": "2026-09-23"
+}

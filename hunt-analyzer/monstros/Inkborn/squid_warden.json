@@ -1,0 +1,68 @@
+{
+ "nome": "Squid Warden",
+ "categoria": "Inkborn",
+ "hp": 16500,
+ "xp": 15300,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 115,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 0,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-800)"
+  ],
+  "gelo": [
+   "Berserk (600-850)",
+   "Cross (800-1100)",
+   "Ball (400-580)",
+   "Strike (700-900)",
+   "Beam (500-600)",
+   "Snowball (600-800)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins",
+   "0-? Glowing Runes",
+   "0-? Small Sapphires"
+  ],
+  "incomum": [
+   "Glacier Mask",
+   "Ice Rapier",
+   "Crystal Mace",
+   "Ice Cube",
+   "Ultimate Health Potion",
+   "Frosty Heart",
+   "Ultimate Mana Potion",
+   "Inkwell (Black)"
+  ],
+  "semi-raro": [
+   "Glacier Kilt",
+   "Glacier Robe",
+   "Diamond Sceptre",
+   "Crystal Sword",
+   "Piece of Dead Brain",
+   "Slime Heart"
+  ],
+  "raro": [
+   "Sapphire Hammer",
+   "Crystalline Armor",
+   "Glacial Rod"
+  ],
+  "muito raro": [
+   "Leviathan's Amulet"
+  ]
+ },
+ "gif": "squid_warden.gif",
+ "local": [
+  "Secret Library Ice Section"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Squid_Warden",
+ "catalogado": "2026-09-22"
+}

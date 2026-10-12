@@ -1,0 +1,59 @@
+{
+ "nome": "Burning Book",
+ "categoria": "Inkborn",
+ "hp": 18000,
+ "xp": 13200,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 0,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-700)"
+  ],
+  "fogo": [
+   "ataque a distância com Flaming Arrow (800-1100)",
+   "Fire Berserk (700-950)",
+   "Fire Beam (750-950)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-28 Platinum Coins",
+   "0-4 Book Pages",
+   "0-? Flask of Demonic Blood"
+  ],
+  "incomum": [
+   "0-? Demonic Essences",
+   "0-3 Small Amethysts",
+   "Guardian Shield",
+   "Magma Coat",
+   "Silken Bookmark",
+   "Soul Orb"
+  ],
+  "semi-raro": [
+   "Death Ring",
+   "Magma Monocle",
+   "Necrotic Rod",
+   "Scimitar"
+  ],
+  "raro": [
+   "Stealth Ring"
+  ],
+  "muito raro": [
+   "Shadow Sceptre"
+  ]
+ },
+ "gif": "burning_book.gif",
+ "fonte": "https://www.tibiawiki.com.br/wiki/Burning_Book",
+ "catalogado": "2026-09-21",
+ "local": [
+  "Secret Library Fire Section"
+ ]
+}

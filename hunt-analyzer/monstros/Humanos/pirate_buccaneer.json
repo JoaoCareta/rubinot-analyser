@@ -1,0 +1,64 @@
+{
+ "nome": "Pirate Buccaneer",
+ "categoria": "Humanos",
+ "hp": 425,
+ "xp": 250,
+ "toma": {
+  "físico": 105,
+  "terra": 90,
+  "fogo": 105,
+  "morte": 105,
+  "energia": 105,
+  "sagrado": 90,
+  "gelo": 105,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-140) causando envenenamento em 1 hp/turno",
+   "Strike (5-100)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-59 Gold Coins"
+  ],
+  "incomum": [
+   "Torch",
+   "Worn Leather Boots",
+   "Sabre",
+   "0-5 Throwing Knives",
+   "Compass"
+  ],
+  "semi-raro": [
+   "Battle Shield"
+  ],
+  "raro": [
+   "Strong Health Potion",
+   "Plate Armor",
+   "Treasure Map",
+   "Pirate Backpack",
+   "Pirate Shirt",
+   "Hook",
+   "Eye Patch",
+   "Peg Leg"
+  ],
+  "muito raro": [
+   "Die",
+   "Rum Flask"
+  ]
+ },
+ "gif": "pirate_buccaneer.gif",
+ "local": [
+  "Fields of Glory",
+  "Isle of Evil",
+  "Krailos Shipwreck",
+  "Liberty Bay",
+  "Nargor",
+  "Tyrsung",
+  "Yalahar Foreigner Quarter",
+  "Yalahar Trade Quarter"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Pirate_Buccaneer",
+ "catalogado": "2026-09-22"
+}

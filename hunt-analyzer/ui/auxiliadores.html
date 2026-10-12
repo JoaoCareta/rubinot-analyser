@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunt Analyzer · Auxiliadores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10; --barra: #0e1015; --painel: #11141b; --card: #161a23; --card-sel: #1b1f2b;
+    --borda: #262b36; --borda-forte: #353b49;
+    --texto: #ece6d8; --suave: #9aa1ad; --apagado: #6b7280;
+    --ouro: #d6a84e; --ouro-claro: #f0cf85; --verde: #6fdc8c; --ambar: #f2b44a; --vermelho: #ef6b6b; --roxo: #b06cf5;
+    --azul: #5db3e1;
+    --serif: "Cinzel", Georgia, serif; --sans: "Inter", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--texto); font: 14px/1.5 var(--sans); }
+  button, select { font: inherit; }
+
+  .topo { display: flex; align-items: center; gap: 28px; padding: 14px 28px; background: var(--barra); border-bottom: 1px solid var(--borda); }
+  .marca { font: 600 14px var(--serif); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  nav { display: flex; gap: 18px; }
+  nav a { font-size: 13px; color: var(--suave); padding-bottom: 4px; border-bottom: 1px solid transparent; text-decoration: none; }
+  nav a.ativo { color: var(--texto); border-bottom-color: var(--ouro); }
+  .jogo { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--suave); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--apagado); display: inline-block; flex: none; }
+  .dot.on { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+  .dot.erro { background: var(--vermelho); }
+  .dot.vivo { background: var(--vermelho); box-shadow: 0 0 8px var(--vermelho); animation: pulsa 1.6s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: .35; } }
+  .desligado { display: none; position: fixed; inset: 0; z-index: 30; background: rgba(11, 12, 16, .96);
+               align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .desligado.on { display: flex; }
+  .botao { font: 600 13px var(--sans); letter-spacing: .03em; color: var(--ouro-claro); background: transparent;
+           border: 1px solid var(--ouro); border-radius: 999px; padding: 7px 18px; cursor: pointer; white-space: nowrap; }
+  .botao:hover { background: rgba(214, 168, 78, .10); }
+  .botao.cheio { background: var(--ouro); color: #17130a; }
+  .botao.cheio:hover { background: var(--ouro-claro); }
+  .botao.discreto { color: var(--suave); border-color: var(--borda-forte); }
+  .botao.discreto:hover { color: var(--texto); background: rgba(255, 255, 255, .04); }
+  .botao.pequeno { padding: 5px 14px; font-size: 12px; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 28px 48px; }
+  .rotulo { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  h1 { font: 600 32px/1.2 var(--serif); color: #efe7d6; margin: 6px 0 4px; }
+  h2 { font: 600 20px var(--serif); color: var(--ouro-claro); margin: 0; }
+  .sub { color: var(--suave); margin: 0 0 20px; }
+
+  .aux { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 20px 22px; }
+  .aux.on { border-color: rgba(214, 168, 78, .45); }
+  .cab { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .cab .estado { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--suave); }
+  .cab .acoes { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .ouvir { display: inline-flex; align-items: center; gap: 6px; font: 11px var(--mono);
+           letter-spacing: .08em; text-transform: uppercase; color: var(--apagado); }
+  .oque { color: var(--suave); font-size: 13px; margin: 0 0 16px; max-width: 78ch; }
+
+  /* o mesmo gato do scuba da calibração (user, 28/09), agora no contexto do Utamo */
+  .gato { position: fixed; left: 50%; bottom: 24px; z-index: 20; transform: translate(-50%, 30px); opacity: 0;
+          pointer-events: none; transition: opacity .3s, transform .3s; }
+  .gato.on { opacity: 1; transform: translate(-50%, 0); }
+  .gato img { display: block; width: 320px; height: 320px; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(0, 0, 0, .55)); }
+  .gato .fala { width: max-content; max-width: 460px; margin: 4px auto 0; padding: 10px 18px; text-align: center;
+                font: 600 15px/1.4 var(--sans); color: var(--texto); background: var(--card); border: 1px solid var(--ouro);
+                border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+  .gato .fala.calmo { border-color: var(--borda-forte); }
+  /* ligar sozinho (user, 28/09) */
+  .auto { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; margin-bottom: 14px;
+          background: var(--card); border: 1px solid var(--borda); border-radius: 10px; cursor: pointer; }
+  .auto input { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--ouro); cursor: pointer; }
+  .auto b { display: block; font: 500 13px var(--sans); color: var(--texto); }
+  .auto span span { font: 11px var(--mono); color: var(--apagado); }
+  .auto.on { border-color: rgba(214, 168, 78, .45); }
+  /* caixa das regras (user, 28/09): abre e fecha, e só dá para mexer com o auxiliador desligado */
+  .regras { background: var(--card); border: 1px solid var(--borda); border-radius: 10px; margin-bottom: 14px; }
+  .regras summary { display: flex; align-items: center; gap: 12px; padding: 11px 14px; cursor: pointer; list-style: none; }
+  .regras summary::-webkit-details-marker { display: none; }
+  .regras summary::before { content: "▸"; color: var(--ouro); font-size: 12px; transition: transform .15s; }
+  .regras[open] summary::before { transform: rotate(90deg); }
+  .regras .resumo { margin-left: auto; font: 11px var(--mono); color: var(--apagado); }
+  .regras .lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 2px 18px; padding: 0 14px 4px; }
+  .regra { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid rgba(38, 43, 54, .7); }
+  .regra input { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--ouro); cursor: pointer; }
+  .regra.travada input { cursor: not-allowed; }
+  .regra .txt b { display: block; font: 500 13px var(--sans); color: var(--texto); }
+  .regra .txt span { font: 11px var(--mono); color: var(--apagado); }
+  .regra.off .txt b { color: var(--apagado); }
+  .regras .trava { margin: 0; padding: 8px 14px 12px; font: 11px var(--mono); color: var(--ambar); }
+
+  .medidores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .med { background: var(--card); border: 1px solid var(--borda); border-radius: 8px; padding: 10px 13px; }
+  .med .n { font: 600 22px var(--mono); margin-top: 2px; }
+  .med .lim { font: 11px var(--mono); color: var(--apagado); }
+  .med .barra { height: 4px; border-radius: 2px; background: var(--borda); margin-top: 7px; overflow: hidden; }
+  .med .barra i { display: block; height: 100%; background: var(--ouro); border-radius: 2px; transition: width .3s; }
+  .med.perto .n { color: var(--ambar); } .med.perto .barra i { background: var(--ambar); }
+  .med.passou .n { color: var(--vermelho); } .med.passou .barra i { background: var(--vermelho); }
+
+  .faixa { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
+           background: var(--card); border: 1px solid var(--borda); font: 12px var(--mono); color: var(--suave); }
+  .faixa.escudo { border-color: rgba(93, 179, 225, .5); color: var(--azul); }
+  .faixa b { color: var(--texto); font-weight: 500; }
+
+  .nivel { display: inline-flex; gap: 2px; padding: 3px; background: var(--card); border: 1px solid var(--borda); border-radius: 999px; }
+  .nivel button { font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--suave);
+                  background: transparent; border: 0; border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+  .nivel button:hover { color: var(--texto); }
+  .nivel button.on { background: rgba(214, 168, 78, .14); color: var(--ouro-claro); }
+
+  .hist { margin-top: 16px; }
+  .hist .linha { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(38, 43, 54, .6); font: 12px var(--mono); }
+  .hist .linha b { color: var(--ouro-claro); font-weight: 500; }
+  .hist .linha span { color: var(--suave); }
+  .nota { font: 12px var(--mono); color: var(--apagado); margin: 14px 0 0; line-height: 1.6; }
+  .proximos { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .proximos .card { background: var(--card); border: 1px dashed var(--borda-forte); border-radius: 10px; padding: 14px 16px; color: var(--apagado); }
+  .proximos .card b { display: block; color: var(--suave); font: 600 13px var(--serif); margin-bottom: 4px; }
+  @media (max-width: 760px) { .medidores { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header class="topo">
+  <span class="marca">Hunt Analyzer</span>
+  <nav><a href="/">calibração</a><a href="/hunt">hunt</a><a href="/hunt?h">histórico</a><a href="/evolucao">evolução</a><a class="ativo" href="/auxiliadores">auxiliadores</a></nav>
+  <span class="jogo" id="jogo"><span class="dot"></span>procurando o jogo…</span>
+  <button class="botao discreto pequeno" id="btnDesligar">Desligar</button>
+</header>
+<script src="/ui/navegacao.js"></script>
+<div id="gato" class="gato"><img id="gatoImg" alt="" aria-hidden="true"><p id="gatoFala" class="fala" role="status"></p></div>
+<div id="desligado" class="desligado"><div>
+  <div class="rotulo">— hunt analyzer</div>
+  <h1>Analisador desligado</h1>
+  <p class="sub">Todos os processos foram encerrados. Pode fechar esta janela; para ligar de novo, use o painel de controle.</p>
+</div></div>
+
+<main>
+  <div class="rotulo">— auxiliadores</div>
+  <h1>Auxiliadores</h1>
+  <p class="sub">Apitos para as jogadas que exigem atenção no meio da luta. Eles não jogam por você: só avisam.</p>
+
+  <section class="aux" id="cartao">
+    <div class="cab">
+      <h2>Utamo Vita</h2>
+      <span class="estado"><span class="dot" id="dotAux"></span><span id="txtAux">desligado</span></span>
+      <span class="acoes">
+        <span class="nivel" id="niveis">
+          <button type="button" data-nivel="calmo">calmo</button>
+          <button type="button" data-nivel="normal">normal</button>
+          <button type="button" data-nivel="sensivel">sensível</button>
+        </span>
+        <button class="botao discreto pequeno" id="btnSom">som: ligado</button>
+        <span class="ouvir">ouvir:
+          <button class="botao discreto pequeno" id="btnOuvirCaiu" title="duas notas caindo — o escudo acabou">🛡 caiu</button>
+          <button class="botao discreto pequeno" id="btnOuvirPerigo" title="três notas subindo — perigo, vida ou box">🔔 perigo</button>
+        </span>
+        <button class="botao cheio pequeno" id="btnLigar">Ligar</button>
+      </span>
+    </div>
+    <p class="oque">🛡 <b>O escudo caiu</b> — dois apitos caindo, quando o <b>ícone do utamo</b> sai da
+      tela e não volta, com você apanhando. É o principal. Medido em 29/09: o escudo cai 58x por hora,
+      mas em metade das vezes o ícone volta em menos de 4 s (você já soltou) — por isso a queda só vale
+      apito depois de confirmada: <b>4 s</b> no sensível, <b>8 s</b> no normal, <b>16 s</b> no calmo.<br>
+      🔔 <b>Perigo</b> — três apitos subindo: <b id="regra">—</b>.<br>
+      Fica calado enquanto o ícone está na tela. Até 28/09 ele adivinhava o escudo pelo console ("o dano
+      voltou a bater no HP") e apitava com o escudo inteiro e o utamo em cooldown: 37 dos 104 apitos de
+      29/09. O que bate nos outros da pt não conta.</p>
+
+    <label class="auto" id="linhaAuto">
+      <input type="checkbox" id="chkAuto">
+      <span><b>Ligar sozinho quando o analisador abrir</b>
+        <span id="autoTxt">assim você não precisa clicar em Ligar toda vez; desmarcar volta ao normal</span></span>
+    </label>
+
+    <details class="regras" id="caixaRegras">
+      <summary><span class="rotulo">— regras</span><span class="resumo" id="resumoRegras"></span></summary>
+      <div class="lista" id="listaRegras"></div>
+      <p class="trava" id="travaRegras"></p>
+    </details>
+
+    <div class="medidores" id="medidores"></div>
+    <div class="faixa" id="faixa">—</div>
+
+    <div class="hist">
+      <div class="rotulo">— apitos desta sessão</div>
+      <div id="historico"></div>
+    </div>
+    <p class="nota" id="nota"></p>
+  </section>
+
+  <div class="proximos">
+    <div class="card"><b>Próximos</b>Mana baixa com a pt tomando dano, sio fora de alcance, lure passando do ponto. Diga qual vale a pena e ele entra aqui do mesmo jeito: medido na sua hunt antes de virar apito.</div>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+let E = null;
+
+async function api(corpo) {
+  const op = corpo === undefined ? {cache: 'no-store'}
+    : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo)};
+  try { return await (await fetch('/api/auxiliares', op)).json(); } catch { return null; }
+}
+
+const MEDIDAS = [
+  ['bichos', 'bichos em você', v => String(v), (e) => e.limites.bichos],
+  ['dano', 'dano tomado', v => `${(v / 1000).toFixed(1).replace('.', ',')}k`, (e) => e.limites.dano],
+  ['curas_outros', 'curas na pt', v => String(v), (e) => e.limites.curas],
+  ['curas_eu', 'curas em você', v => String(v), () => null],
+];
+function desenha() {
+  if (!E) return;
+  const on = E.ligado;
+  $('#cartao').classList.toggle('on', on);
+  $('#btnLigar').textContent = on ? 'Desligar' : 'Ligar';
+  $('#btnLigar').classList.toggle('cheio', !on);
+  $('#btnLigar').classList.toggle('discreto', on);
+  $('#btnSom').textContent = `som: ${E.som ? 'ligado' : 'desligado'}`;
+  document.querySelectorAll('#niveis button').forEach(b => b.classList.toggle('on', b.dataset.nivel === E.nivel));
+  const L = E.limites;
+  $('#regra').textContent = `${L.bichos} bichos batendo em você · ${L.dano.toLocaleString('pt-BR')} de dano em ${E.janela_s}s`
+    + (L.dano_curas > 90000 ? '' : ` · ${L.dano_curas.toLocaleString('pt-BR')} de dano enquanto você cura a pt ${L.curas}x`)
+    + (L.turnos > 90 ? '' : ` · ${L.turnos} turnos seguidos em cura`);
+
+  $('#chkAuto').checked = !!E.auto;
+  $('#linhaAuto').classList.toggle('on', !!E.auto);
+  $('#autoTxt').textContent = E.auto
+    ? `o analisador já abre com ele ligado no nível ${E.nivel}; desmarque para voltar ao normal`
+    : 'liga agora e em toda abertura do analisador; desmarcar só tira das próximas (para parar agora, use Desligar)';
+
+  // regras: uma linha com checkbox por regra; travadas com o auxiliador ligado (user, 28/09)
+  const R = E.regras || {}, ligadas = (E.lista_regras || []).filter(r => R[r.id]).length;
+  $('#resumoRegras').textContent = `${ligadas} de ${(E.lista_regras || []).length} ligadas`;
+  $('#travaRegras').textContent = on ? 'Desligue o auxiliador para mudar as regras.' : '';
+  // a tela redesenha a cada segundo: só refaz a lista quando algo mudou, senão rouba o clique
+  const chave = JSON.stringify([R, on]);
+  if ($('#listaRegras').dataset.chave !== chave) $('#listaRegras').dataset.chave = chave;
+  else return desenhaResto();
+  $('#listaRegras').replaceChildren(...(E.lista_regras || []).map(r => {
+    const l = el('label', 'regra' + (R[r.id] ? '' : ' off') + (on ? ' travada' : ''));
+    const c = el('input');
+    c.type = 'checkbox'; c.checked = !!R[r.id]; c.disabled = on;
+    c.onchange = async () => {
+      const novo = await api({regras: {...R, [r.id]: c.checked}});
+      if (novo) { E = novo; desenha(); }
+    };
+    const t = el('span', 'txt');
+    t.append(el('b', null, r.nome), el('span', null, r.texto));
+    l.append(c, t);
+    return l;
+  }));
+  desenhaResto();
+}
+
+function desenhaResto() {
+  const on = E.ligado, S = E.sinais;
+  const medidas = [...MEDIDAS];
+  if (E.vida != null) medidas.unshift(['vida', 'sua vida', v => `${Math.round(v * 100)}%`, null]);
+  $('#medidores').replaceChildren(...medidas.map(([k, rot, fmt, limDe]) => {
+    const vida = k === 'vida', v = vida ? E.vida : S[k];
+    const lim = vida ? 0.6 : limDe(E);
+    const frac = vida ? v : (lim ? Math.min(1, v / lim) : 0);
+    const passou = vida ? v <= lim : lim && v >= lim;
+    const perto = vida ? v <= lim + 0.15 : lim && frac >= .7;
+    const d = el('div', 'med' + (passou ? ' passou' : perto ? ' perto' : ''));
+    d.append(el('div', 'rotulo', rot), el('div', 'n', fmt(v)),
+             el('div', 'lim', vida ? 'apita em 60%' : lim ? `limite ${fmt(lim)}` : `nos últimos ${E.janela_s}s`));
+    const b = el('div', 'barra'), i = el('i');
+    i.style.width = (frac || 0) * 100 + '%';
+    b.append(i); d.append(b);
+    return d;
+  }));
+
+  const f = $('#faixa');
+  f.className = 'faixa' + (E.escudo ? ' escudo' : '');
+  if (!on) f.replaceChildren('Auxiliador desligado.');
+  else if (!E.gravando) f.replaceChildren('Sem gravação: o auxiliador lê o Server Log que a gravação recorta. Ligue a hunt na aba ', (() => { const a = el('a', null, 'hunt'); a.href = '/hunt'; a.style.color = 'var(--ouro-claro)'; return a; })(), '.');
+  else if (E.escudo) f.replaceChildren(el('b', null, '🛡 escudo de pé'), ' — o ícone do utamo está na tela, então ele fica calado.');
+  else if (!E.lendo) f.replaceChildren('Esperando o console: a captura só grava com o jogo na frente', E.atraso_s != null ? ` (último recado há ${E.atraso_s}s).` : '.');
+  else if (E.escudo == null) f.replaceChildren('Sem enxergar o ícone do utamo na tela: as regras do escudo ficam caladas até ele aparecer uma vez.');
+  else f.replaceChildren(el('b', null, '👂 ouvindo'), ` · console em dia · sem repetir apito por ${E.silencio_s}s`);
+
+  const h = E.historico || [];
+  $('#historico').replaceChildren(...(h.length ? h.map(a => {
+    const l = el('div', 'linha');
+    l.append(el('b', null, a.quando), el('span', null, a.motivo));
+    return l;
+  }) : [el('p', 'nota', on ? 'Nenhum apito ainda nesta sessão.' : 'Ligue para começar a acompanhar.')]));
+  $('#nota').textContent = E.erro ? `Um quadro não leu direito (${E.erro}); ele tenta de novo sozinho.`
+    : `Medido nas suas hunts: o escudo cai 58x por hora (metade volta em 4 s), a vida cruza 60% ~1x `
+      + `e dentro de uma box pesada o escudo aguenta 12 s. `
+      + (E.boxes ? `${E.boxes} boxes pesadas mapeadas em ${E.hunt || 'esta hunt'}.` : 'As boxes se mapeiam sozinhas enquanto você caça com ele ligado.');
+}
+
+$('#btnLigar').onclick = async () => { E = await api({ligar: !E?.ligado, nivel: E?.nivel, som: E?.som}) || E; desenha(); };
+$('#btnSom').onclick = async () => { E = await api({som: !E?.som}) || E; desenha(); };
+// o gato do scuba também aqui (user, 28/09): marcar ou desmarcar o "ligar sozinho" tem festa,
+// com a mesma música da calibração e frase de escudo
+const FRASES_LIGOU = [
+  'Miau! De hoje em diante eu fico de olho no seu escudo.',
+  'Glub glub! Pode caçar: quando o utamo cair, eu grito.',
+  'Ligado para sempre. Escudo caído não passa por mim.',
+  'Agora somos dois cuidando da sua mana.',
+  'Pronto! Você cuida do EK, eu cuido do seu utamo.',
+];
+const FRASES_DESLIGOU = [
+  'Tá bom… eu fico quietinho. Mas o escudo cai, viu?',
+  'Glub… guardei o apito na mochila. É só chamar.',
+  'Sem aviso, então. Olho vivo na barra de mana!',
+  'Miau. Vou tirar uma soneca no fundo do mar.',
+  'Desmarquei. Se sentir falta, eu volto na hora.',
+];
+const sorteia = l => l[Math.floor(Math.random() * l.length)];
+function festa(ligou) {
+  const g = $('#gato'), fala = $('#gatoFala');
+  fala.textContent = sorteia(ligou ? FRASES_LIGOU : FRASES_DESLIGOU);
+  fala.classList.toggle('calmo', !ligou);
+  $('#gatoImg').src = '/ui/gato_scuba.png?' + Date.now();   // recomeça a dança do início
+  g.classList.add('on');
+  festa.som?.pause();                                       // clique de novo: a música recomeça, não empilha
+  const som = festa.som = new Audio('/ui/gato_som.mp3');
+  const some = () => { g.classList.remove('on'); som.pause(); };
+  som.onended = some;                                       // o gato dança a música inteira (10,2 s)
+  som.play().catch(() => {});
+  clearTimeout(festa.fim);
+  festa.fim = setTimeout(some, 11000);                      // sem som (arquivo ausente), some do mesmo jeito
+}
+$('#chkAuto').onchange = async () => {
+  const quer = $('#chkAuto').checked;
+  const n = await api({auto: quer});
+  if (n) { E = n; desenha(); }
+  festa(quer);
+};
+$('#btnOuvirCaiu').onclick = () => api({testar: 'caiu'});
+$('#btnOuvirPerigo').onclick = () => api({testar: 'perigo'});
+document.querySelectorAll('#niveis button').forEach(b => b.onclick = async () => { E = await api({nivel: b.dataset.nivel}) || E; desenha(); });
+$('#btnDesligar').onclick = async () => {
+  if (!confirm('Desligar o analisador? Todos os processos dele serão encerrados.')) return;
+  await fetch('/api/desligar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'}).catch(() => null);
+  $('#desligado').classList.add('on');
+};
+
+async function vigiaJogo() {
+  try {
+    const s = await (await fetch('/api/status', {cache: 'no-store'})).json();
+    $('#jogo').replaceChildren(el('span', 'dot' + (s.jogo ? ' on' : '')), s.jogo ? `RubinOT aberto${s.char ? ' · ' + s.char : ''}` : 'RubinOT fechado');
+  } catch {
+    $('#jogo').replaceChildren(el('span', 'dot erro'), 'programa fechado');
+  }
+}
+async function busca() {
+  const novo = await api();
+  if (novo) E = novo;
+  $('#dotAux').className = 'dot' + (E?.ligado ? (E.escudo ? '' : ' vivo') : '');
+  $('#txtAux').textContent = !E ? 'sem resposta' : !E.ligado ? 'desligado' : E.escudo ? 'escudo de pé'
+    : !E.lendo ? 'esperando o console' : E.escudo == null ? 'sem ver o ícone do utamo' : 'ouvindo';
+  desenha();
+  setTimeout(busca, 1000);   // o card mostra a janela de 8 s andando
+}
+vigiaJogo(); setInterval(vigiaJogo, 5000); busca();
+</script>
+</body>
+</html>

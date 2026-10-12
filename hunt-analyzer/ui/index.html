@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunt Analyzer · Calibração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10; --barra: #0e1015; --painel: #11141b; --card: #161a23; --card-sel: #1b1f2b;
+    --borda: #262b36; --borda-forte: #353b49;
+    --texto: #ece6d8; --suave: #9aa1ad; --apagado: #6b7280;
+    --ouro: #d6a84e; --ouro-claro: #f0cf85; --verde: #6fdc8c; --ambar: #f2b44a; --vermelho: #ef6b6b; --roxo: #b06cf5;
+    --serif: "Cinzel", Georgia, serif; --sans: "Inter", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--texto); font: 14px/1.5 var(--sans); }
+
+  .topo { display: flex; align-items: center; gap: 28px; padding: 14px 28px; background: var(--barra); border-bottom: 1px solid var(--borda); }
+  .marca { font: 600 14px var(--serif); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  nav { display: flex; gap: 18px; }
+  nav a { font-size: 13px; color: var(--suave); padding-bottom: 4px; border-bottom: 1px solid transparent; text-decoration: none; }
+  nav a.ativo { color: var(--texto); border-bottom-color: var(--ouro); }
+  .jogo { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--suave); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--apagado); display: inline-block; }
+  .dot.on { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+  .dot.erro { background: var(--vermelho); }
+
+  main { max-width: 1480px; margin: 0 auto; padding: 28px 28px 40px; }
+  .rotulo { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ouro); }
+  h1 { font: 600 34px/1.2 var(--serif); color: #efe7d6; margin: 8px 0 6px; }
+  h2 { font: 600 19px var(--serif); color: var(--ouro-claro); margin: 6px 0 4px; }
+  .sub { color: var(--suave); margin: 0; }
+  .sub.erro { color: var(--vermelho); }
+
+  .passo { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 24px 0 14px;
+           padding: 18px 22px; background: var(--card); border: 1px solid var(--borda); border-radius: 8px; }
+  .botao { font: 600 13px var(--sans); letter-spacing: .03em; color: var(--ouro-claro); background: transparent;
+           border: 1px solid var(--ouro); border-radius: 999px; padding: 9px 24px; cursor: pointer; white-space: nowrap; }
+  .botao:hover { background: rgba(214, 168, 78, .10); }
+  .botao:disabled { opacity: .5; cursor: wait; }
+  .botao.discreto { color: var(--suave); border-color: var(--borda-forte); }
+  .botao.discreto:hover { color: var(--texto); background: rgba(255, 255, 255, .04); }
+  .botoes { display: flex; gap: 10px; }
+  .botao.cheio { background: var(--ouro); color: #17130a; }
+  .botao.cheio:hover { background: var(--ouro-claro); }
+
+  #fonteCaptura { display: block; padding: 28px; }
+  .fonte-intro { max-width: 760px; margin-top: 10px; line-height: 1.65; }
+  .fonte-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 28px; }
+  .fonte-form label { display: flex; flex-direction: column; gap: 10px; min-width: 0;
+    font: 500 12px/1.5 var(--sans); color: var(--suave); }
+  #camposTwitch { display: contents; }
+  #camposTwitch[hidden] { display: none; }
+  .fonte-campo { width: 100%; min-width: 0; height: 46px; padding: 0 14px; border-radius: 8px;
+    border: 1px solid var(--borda-forte); background: var(--painel); color: var(--texto); font: 14px var(--sans); }
+  .fonte-campo::placeholder { color: var(--apagado); }
+  .fonte-campo:focus-visible { outline: 2px solid var(--roxo); outline-offset: 3px; border-color: var(--roxo); }
+  select.fonte-campo { cursor: pointer; color-scheme: dark; }
+  .fonte-acoes { display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+    margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--borda); flex-wrap: wrap; }
+  #fonteMensagem:not(:empty) { margin-top: 20px; line-height: 1.65; }
+  @media (max-width: 950px) { .fonte-form { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+  @media (max-width: 700px) { #fonteCaptura { padding: 22px; } .fonte-acoes { justify-content: stretch; }
+    .fonte-acoes button { flex: 1 1 180px; } }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--borda); border-radius: 8px; padding: 12px 16px; }
+  .num { font: 600 21px var(--mono); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* print na largura toda e os cards das regiões embaixo, em grade (user, 21/09) */
+  .area { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .cabeca { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .salvar { display: flex; align-items: center; gap: 18px; }
+  .quadro { background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; padding: 12px; }
+  .quadro .rotulo { margin: 2px 0 10px; }
+  #tela { display: none; cursor: crosshair; border-radius: 4px; }
+  .vazio { height: 420px; display: flex; align-items: center; justify-content: center; color: var(--apagado);
+           border: 1px dashed var(--borda-forte); border-radius: 6px; }
+  .dica { font: 12px var(--mono); color: var(--apagado); margin: 10px 0 0; }
+
+  #lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .regioes-topo { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 8px 0 0; }
+  .regioes-topo h2 { margin: 0 0 4px; }
+  .reg { background: var(--card); border: 1px solid var(--borda); border-left: 3px solid transparent;
+         border-radius: 12px; padding: 16px; height: 164px; display: flex; flex-direction: column;
+         background: linear-gradient(135deg, #1b202b, var(--card) 70%); }
+  .reg:hover { border-color: var(--borda-forte); border-left-color: var(--borda-forte); }
+  .reg.sel { background: var(--card-sel); border-left-color: var(--roxo); }
+  .reg .rotulo { letter-spacing: .08em; font-size: 10px; }
+  .reg-nome { font: 600 16px var(--sans); margin: 10px 0 7px; }
+  .reg-resumo { font-size: 12px; color: var(--suave); margin: 0; display: -webkit-box;
+                -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .reg-acoes { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px; }
+  .expandir { color: var(--ouro-claro); font: 500 12px var(--sans); border: 0; padding: 0;
+              background: transparent; cursor: pointer; text-align: left; }
+  .expandir:hover { color: var(--texto); }
+  button:focus-visible, summary:focus-visible { outline: 2px solid var(--roxo); outline-offset: 4px; }
+  .reg .limpar { padding: 0; text-decoration: none; }
+  .detalhes { position: fixed; inset: 0 0 0 auto; margin: 0; height: 100dvh; max-height: 100dvh;
+              width: min(480px, 100%); max-width: 100%; border: 0; border-left: 1px solid var(--borda-forte);
+              padding: 0; background: var(--painel); color: var(--texto); box-shadow: -20px 0 70px #0008; }
+  .detalhes::backdrop { background: #05060a99; }
+  .detalhes[open] { display: flex; flex-direction: column; }
+  .detalhes-topo { padding: 24px; border-bottom: 1px solid var(--borda); display: flex;
+                   justify-content: space-between; align-items: center; gap: 12px; flex: 0 0 auto; }
+  .detalhes-topo h2 { margin: 5px 0 0; }
+  .detalhes-corpo { padding: 20px 24px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  .detalhe { border: 1px solid var(--borda); border-radius: 10px; margin-bottom: 12px; background: var(--card); }
+  .detalhe summary { cursor: pointer; padding: 16px; font-weight: 600; }
+  .detalhe summary .chip { margin-left: 8px; }
+  .detalhe-conteudo { padding: 0 16px 18px; }
+  .detalhe .uso { line-height: 1.7; }
+  .detalhe .res { margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 6px; }
+  .detalhe .limpar { margin-top: 10px; }
+  .detalhe canvas.zoom { margin: 14px auto 0; }
+  @media (max-width: 650px) { #lista { grid-template-columns: minmax(0, 1fr); } }
+  .linha { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .uso { color: var(--suave); font-size: 12.5px; margin: 6px 0 0; }
+  .res { font: 12px/1.45 var(--mono); color: var(--texto); margin: 8px 0 0; overflow-wrap: anywhere; }
+  .chip { font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; white-space: nowrap;
+          border-radius: 999px; border: 1px solid var(--borda-forte); color: var(--suave); }
+  .chip.ok { color: var(--verde); border-color: rgba(111, 220, 140, .45); }
+  .chip.aviso { color: var(--ambar); border-color: rgba(242, 180, 74, .45); }
+  .chip.erro { color: var(--vermelho); border-color: rgba(239, 107, 107, .45); }
+  canvas.zoom { display: block; margin-top: 10px; border: 1px solid var(--borda); image-rendering: pixelated; max-width: 100%; }
+  .limpar { font: 11px var(--mono); color: var(--apagado); background: none; border: 0; padding: 8px 0 0; cursor: pointer; text-decoration: underline; }
+  .limpar:hover { color: var(--vermelho); }
+
+  .botao.pequeno { padding: 5px 16px; font-size: 12px; }
+  .desligado { display: none; position: fixed; inset: 0; z-index: 10; background: rgba(11, 12, 16, .96);
+               align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .desligado.on { display: flex; }
+
+  .gato { position: fixed; left: 50%; bottom: 24px; z-index: 20; transform: translate(-50%, 30px); opacity: 0;
+          pointer-events: none; transition: opacity .3s, transform .3s; }
+  .gato.on { opacity: 1; transform: translate(-50%, 0); }
+  .gato img { display: block; width: 320px; height: 320px; margin: 0 auto; filter: drop-shadow(0 12px 28px rgba(0, 0, 0, .55)); }
+  .gato .fala { width: max-content; max-width: 460px; margin: 4px auto 0; padding: 10px 18px; text-align: center;
+                font: 600 15px/1.4 var(--sans); color: var(--texto); background: var(--card); border: 1px solid var(--ouro);
+                border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+  .gato .fala.erro { border-color: var(--vermelho); }
+
+  @media (max-width: 1100px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header class="topo">
+  <span class="marca">Hunt Analyzer</span>
+  <nav><a class="ativo" href="/">calibração</a><a href="/hunt">hunt</a><a href="/hunt?h">histórico</a><a href="/evolucao">evolução</a><a href="/auxiliadores">auxiliadores</a></nav>
+  <span id="jogo" class="jogo"><span class="dot"></span>procurando o jogo…</span>
+  <button id="btnDesligar" class="botao discreto pequeno">Desligar</button>
+</header>
+<script src="/ui/navegacao.js"></script>
+<div id="gato" class="gato"><img id="gatoImg" alt="" aria-hidden="true"><p id="gatoFala" class="fala" role="status"></p></div>
+<div id="desligado" class="desligado"><div>
+  <div class="rotulo">— hunt analyzer</div>
+  <h1>Analisador desligado</h1>
+  <p class="sub">Todos os processos foram encerrados. Pode fechar esta janela; para ligar de novo, use o painel de controle.</p>
+</div></div>
+
+<main>
+  <section class="cabeca">
+    <div>
+      <div class="rotulo">— calibração</div>
+      <h1>Onde fica cada painel</h1>
+      <p class="sub">Marque uma vez cada região da sua tela. O programa só lê dentro delas, e cada uma é conferida na hora.</p>
+    </div>
+    <div class="salvar">   <!-- em cima, junto da data da última calibração (user, 21/09) -->
+      <span id="msgSalvar" class="sub"></span>
+      <button id="btnSalvar" class="botao cheio">Salvar calibração</button>
+    </div>
+  </section>
+
+  <section class="passo" aria-label="Calibração de RTC e roda">
+    <div><div class="rotulo">configurações do personagem</div><h2>RTC e roda de habilidades</h2>
+      <p class="sub">Referências opcionais para reconhecer as configurações quando suas janelas estiverem abertas.</p></div>
+    <a class="botao" href="/configuracoes">Calibrar roda de habilidades / RTC</a>
+  </section>
+
+  <section class="passo" id="fonteCaptura">
+    <div>
+      <div class="rotulo">fonte da análise</div>
+      <h2>De onde vem sua hunt</h2>
+      <p class="sub fonte-intro">Troque a fonte com a hunt encerrada. Cada canal e personagem tem sua própria calibração.</p>
+      <div class="fonte-form">
+      <label for="fonteTipo">Fonte de captura<select id="fonteTipo" class="fonte-campo"><option value="janela">Janela do RubinOT</option><option value="twitch">Live da Twitch</option></select></label>
+      <span id="camposTwitch" hidden>
+        <label for="fonteCanal">Canal da Twitch<input id="fonteCanal" class="fonte-campo" placeholder="Canal ou link da Twitch" maxlength="100"></label>
+        <label for="fonteChar">Personagem<input id="fonteChar" class="fonte-campo" placeholder="Nome no jogo" maxlength="40"></label>
+      </span>
+      </div>
+      <p id="fonteMensagem" class="sub" role="status"></p>
+    </div>
+    <div class="fonte-acoes"><button id="btnTutorial" class="botao discreto">Como configurar</button><button id="btnFonte" class="botao cheio">Usar esta fonte</button></div>
+  </section>
+  <section class="passo" id="passoCaptura">
+    <div>
+      <div class="rotulo">01 · captura</div>
+      <h2>Print da tela do jogo</h2>
+      <p id="msgCaptura" class="sub">Clique em Capturar e depois na janela do RubinOT. O print sai sozinho quando o jogo fica na frente, e os painéis são achados pelo título.</p>
+    </div>
+    <div class="botoes">
+      <button id="btnDetectar" class="botao discreto">Detectar painéis</button>
+      <button id="btnCapturar" class="botao">Capturar</button>
+    </div>
+  </section>
+
+  <details class="passo" id="exemploPaineis">
+    <summary>Ver exemplo de organização dos painéis</summary>
+    <div style="width:100%;margin-top:20px">
+      <p class="sub">Esquema ilustrativo: a posição é livre. Os painéis precisam ficar inteiros e legíveis na imagem da live; mantenha a proporção original no OBS.</p>
+      <svg viewBox="0 0 1000 540" role="img" aria-label="Exemplo: jogo ao centro, Battle e XP à esquerda, Map View e Party Hunt à direita, Server Log embaixo" style="width:100%;max-height:460px;background:#11141b;border:1px solid #393b44;border-radius:8px">
+        <g fill="#1b202b" stroke="#6b4f1a"><rect x="16" y="16" width="170" height="245" rx="5"/><rect x="16" y="273" width="170" height="120" rx="5"/><rect x="16" y="405" width="170" height="118" rx="5"/><rect x="202" y="16" width="584" height="362" rx="5"/><rect x="202" y="394" width="584" height="129" rx="5"/><rect x="802" y="16" width="182" height="140" rx="5"/><rect x="802" y="170" width="182" height="108" rx="5"/><rect x="802" y="292" width="182" height="108" rx="5"/><rect x="802" y="414" width="182" height="109" rx="5"/></g>
+        <g fill="#f3d98f" font-family="monospace" font-size="16"><text x="30" y="44">Battle List</text><text x="30" y="303">XP Analyser</text><text x="30" y="435">Hunt Analyser</text><text x="380" y="190">TELA DO JOGO</text><text x="220" y="423">Server Log · 5–6 linhas</text><text x="820" y="46">Map View</text><text x="820" y="200">Party Hunt</text><text x="820" y="322">Supply Analyser</text><text x="820" y="444">Input Analyser</text></g>
+        <g fill="#9ba3b4" font-family="sans-serif" font-size="14"><text x="355" y="220">Nome do personagem no centro</text><text x="220" y="454">Aba Server Log ativa, sem o campo de digitação</text><text x="220" y="480">Pode estar vazio, em local seguro</text><text x="30" y="76">Pode estar vazia</text><text x="30" y="334">Raw XP Gain: 0</text><text x="30" y="466">Balance: 0</text><text x="820" y="230">Pode estar zerado</text><text x="820" y="352">Gold Value: 0</text><text x="820" y="474">Total: 0</text></g>
+      </svg>
+      <p class="sub">Spells e Loot Analyser são opcionais. Este exemplo não é uma calibração pronta: marque as regiões na sua própria imagem.</p>
+    </div>
+  </details>
+  <section class="tiles">
+    <div class="tile"><div class="rotulo">janela</div><div id="tJanela" class="num">—</div></div>
+    <div class="tile"><div class="rotulo">personagem</div><div id="tChar" class="num">—</div></div>
+    <div class="tile"><div class="rotulo">tile do mundo</div><div id="tTile" class="num">—</div></div>
+    <div class="tile"><div class="rotulo">regiões lendo</div><div id="tOk" class="num">—</div></div>
+  </section>
+
+  <section class="area">
+    <div class="quadro">
+      <div class="rotulo">02 · regiões</div>
+      <div id="vazio" class="vazio">Nenhum print ainda. Capture a tela do jogo para começar.</div>
+      <canvas id="tela"></canvas>
+      <p class="dica">Escolha uma região abaixo e arraste sobre o print. Setas movem 1 px; Shift + setas mudam o tamanho.</p>
+    </div>
+    <div class="regioes-topo">
+      <div><h2>Painéis da calibração</h2><p class="sub">Confira o status de cada região. Abra os detalhes para ver as instruções e o recorte.</p></div>
+      <button id="btnExpandirTodos" class="botao discreto pequeno">Expandir todos</button>
+    </div>
+    <div id="lista"></div>
+  </section>
+</main>
+<dialog id="detalhes" class="detalhes" aria-labelledby="tituloDetalhes">
+  <div class="detalhes-topo">
+    <div><div class="rotulo">calibração · detalhes</div><h2 id="tituloDetalhes">Painéis</h2></div>
+    <button id="btnRetrair" class="botao discreto pequeno" autofocus>Retrair</button>
+  </div>
+  <div id="detalhesCorpo" class="detalhes-corpo"></div>
+</dialog>
+
+<script>
+const REG = [
+  {k: 'tela', nome: 'Tela do jogo', uso: 'A área do mundo, sem as barras. Achada e conferida pelo nome do personagem, que fica sempre no centro.', auto: true},
+  {k: 'server_log', nome: 'Server Log', uso: 'Aba Server Log ativa: marque o cabeçalho e todo o texto, sem o campo de digitação. Deixe 5–6 linhas visíveis. Pode calibrar vazio, em local seguro. O título será conferido.'},
+  {k: 'spells', nome: 'Spells', opcional: true, uso: 'Opcional. A análise por magia está pausada; não precisa abrir este painel.'},
+  {k: 'mapa', nome: 'Map View', uso: 'O minimapa inteiro. Dá a posição, as voltas e os mapas da hunt.'},
+  {k: 'battle', nome: 'Battle List', uso: 'A lista de criaturas. Conta a pilha e acha o início da hunt.', auto: true},
+  {k: 'hunt', nome: 'Hunt Analyser', uso: 'Seu painel: XP raw, profit, seus supplies, dano e cura.', auto: true},
+  {k: 'xp', nome: 'XP Analyser', uso: 'A raw por hora dos últimos 15 min e o tempo até o próximo nível.', auto: true},
+  // 24/09 (user): o Supply Analyser entrou no lugar do Loot Analyser, que virou opcional
+  {k: 'supply', nome: 'Supply Analyser', uso: 'As poções e runas que você gastou e quanto custaram. Abra pelo seletor de Analytics do jogo.', auto: true},
+  {k: 'party', nome: 'Party Hunt', uso: 'O painel da pt: profit e supplies da pt inteira e de cada membro.', auto: true},
+  {k: 'input', nome: 'Input Analyser', uso: 'Dano recebido: total, pico por segundo, tipos de dano e de quais bichos.', auto: true},
+  {k: 'loot', nome: 'Loot Analyser', uso: 'Opcional: valor do loot e loot por hora. Pode deixar sem marcar.', auto: true, opcional: true},
+];
+const COR = {ok: '#6fdc8c', aviso: '#f2b44a', erro: '#ef6b6b'};
+const CINZA = '#6b7280', OURO = '#d6a84e';
+const SELO = {ok: 'lendo', aviso: 'confira', erro: 'não lê'};
+const $ = s => document.querySelector(s);
+const html = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const dois = i => String(i + 1).padStart(2, '0');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+let regioes = {}, status = {}, sel = 'tela', img = null, escala = 1, janela = null, arrasto = null, timer = null;
+const cv = $('#tela');
+let detalhesAlvo = null;
+const detalhesAbertos = new Set();
+
+function chipRegiao(g) {
+  const st = status[g.k];
+  const tipo = !regioes[g.k] ? '' : st?.status || '';
+  const texto = !regioes[g.k] ? (g.opcional ? 'opcional' : 'marcar') : st ? SELO[st.status] : 'conferindo';
+  return `<span class="chip ${html(tipo)}">${html(texto)}</span>`;
+}
+
+function desenhaDetalhes() {
+  if (!$('#detalhes').open) return;
+  const corpo = $('#detalhesCorpo'), scroll = corpo.scrollTop;
+  const campos = detalhesAlvo === 'todos' ? REG : REG.filter(g => g.k === detalhesAlvo);
+  $('#tituloDetalhes').textContent = detalhesAlvo === 'todos' ? 'Todos os painéis' : campos[0].nome;
+  $('#btnRetrair').textContent = detalhesAlvo === 'todos' ? 'Retrair todos' : 'Retrair';
+  corpo.innerHTML = campos.map(g => {
+    const r = regioes[g.k], st = status[g.k];
+    return `<details class="detalhe" data-k="${g.k}" ${detalhesAbertos.has(g.k) ? 'open' : ''}>
+      <summary>${html(g.nome)}${chipRegiao(g)}</summary>
+      <div class="detalhe-conteudo"><p class="uso">${html(g.uso)}</p>
+      <p class="res">${html(st?.texto || (r ? 'Conferindo a leitura…' : 'Capture a tela e marque esta região no print.'))}</p>
+      ${r && img ? `<canvas class="zoom" data-zoom="${g.k}" aria-label="Recorte de ${html(g.nome)}"></canvas>` : ''}
+      ${r ? `<button class="limpar" data-limpar="${g.k}">Limpar região</button>` : ''}</div>
+    </details>`;
+  }).join('');
+  corpo.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => {
+    if (!d.isConnected) return;
+    if (d.open) detalhesAbertos.add(d.dataset.k); else detalhesAbertos.delete(d.dataset.k);
+    desenhaZoom();
+  }));
+  desenhaZoom();
+  corpo.scrollTop = scroll;
+}
+
+function abreDetalhes(k) {
+  detalhesAlvo = k;
+  detalhesAbertos.clear();
+  (k === 'todos' ? REG : REG.filter(g => g.k === k)).forEach(g => detalhesAbertos.add(g.k));
+  if (!$('#detalhes').open) $('#detalhes').showModal();
+  desenhaDetalhes();
+  $('#detalhesCorpo').scrollTop = 0;
+}
+
+async function api(rota, corpo) {
+  if (corpo !== undefined && rota !== '/api/fonte') corpo = {...corpo, _fonte: fonteAtual};
+  const op = corpo === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo)};
+  return (await fetch(rota, op)).json();
+}
+
+// ------------------------------------------------------------ print + retângulos
+function desenha() {
+  $('#vazio').style.display = img ? 'none' : 'flex';
+  cv.style.display = img ? 'block' : 'none';
+  if (!img) return;
+  const W = cv.parentElement.clientWidth - 24;
+  escala = W / img.width;
+  const H = img.height * escala, dpr = window.devicePixelRatio || 1, px = 1 / escala;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const c = cv.getContext('2d');
+  c.setTransform(dpr * escala, 0, 0, dpr * escala, 0, 0);
+  c.drawImage(img, 0, 0);
+  REG.forEach((g, i) => {
+    const r = regioes[g.k];
+    if (!r) return;
+    const eSel = g.k === sel, cor = eSel ? OURO : (COR[status[g.k]?.status] || CINZA);
+    if (eSel) { c.fillStyle = 'rgba(214,168,78,.14)'; c.fillRect(r.left, r.top, r.width, r.height); }
+    c.lineWidth = (eSel ? 3 : 2) * px; c.strokeStyle = cor;
+    c.strokeRect(r.left, r.top, r.width, r.height);
+    const txt = eSel ? `${dois(i)} ${g.nome.toUpperCase()}` : dois(i);  // vizinhos colados: só o número
+    c.font = `500 ${11 * px}px "JetBrains Mono", Consolas, monospace`;
+    const w = c.measureText(txt).width + 8 * px, h = 16 * px, y = r.top - h >= 0 ? r.top - h : r.top;
+    c.fillStyle = 'rgba(11,12,16,.85)'; c.fillRect(r.left, y, w, h);
+    c.fillStyle = cor; c.fillText(txt, r.left + 4 * px, y + 12 * px);
+  });
+  if (arrasto?.r) {
+    const r = arrasto.r;
+    c.setLineDash([6 * px, 4 * px]); c.lineWidth = 2 * px; c.strokeStyle = OURO;
+    c.strokeRect(r.left, r.top, r.width, r.height); c.setLineDash([]);
+  }
+}
+
+// ------------------------------------------------------------ cards das regiões
+function desenhaLista() {
+  $('#lista').innerHTML = REG.map((g, i) => {
+    const r = regioes[g.k], st = status[g.k];
+    return `<div class="reg${g.k === sel ? ' sel' : ''}" data-k="${g.k}">
+      <div class="linha"><span class="rotulo">REGIÃO ${dois(i)}${g.opcional ? ' · OPCIONAL' : ''}</span>${chipRegiao(g)}</div>
+      <h3 class="reg-nome">${g.nome}</h3>
+      <p class="reg-resumo">${html(r && st ? st.texto : g.uso)}</p>
+      <div class="reg-acoes"><button class="expandir" data-expandir="${g.k}" aria-haspopup="dialog" aria-label="Expandir ${g.nome}">Expandir detalhes ↗</button>
+      ${r ? `<button class="limpar" data-limpar="${g.k}" aria-label="Limpar ${g.nome}">limpar</button>` : ''}</div>
+    </div>`;
+  }).join('');
+  desenhaDetalhes();
+  numeros();
+}
+
+function desenhaZoom() {
+  document.querySelectorAll('[data-zoom]').forEach(z => {
+  const r = regioes[z.dataset.zoom];
+  if (!r || !img || !z.closest('details').open) return;
+  const f = Math.min(3, (z.parentElement.clientWidth - 2) / r.width, 280 / r.height);
+  z.width = Math.max(1, Math.round(r.width * f)); z.height = Math.max(1, Math.round(r.height * f));
+  const c = z.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  c.drawImage(img, r.left, r.top, r.width, r.height, 0, 0, z.width, z.height);
+  });
+}
+
+function numeros() {
+  $('#tJanela').textContent = janela?.largura ? `${janela.largura}×${janela.altura}` : '—';
+  $('#tChar').textContent = janela?.char || '—';
+  $('#tTile').textContent = regioes.tela ? `${Math.round(regioes.tela.width / 15)} px` : '—';
+  const marcadas = REG.filter(g => regioes[g.k]);
+  $('#tOk').textContent = img ? `${marcadas.filter(g => status[g.k]?.status === 'ok').length} de ${marcadas.length}` : '—';
+}
+
+// ------------------------------------------------------------ conferência
+async function valida(k) {
+  const r = regioes[k];
+  if (!r || !img) return;
+  const alvo = JSON.stringify(r);
+  status[k] = null; desenhaLista();
+  const res = await api('/api/validar', {k, r, nome: janela?.char});
+  if (JSON.stringify(regioes[k]) !== alvo) return;   // a região mudou enquanto conferia
+  status[k] = res; desenha(); desenhaLista();
+}
+const validaTodas = () => REG.forEach(g => regioes[g.k] && valida(g.k));
+
+function carregaPrint() {
+  return new Promise(ok => {
+    const i = new Image();
+    i.onload = () => { img = i; desenha(); desenhaLista(); ok(true); };
+    i.onerror = () => ok(false);
+    i.src = '/api/print.png?t=' + Date.now();
+  });
+}
+
+// ------------------------------------------------------------ mouse e teclado
+function ponto(e) {
+  const b = cv.getBoundingClientRect();
+  return {x: clamp((e.clientX - b.left) / escala, 0, img.width), y: clamp((e.clientY - b.top) / escala, 0, img.height)};
+}
+cv.addEventListener('mousedown', e => {
+  if (!img) return;
+  e.preventDefault();
+  const p = ponto(e);
+  arrasto = {x0: p.x, y0: p.y, r: null};
+});
+window.addEventListener('mousemove', e => {
+  if (!arrasto) return;
+  const p = ponto(e);
+  arrasto.r = {left: Math.round(Math.min(arrasto.x0, p.x)), top: Math.round(Math.min(arrasto.y0, p.y)),
+               width: Math.round(Math.abs(p.x - arrasto.x0)), height: Math.round(Math.abs(p.y - arrasto.y0))};
+  desenha();
+});
+window.addEventListener('mouseup', () => {
+  if (!arrasto) return;
+  const r = arrasto.r;
+  arrasto = null;
+  if (r && r.width >= 8 && r.height >= 8) { regioes[sel] = r; valida(sel); }
+  desenha(); desenhaLista();
+});
+window.addEventListener('keydown', e => {
+  if ($('#detalhes').open || /^(INPUT|TEXTAREA|BUTTON|SUMMARY)$/.test(e.target.tagName)) return;
+  const passo = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]}[e.key];
+  const r = regioes[sel];
+  if (!passo || !r || !img) return;
+  e.preventDefault();
+  if (e.shiftKey) {
+    r.width = clamp(r.width + passo[0], 8, img.width - r.left);
+    r.height = clamp(r.height + passo[1], 8, img.height - r.top);
+  } else {
+    r.left = clamp(r.left + passo[0], 0, img.width - r.width);
+    r.top = clamp(r.top + passo[1], 0, img.height - r.height);
+  }
+  status[sel] = null; desenha(); desenhaLista();
+  clearTimeout(timer); timer = setTimeout(() => valida(sel), 300);
+});
+function acaoRegiao(e) {
+  const limpar = e.target.closest('[data-limpar]');
+  if (limpar) {
+    delete regioes[limpar.dataset.limpar]; delete status[limpar.dataset.limpar];
+    desenha(); desenhaLista();
+    return;
+  }
+  const expandir = e.target.closest('[data-expandir]');
+  if (expandir) {
+    sel = expandir.dataset.expandir; desenha(); desenhaLista(); abreDetalhes(sel);
+    return;
+  }
+  const card = e.target.closest('.reg');
+  if (!card) return;
+  sel = card.dataset.k; desenha(); desenhaLista();
+}
+$('#lista').addEventListener('click', acaoRegiao);
+$('#detalhesCorpo').addEventListener('click', acaoRegiao);
+$('#btnExpandirTodos').onclick = () => abreDetalhes('todos');
+$('#btnRetrair').onclick = () => $('#detalhes').close();
+$('#detalhes').addEventListener('close', () => {
+  const botao = detalhesAlvo === 'todos' ? $('#btnExpandirTodos') : document.querySelector(`[data-expandir="${detalhesAlvo}"]`);
+  botao?.focus({preventScroll: true});
+});
+$('#detalhes').addEventListener('click', e => {
+  if (e.target !== $('#detalhes')) return;
+  const b = e.target.getBoundingClientRect();
+  if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) e.target.close();
+});
+
+// ------------------------------------------------------------ botões
+$('#btnCapturar').onclick = async () => {
+  const b = $('#btnCapturar'), msg = $('#msgCaptura');
+  let s = 20;
+  const conta = () => { msg.textContent = fonteAtual.tipo === 'twitch' ? 'Conectando à Twitch e aguardando um quadro…' : `Agora clique na janela do RubinOT… ${s} s`; };
+  b.disabled = true; msg.classList.remove('erro'); conta();
+  const t = setInterval(() => { s = Math.max(0, s - 1); conta(); }, 1000);
+  const res = await api('/api/capturar', {}).catch(() => ({ok: false, erro: 'O programa não respondeu.'}));
+  clearInterval(t); b.disabled = false;
+  if (!res.ok) { msg.textContent = res.erro; msg.classList.add('erro'); return; }
+  // 24/09: as regiões da calibração anterior só continuam valendo se a janela tem o mesmo tamanho
+  const outroTamanho = janela?.largura && (janela.largura !== res.largura || janela.altura !== res.altura);
+  janela = res; status = {};
+  if (!await carregaPrint()) return;
+  if (res.aviso) { msg.textContent = res.aviso; msg.classList.add('erro'); return; }   // escala do Windows: nada lê
+  msg.textContent = `Print capturado às ${new Date().toTimeString().slice(0, 5)}. ${await detecta()}`
+    + (outroTamanho ? ' A janela do jogo está com outro tamanho: confira TODAS as regiões antes de salvar.' : '');
+  msg.classList.toggle('erro', !!outroTamanho);
+};
+
+// painéis achados pelo título do cabeçalho; tela do jogo, console e minimapa a pessoa confere
+async function detecta() {
+  const res = await api('/api/detectar', {nome: janela?.char}).catch(() => ({ok: false, erro: 'O programa não respondeu.'}));
+  if (!res.ok) return res.erro;
+  Object.assign(regioes, res.regioes);
+  status = {}; desenha(); desenhaLista(); validaTodas();
+  const autos = REG.filter(g => g.auto), achou = autos.filter(g => res.regioes[g.k]);
+  // 24/09 (user): "não reconheceu todos os meus painéis e eu não tinha mexido nisso, fui obrigado a
+  // reconfigurar". O que a detecção não acha (Server Log e Map View, sempre) continua valendo da
+  // calibração anterior — só precisa marcar na mão o que nunca foi marcado.
+  const mantidas = REG.filter(g => regioes[g.k] && !res.regioes[g.k]).map(g => g.nome);
+  const faltam = REG.filter(g => !regioes[g.k] && !g.opcional).map(g => g.nome);
+  return `Achei ${achou.length} de ${autos.length}: os painéis pelo título ou pelos campos, a tela do jogo pelo nome do personagem.` +
+    (mantidas.length ? ` Mantive da calibração anterior: ${mantidas.join(', ')} — confira no print se continuam no lugar.` : '') +
+    (faltam.length ? ` Falta marcar na mão: ${faltam.join(', ')}.` : ' Nada para marcar na mão.');
+}
+$('#btnDetectar').onclick = async () => {
+  const msg = $('#msgCaptura');
+  msg.classList.toggle('erro', !img);
+  msg.textContent = img ? await detecta() : 'Capture a tela do jogo primeiro.';
+};
+
+$('#btnSalvar').onclick = async () => {
+  let res;
+  try { res = await api('/api/salvar', {regioes, janela}); } catch { res = {ok: false}; }
+  const m = $('#msgSalvar');
+  m.classList.toggle('erro', !res.ok);
+  m.textContent = res.ok ? `Calibração salva às ${res.salvo_em.slice(11, 16)}.${res.aviso ? ' ' + res.aviso : ''}` : (res.erro || 'Não salvou.');
+  festa(res);
+};
+
+// todo clique em Salvar = o gato do scuba dança com a música, e embaixo ele conta como foi (user, 21/09).
+// O fundo do gif já vem transparente; gato_scuba.png é ele em PNG animado. O som só toca se o arquivo
+// gato_som.mp3 existir na pasta ui.
+const FRASES_OK = [
+  'Miau! Tudo no lugar. Pode ir caçar que eu fico de olho.',
+  'Glub glub! Calibração salva, capitão.',
+  'Salvo! Até o gato mergulhador aprovou.',
+  'Painéis no lugar. Agora é só lurar e ser feliz.',
+  'Calibrado! Nenhum bicho passa despercebido.',
+];
+const FRASES_FALTA = [   // {x} = as regiões que faltam marcar
+  'Glub… afundei! Falta marcar: {x}.',
+  'Miau? Procurei, procurei e não achei: {x}.',
+  'Acabou o oxigênio antes de achar {x}.',
+  'Quase! Só falta marcar {x}.',
+];
+const sorteia = l => l[Math.floor(Math.random() * l.length)];
+function festa(res) {
+  const g = $('#gato'), fala = $('#gatoFala');
+  const falta = !res.ok && /^Falta marcar: (.+)$/.exec(res.erro || '');
+  fala.textContent = res.ok ? sorteia(FRASES_OK)
+    : falta ? sorteia(FRASES_FALTA).replace('{x}', falta[1])
+    : res.erro ? `Glub… ${res.erro}`
+    : 'Glub… o programa não respondeu. Tenta salvar de novo?';
+  fala.classList.toggle('erro', !res.ok);
+  $('#gatoImg').src = '/ui/gato_scuba.png?' + Date.now();   // recomeça a dança do início
+  g.classList.add('on');
+  festa.som?.pause();                                       // clique de novo: a música recomeça, não empilha
+  const som = festa.som = new Audio('/ui/gato_som.mp3');
+  const some = () => { g.classList.remove('on'); som.pause(); };
+  som.onended = some;                                        // o gato dança a música inteira (10,2 s)
+  som.play().catch(() => {});
+  clearTimeout(festa.fim);
+  festa.fim = setTimeout(some, 11000);                      // sem som (arquivo ausente), some do mesmo jeito
+}
+
+$('#btnDesligar').onclick = async () => {
+  if (!confirm('Desligar o analisador? Todos os processos dele serão encerrados.')) return;
+  await api('/api/desligar', {}).catch(() => null);
+  $('#desligado').classList.add('on');
+};
+
+// ------------------------------------------------------------ jogo aberto?
+async function vigiaJogo() {
+  try {
+    const s = await api('/api/status');
+    if (s.fonte?.tipo === 'twitch') {
+      $('#jogo').textContent = 'Twitch · ' + s.fonte.canal;
+      return;
+    }
+    $('#jogo').innerHTML = s.jogo
+      ? `<span class="dot on"></span>RubinOT aberto${s.char ? ' · ' + html(s.char) : ''}`
+      : '<span class="dot"></span>jogo fechado';
+  } catch {
+    $('#jogo').innerHTML = '<span class="dot erro"></span>programa fechado';
+  }
+}
+setInterval(vigiaJogo, 3000);
+vigiaJogo();
+
+window.addEventListener('resize', () => { desenha(); desenhaZoom(); });
+let fonteAtual = {tipo: 'janela'};
+function fonteEditada() {
+  const twitch = $('#fonteTipo').value === 'twitch';
+  $('#camposTwitch').hidden = !twitch;
+  const mudou = $('#fonteTipo').value !== fonteAtual.tipo || (twitch &&
+    ($('#fonteCanal').value !== (fonteAtual.canal || '') || $('#fonteChar').value !== (fonteAtual.char || '')));
+  $('#btnCapturar').disabled = mudou;
+  $('#btnSalvar').disabled = mudou;
+  $('#fonteMensagem').textContent = mudou ? 'Clique em Usar esta fonte para aplicar a alteração antes de capturar.'
+    : twitch ? 'A transmissão tem atraso. Mapas dependem da base local e alertas não acompanham o jogo em tempo real.' : '';
+}
+$('#fonteTipo').onchange = fonteEditada;
+$('#fonteCanal').oninput = fonteEditada;
+$('#fonteChar').oninput = fonteEditada;
+$('#btnFonte').onclick = async () => {
+  const b = $('#btnFonte'); b.disabled = true;
+  try {
+    const r = await api('/api/fonte', {tipo: $('#fonteTipo').value, canal: $('#fonteCanal').value, char: $('#fonteChar').value});
+    if (!r.ok) { $('#fonteMensagem').textContent = r.erro; return; }
+    location.reload();
+  } catch { $('#fonteMensagem').textContent = 'Não foi possível trocar a fonte. Tente novamente.'; }
+  finally { b.disabled = false; }
+};
+(async () => {
+  const c = await api('/api/calibracao');
+  fonteAtual = c.fonte || {tipo: 'janela'};
+  $('#fonteTipo').value = fonteAtual.tipo;
+  $('#fonteCanal').value = fonteAtual.canal || '';
+  $('#fonteChar').value = fonteAtual.char || '';
+  $('#fonteTipo').onchange();
+  if (fonteAtual.tipo === 'twitch') {
+    $('#msgCaptura').textContent = 'Clique em Capturar para testar a conexão e trazer uma imagem da live. Preserve a proporção e o tamanho original do jogo no OBS.';
+    $('#fonteMensagem').textContent = 'A transmissão tem atraso. Mapas dependem da base local e alertas não acompanham o jogo em tempo real.';
+  }
+  regioes = c.regioes || {}; janela = c.janela;
+  $('#msgSalvar').textContent = c.salvo_em
+    ? `Última calibração salva em ${c.salvo_em.slice(8, 10)}/${c.salvo_em.slice(5, 7)} às ${c.salvo_em.slice(11, 16)}.`
+    : 'Capture a tela do jogo e marque cada região.';
+  if (!(c.tem_print && await carregaPrint() && (validaTodas(), true))) { desenha(); desenhaLista(); }
+})();
+</script>
+<script src="/ui/tutorial.js"></script>
+</body>
+</html>

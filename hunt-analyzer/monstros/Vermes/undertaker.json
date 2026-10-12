@@ -1,0 +1,55 @@
+{
+ "nome": "Undertaker",
+ "categoria": "Vermes",
+ "hp": 20100,
+ "xp": 14560,
+ "toma": {
+  "físico": 115,
+  "terra": 90,
+  "fogo": 100,
+  "morte": 60,
+  "energia": 110,
+  "sagrado": 105,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "()"
+  ],
+  "terra": [
+   "()"
+  ],
+  "morte": [
+   "()"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-X Great Spirit Potion",
+   "Undertaker Fangs"
+  ],
+  "incomum": [
+   "0-X Crystal Coins"
+  ],
+  "semi-raro": [
+   "Terra Legs",
+   "Terra Boots",
+   "Necrotic Rod",
+   "Spider Silk",
+   "Relic Sword",
+   "Wand of Voodoo",
+   "Blue Crystal Shard",
+   "Butterfly Ring"
+  ],
+  "raro": [
+   "Violet Gem"
+  ]
+ },
+ "gif": "undertaker.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Undertaker",
+ "catalogado": "2026-10-08"
+}

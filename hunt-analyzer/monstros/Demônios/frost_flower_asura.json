@@ -1,0 +1,77 @@
+{
+ "nome": "Frost Flower Asura",
+ "categoria": "Demônios",
+ "hp": 3500,
+ "xp": 4200,
+ "toma": {
+  "físico": 105,
+  "terra": 110,
+  "fogo": 115,
+  "morte": 80,
+  "energia": 100,
+  "sagrado": 70,
+  "gelo": 0,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-200)"
+  ],
+  "gelo": [
+   "Strike (150-200)",
+   "Beam causando Freezing em 8hp/turno"
+  ],
+  "dreno de mana": [
+   "Beam (70-130)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-? Gold Coin",
+   "0-? Platinum Coin"
+  ],
+  "incomum": [
+   "0-? Great Health Potion",
+   "0-? White Pearls",
+   "0-? Small Diamonds",
+   "0-? Small Sapphires",
+   "Soul Orb",
+   "Demonic Essence",
+   "Flask of Demonic Blood",
+   "0-? Assassin Stars",
+   "Golden Lotus Brooch",
+   "Peacock Feather Fan"
+  ],
+  "semi-raro": [
+   "Silver Brooch",
+   "0-? Black Pearls",
+   "0-? Small Emeralds",
+   "0-? Small Rubies",
+   "Yellow Gem",
+   "Silver Necklace",
+   "Hailstorm Rod",
+   "Tribal Mask",
+   "Northwind Rod",
+   "0-? Small Topazes"
+  ],
+  "raro": [
+   "Crystal Ring",
+   "Blue Robe",
+   "Assassin Dagger",
+   "Oriental Shoes"
+  ],
+  "muito raro": [
+   "Blue Gem",
+   "Skullcracker Armor",
+   "Gold Ingot",
+   "Spellbook of Mind Control"
+  ]
+ },
+ "gif": "frost_flower_asura.gif",
+ "local": [
+  "Asura Palace",
+  "Asura Vaults"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Frost_Flower_Asura",
+ "catalogado": "2026-09-22"
+}

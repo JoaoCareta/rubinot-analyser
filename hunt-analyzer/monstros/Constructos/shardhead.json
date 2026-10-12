@@ -1,0 +1,24 @@
+{
+ "nome": "Shardhead",
+ "categoria": "Constructos",
+ "hp": 800,
+ "xp": 650,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 0,
+  "morte": 0,
+  "energia": 120,
+  "sagrado": 0,
+  "gelo": 0,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {},
+ "gif": "shardhead.gif",
+ "local": [
+  "Formorgar Glacier"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Shardhead",
+ "catalogado": "2026-09-22"
+}

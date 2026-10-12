@@ -1,0 +1,45 @@
+{
+ "nome": "Wardragon",
+ "categoria": "Dragões",
+ "hp": 6960,
+ "xp": 5340,
+ "toma": {
+  "físico": 100,
+  "terra": 110,
+  "fogo": 60,
+  "morte": 85,
+  "energia": 105,
+  "sagrado": 105,
+  "gelo": 110,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "0-? Platinum Coins"
+  ],
+  "incomum": [
+   "Gold Ingot",
+   "Dragon Tongue",
+   "Nimmersatt's Seal",
+   "Wardragon Claw",
+   "Wardragon Tooth"
+  ],
+  "semi-raro": [
+   "Black Pearl",
+   "Ultimate Health Potion",
+   "0-? Onyx Chips",
+   "Ultimate Mana Potion"
+  ],
+  "raro": [
+   "Dragonbone Staff",
+   "White Gem"
+  ]
+ },
+ "gif": "wardragon.gif",
+ "local": [
+  "Nimmersatt's Breeding Ground"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Wardragon",
+ "catalogado": "2026-09-28"
+}

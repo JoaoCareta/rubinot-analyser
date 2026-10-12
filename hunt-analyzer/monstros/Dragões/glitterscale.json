@@ -1,0 +1,24 @@
+{
+ "nome": "Glitterscale",
+ "categoria": "Dragões",
+ "hp": 1111,
+ "xp": 700,
+ "toma": {
+  "físico": 100,
+  "terra": 20,
+  "fogo": 0,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {},
+ "gif": "glitterscale.gif",
+ "local": [
+  "Ancient Temple"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Glitterscale",
+ "catalogado": "2026-09-22"
+}

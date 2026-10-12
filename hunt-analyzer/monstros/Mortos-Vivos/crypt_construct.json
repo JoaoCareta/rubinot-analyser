@@ -1,0 +1,49 @@
+{
+ "nome": "Crypt Construct",
+ "categoria": "Mortos-Vivos",
+ "hp": 25000,
+ "xp": 19730,
+ "toma": {
+  "físico": 106,
+  "terra": 109,
+  "fogo": 106,
+  "morte": 92,
+  "energia": 82,
+  "sagrado": 92,
+  "gelo": 88,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Crystal Coin"
+  ],
+  "incomum": [
+   "1+ Small Amethyst",
+   "1+ Cyan Crystal Fragment"
+  ],
+  "semi-raro": [
+   "1+ Blue Gem",
+   "Blue Crystal Shard",
+   "Toe Nails",
+   "Crystallized Death",
+   "Cluster of Crystallized Death"
+  ],
+  "raro": [
+   "Amber Staff",
+   "Amber with a Bug",
+   "Amber (Item)"
+  ],
+  "muito raro": [
+   "Amber with a Dragonfly",
+   "Fetid Heart"
+  ]
+ },
+ "gif": "crypt_construct.gif",
+ "local": [
+  "Unhallowed Crypt",
+  "Forgotten Crypt"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Crypt_Construct",
+ "catalogado": "2026-09-23"
+}

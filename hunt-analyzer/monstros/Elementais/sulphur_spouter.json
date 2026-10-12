@@ -1,0 +1,46 @@
+{
+ "nome": "Sulphur Spouter",
+ "categoria": "Elementais",
+ "hp": 19000,
+ "xp": 12381,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 75,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 120,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "Sulphur Powder"
+  ],
+  "incomum": [
+   "1+ Crystal Coins",
+   "1+ Ultimate Mana Potions"
+  ],
+  "semi-raro": [
+   "Giant Shimmering Pearl",
+   "Yellow Gem",
+   "Red Gem",
+   "Might Ring",
+   "Knight Legs",
+   "Slightly Rusted Legs",
+   "Warrior's Shield"
+  ],
+  "raro": [
+   "Fire Sword",
+   "Crystal Crossbow",
+   "Ring of Red Plasma"
+  ]
+ },
+ "gif": "sulphur_spouter.gif",
+ "local": [
+  "Monster Graveyard"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Sulphur_Spouter",
+ "catalogado": "2026-10-08"
+}

@@ -1,0 +1,31 @@
+HUNT ANALYZER — analisador de hunt do RubinOT
+
+Instalação
+Execute HuntAnalyzer-Setup.exe e siga o assistente. O programa já inclui
+Python e as bibliotecas necessárias: não é preciso baixá-los separadamente.
+Compatível com Windows 10/11 de 64 bits. A instalação funciona sem internet.
+Microsoft Edge ou Google Chrome precisa estar instalado para abrir a interface.
+
+Primeiro uso
+Abra Hunt Analyzer pelo atalho. Com o RubinOT em primeiro plano, capture
+a janela e confira os painéis na calibração. Salve e acesse a tela de hunt.
+Use a escala do Windows em 100% ou confira o aviso de DPI na calibração.
+Mantenha o Server Log visível para a leitura de combate.
+
+O programa observa o começo da hunt e fecha as voltas automaticamente.
+Fechar a janela ou clicar em Desligar salva a hunt e encerra o analisador.
+Minimizar não desliga. Um novo clique no atalho traz a janela para frente.
+
+Dados e espaço
+Por padrão, a instalação fica em %LOCALAPPDATA%\HuntAnalyzer.
+As gravações usam cerca de 3 GB por hora. Reserve pelo menos 20 GB livres.
+O analisador interrompe a gravação quando restam menos de 10 GB.
+Ao encerrar, ele limpa os quadros das sessões antigas e mantém os números.
+Calibração e histórico pertencem a quem usa e não acompanham este instalador.
+Atualizar o programa preserva os dados. A desinstalação remove os arquivos
+instalados e os atalhos, mas mantém os dados criados durante o uso.
+
+Privacidade
+O programa captura a janela do RubinOT quando ela está em primeiro plano.
+As hunts são analisadas localmente. A internet é usada para buscar dados de
+monstros no TibiaWiki e carregar as fontes de letra da interface.

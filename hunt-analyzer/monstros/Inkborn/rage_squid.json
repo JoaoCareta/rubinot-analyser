@@ -1,0 +1,74 @@
+{
+ "nome": "Rage Squid",
+ "categoria": "Inkborn",
+ "hp": 17000,
+ "xp": 16300,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 0,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 115,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-650)"
+  ],
+  "fogo": [
+   "Fire Strike (600-750)",
+   "Fire Berserk (500-700)",
+   "Cross (850-1200)",
+   "Ball (600-750)",
+   "Beam (400-500)"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "0-6 Platinum Coins",
+   "0-3 Ultimate Health Potions"
+  ],
+  "incomum": [
+   "0-3 Great Mana Potions",
+   "0-3 Great Spirit Potions",
+   "0-6 Fire Mushrooms",
+   "0-? Glowing Runes",
+   "0-5 Small Amethysts",
+   "0-5 Small Emeralds",
+   "0-5 Small Ruby",
+   "0-5 Small Topaz",
+   "Demonic Essence",
+   "Fire Axe",
+   "Inkwell (Black)"
+  ],
+  "semi-raro": [
+   "Demon Shield",
+   "Demonrage Sword",
+   "Giant Sword",
+   "Might Ring",
+   "Orb",
+   "Piece of Dead Brain",
+   "Platinum Amulet",
+   "Red Gem",
+   "Slime Heart",
+   "Talon"
+  ],
+  "raro": [
+   "Devil Helmet",
+   "Purple Tome"
+  ],
+  "muito raro": [
+   "Demon Trophy",
+   "Magic Plate Armor",
+   "Wand of Everblazing"
+  ]
+ },
+ "gif": "rage_squid.gif",
+ "fonte": "https://www.tibiawiki.com.br/wiki/Rage_Squid",
+ "catalogado": "2026-09-21",
+ "local": [
+  "Secret Library Fire Section"
+ ]
+}

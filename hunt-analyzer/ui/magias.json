@@ -1,0 +1,3111 @@
+{
+  "consultado": "2026-10-11",
+  "magias": [
+    {
+      "nome": "Apprentice's Strike",
+      "elemento": "fogo",
+      "bp": 15,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori min flam",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Apprentice's Strike",
+      "nivel": 6,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Apprentice%27s_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_apprentice_s_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/1/11/Apprentice%27s_Strike.gif",
+      "id": "apprentice_s_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Apprentice%27s_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Apprentice%27s_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Apprentice%27s_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Buzz",
+      "elemento": "energia",
+      "bp": 15,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori infir vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Buzz",
+      "nivel": 1,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Buzz",
+      "observacao": "",
+      "imagem": "/ui/magia_buzz.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/d/d5/Buzz.gif",
+      "id": "buzz",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Buzz",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Buzz",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Buzz",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Chill Out",
+      "elemento": "gelo",
+      "bp": 10,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo infir frigo hur",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Chill Out",
+      "nivel": 1,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Chill_Out",
+      "observacao": "",
+      "imagem": "/ui/magia_chill_out.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/5/53/Chill_Out.gif",
+      "id": "chill_out",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Chill_Out",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Chill_Out",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Chill_Out",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Curse",
+      "elemento": "morte",
+      "bp": 120,
+      "cd": 40,
+      "grupo": 2,
+      "palavras": "utori mort",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Curse",
+      "nivel": 75,
+      "periodico": true,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Curse",
+      "observacao": "Dano ao longo do tempo; fora da comparação de dano imediato.",
+      "id": "curse",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Curse",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Curse",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Curse",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Death Strike",
+      "elemento": "morte",
+      "bp": 45,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori mort",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Death Strike",
+      "nivel": 16,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Death_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_death_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/4/4e/Death_Strike.gif",
+      "id": "death_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Electrify",
+      "elemento": "energia",
+      "bp": 120,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "utori vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Electrify",
+      "nivel": 34,
+      "periodico": true,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Electrify",
+      "observacao": "Dano ao longo do tempo; fora da comparação de dano imediato.",
+      "id": "electrify",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Electrify",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Electrify",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Electrify",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Energy Beam",
+      "elemento": "energia",
+      "bp": 60,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo vis lux",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Energy Beam",
+      "nivel": 23,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Beam",
+      "observacao": "",
+      "imagem": "/ui/magia_energy_beam.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/b/ba/Energy_Beam.gif",
+      "id": "energy_beam",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 40,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Energy Strike",
+      "elemento": "energia",
+      "bp": 45,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori vis",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Energy Strike",
+      "nivel": 12,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_energy_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/9/9b/Energy_Strike.gif",
+      "id": "energy_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Energy Wave",
+      "elemento": "energia",
+      "bp": 150,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exevo vis hur",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Energy Wave",
+      "nivel": 38,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Wave",
+      "observacao": "",
+      "imagem": "/ui/magia_energy_wave.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/7/7d/Energy_Wave.gif",
+      "id": "energy_wave",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Energy_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 170,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Envenom",
+      "elemento": "terra",
+      "bp": 350,
+      "cd": 40,
+      "grupo": 2,
+      "palavras": "utori pox",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Envenom",
+      "nivel": 50,
+      "periodico": true,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Envenom",
+      "observacao": "Dano ao longo do tempo; fora da comparação de dano imediato.",
+      "id": "envenom",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Envenom",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Envenom",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Envenom",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Eternal Winter",
+      "elemento": "gelo",
+      "bp": 200,
+      "cd": 40,
+      "grupo": 4,
+      "palavras": "exevo gran mas frigo",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "ue",
+      "nivel": 60,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Eternal_Winter",
+      "observacao": "",
+      "imagem": "/ui/magia_eternal_winter.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/6/6e/Eternal_Winter.gif",
+      "id": "eternal_winter",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 40,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Eternal_Winter",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Eternal_Winter",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Eternal_Winter",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 1050,
+      "grupo_secundario": "ue",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Fire Wave",
+      "elemento": "fogo",
+      "bp": 40,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo flam hur",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Fire Wave",
+      "nivel": 18,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Fire_Wave",
+      "observacao": "",
+      "imagem": "/ui/magia_fire_wave.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/c/cf/Fire_Wave.gif",
+      "id": "fire_wave",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 25,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Flame Strike",
+      "elemento": "fogo",
+      "bp": 45,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori flam",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Flame Strike",
+      "nivel": 8,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Flame_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_flame_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/c/cd/Flame_Strike.gif",
+      "id": "flame_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Death Echo",
+      "elemento": "morte",
+      "bp": 75,
+      "cd": 6,
+      "grupo": 2,
+      "palavras": "exevo mort ora",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Death Echo",
+      "nivel": 120,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Death_Echo",
+      "observacao": "Segundo impacto reduzido; exige modelo próprio.",
+      "id": "death_echo",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Echo",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Echo",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Death_Echo",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 150,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Great Energy Beam",
+      "elemento": "energia",
+      "bp": 155,
+      "cd": 6,
+      "grupo": 2,
+      "palavras": "exevo gran vis lux",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "beams",
+      "nivel": 29,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Great_Energy_Beam",
+      "observacao": "",
+      "imagem": "/ui/magia_great_energy_beam.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/6/67/Great_Energy_Beam.gif",
+      "id": "great_energy_beam",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 6,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibia.com/news/?id=8872&subtopic=newsarchive",
+          "vigencia": "2026-07-07",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "auditado_oficial"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Energy_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Energy_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 110,
+      "grupo_secundario": "beams",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Hell's Core",
+      "elemento": "fogo",
+      "bp": 250,
+      "cd": 40,
+      "grupo": 4,
+      "palavras": "exevo gran mas flam",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "ue",
+      "nivel": 60,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Hell%27s_Core",
+      "observacao": "",
+      "imagem": "/ui/magia_hell_s_core.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/0e/Hell%27s_Core.gif",
+      "id": "hell_s_core",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 40,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Hell%27s_Core",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Hell%27s_Core",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Hell%27s_Core",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 1100,
+      "grupo_secundario": "ue",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ice Strike",
+      "elemento": "gelo",
+      "bp": 45,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori frigo",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Ice Strike",
+      "nivel": 8,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_ice_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/c/c6/Ice_Strike.gif",
+      "id": "ice_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ignite",
+      "elemento": "fogo",
+      "bp": 120,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "utori flam",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Ignite",
+      "nivel": 26,
+      "periodico": true,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ignite",
+      "observacao": "Dano ao longo do tempo; fora da comparação de dano imediato.",
+      "id": "ignite",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ignite",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ignite",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ignite",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": null,
+      "estado_regra": "parcial"
+    },
+    {
+      "nome": "Lightning",
+      "elemento": "energia",
+      "bp": 110,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exori amp vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 3,
+      "familia": "Lightning",
+      "nivel": 55,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Lightning",
+      "observacao": "",
+      "imagem": "/ui/magia_lightning.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/5/58/Lightning.gif",
+      "id": "lightning",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Lightning",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Lightning",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Lightning",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 60,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Great Fire Wave",
+      "elemento": "fogo",
+      "bp": 100,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo gran flam hur",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Great Fire Wave",
+      "nivel": 38,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fire_Wave",
+      "observacao": "",
+      "imagem": "/ui/magia_great_fire_wave.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/1/1d/Great_Fire_Wave.gif",
+      "id": "great_fire_wave",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fire_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 120,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ice Burst",
+      "elemento": "gelo",
+      "bp": 115,
+      "cd": 22,
+      "grupo": 2,
+      "palavras": "exevo ulus frigo",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "bursts",
+      "nivel": null,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Burst",
+      "observacao": "",
+      "imagem": "/ui/magia_ice_burst.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/8/82/Ice_Burst.gif",
+      "id": "ice_burst",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 22,
+      "requer_roda": true,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [
+        "Bonus por HP e estágio da roda não aplicado ao cenário base"
+      ],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ice_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 230,
+      "grupo_secundario": "bursts",
+      "requer_revelation": 10,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Great Death Beam",
+      "elemento": "morte",
+      "bp": 155,
+      "cd": 6,
+      "grupo": 2,
+      "palavras": "exevo max mort",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "beams",
+      "nivel": 66,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Great_Death_Beam",
+      "observacao": "",
+      "imagem": "/ui/magia_great_death_beam.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/f/f2/Great_Death_Beam.gif",
+      "id": "great_death_beam",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 6,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibia.com/news/?id=8872&subtopic=newsarchive",
+          "vigencia": "2026-07-07",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "auditado_oficial"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Death_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Death_Beam",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 140,
+      "grupo_secundario": "beams",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Forked Glacier",
+      "elemento": "gelo",
+      "bp": 90,
+      "cd": 6,
+      "grupo": 2,
+      "palavras": "exevo fur frigo",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 7,
+      "familia": "Forked Glacier",
+      "nivel": 90,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Glacier",
+      "observacao": "",
+      "imagem": "/ui/magia_forked_glacier.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/7/77/Forked_Glacier.gif",
+      "id": "forked_glacier",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibia.com/news/?id=8872&subtopic=newsarchive",
+          "vigencia": "2026-07-07",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "auditado_oficial"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Glacier",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Glacier",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 180,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Forked Thorns",
+      "elemento": "terra",
+      "bp": 97,
+      "cd": 6,
+      "grupo": 2,
+      "palavras": "exevo fur tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 6,
+      "familia": "Forked Thorns",
+      "nivel": 80,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Thorns",
+      "observacao": "",
+      "imagem": "/ui/magia_forked_thorns.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/3/38/Forked_Thorns.gif",
+      "id": "forked_thorns",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibia.com/news/?id=8872&subtopic=newsarchive",
+          "vigencia": "2026-07-07",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "auditado_oficial"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Thorns",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Forked_Thorns",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 180,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Physical Strike",
+      "elemento": "físico",
+      "bp": 50,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori moe ico",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Physical Strike",
+      "nivel": 16,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Physical_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_physical_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/3/33/Physical_Strike.gif",
+      "id": "physical_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Physical_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Physical_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Physical_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Rage of the Skies",
+      "elemento": "energia",
+      "bp": 200,
+      "cd": 40,
+      "grupo": 4,
+      "palavras": "exevo gran mas vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "ue",
+      "nivel": 55,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Rage_of_the_Skies",
+      "observacao": "",
+      "imagem": "/ui/magia_rage_of_the_skies.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/9/9e/Rage_of_the_Skies.gif",
+      "id": "rage_of_the_skies",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 40,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Rage_of_the_Skies",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Rage_of_the_Skies",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Rage_of_the_Skies",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 600,
+      "grupo_secundario": "ue",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Strong Energy Strike",
+      "elemento": "energia",
+      "bp": 125,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exori gran vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "strong-strikes",
+      "nivel": 80,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Energy_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_strong_energy_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/b/b2/Strong_Energy_Strike.gif",
+      "id": "strong_energy_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 8,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 60,
+      "grupo_secundario": "strong-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Strong Flame Strike",
+      "elemento": "fogo",
+      "bp": 125,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exori gran flam",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "strong-strikes",
+      "nivel": 70,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Flame_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_strong_flame_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/6/66/Strong_Flame_Strike.gif",
+      "id": "strong_flame_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 8,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 60,
+      "grupo_secundario": "strong-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Strong Ice Strike",
+      "elemento": "gelo",
+      "bp": 115,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exori gran frigo",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "strong-strikes",
+      "nivel": 80,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_strong_ice_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/04/Strong_Ice_Strike.gif",
+      "id": "strong_ice_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 8,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 60,
+      "grupo_secundario": "strong-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Strong Ice Wave",
+      "elemento": "gelo",
+      "bp": 140,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo gran frigo hur",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Strong Ice Wave",
+      "nivel": 40,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Wave",
+      "observacao": "",
+      "imagem": "/ui/magia_strong_ice_wave.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/a/ae/Strong_Ice_Wave.gif",
+      "id": "strong_ice_wave",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibia.com/news/?id=8872&subtopic=newsarchive",
+          "vigencia": "2026-07-07",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "auditado_oficial"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Ice_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 170,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Strong Terra Strike",
+      "elemento": "terra",
+      "bp": 115,
+      "cd": 8,
+      "grupo": 2,
+      "palavras": "exori gran tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "strong-strikes",
+      "nivel": 70,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Terra_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_strong_terra_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/09/Strong_Terra_Strike.gif",
+      "id": "strong_terra_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 8,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Strong_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 60,
+      "grupo_secundario": "strong-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Scorch",
+      "elemento": "fogo",
+      "bp": 10,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo infir flam hur",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Scorch",
+      "nivel": 1,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Scorch",
+      "observacao": "",
+      "imagem": "/ui/magia_scorch.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/0c/Scorch.gif",
+      "id": "scorch",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Scorch",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Scorch",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Scorch",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 8,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Mud Attack",
+      "elemento": "terra",
+      "bp": 15,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori infir tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Mud Attack",
+      "nivel": 1,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Mud_Attack",
+      "observacao": "",
+      "imagem": "/ui/magia_mud_attack.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/9/9b/Mud_Attack.gif",
+      "id": "mud_attack",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Mud_Attack",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Mud_Attack",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Mud_Attack",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 6,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Terra Strike",
+      "elemento": "terra",
+      "bp": 45,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "exori tera",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "Terra Strike",
+      "nivel": 13,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_terra_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/2/24/Terra_Strike.gif",
+      "id": "terra_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 20,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Terra Wave",
+      "elemento": "terra",
+      "bp": 120,
+      "cd": 4,
+      "grupo": 2,
+      "palavras": "exevo tera hur",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "Terra Wave",
+      "nivel": 38,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Wave",
+      "observacao": "",
+      "imagem": "/ui/magia_terra_wave.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/e/eb/Terra_Wave.gif",
+      "id": "terra_wave",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Wave",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 170,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Wrath of Nature",
+      "elemento": "terra",
+      "bp": 175,
+      "cd": 40,
+      "grupo": 4,
+      "palavras": "exevo gran mas tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "ue",
+      "nivel": 55,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Wrath_of_Nature",
+      "observacao": "",
+      "imagem": "/ui/magia_wrath_of_nature.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/a/ab/Wrath_of_Nature.gif",
+      "id": "wrath_of_nature",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 40,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Wrath_of_Nature",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Wrath_of_Nature",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Wrath_of_Nature",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 700,
+      "grupo_secundario": "ue",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ultimate Energy Strike",
+      "elemento": "energia",
+      "bp": 210,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "exori max vis",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "ultimate-strikes",
+      "nivel": 100,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Energy_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_ultimate_energy_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/e/e8/Ultimate_Energy_Strike.gif",
+      "id": "ultimate_energy_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 30,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Energy_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 100,
+      "grupo_secundario": "ultimate-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ultimate Ice Strike",
+      "elemento": "gelo",
+      "bp": 195,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "exori max frigo",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "ultimate-strikes",
+      "nivel": 100,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Ice_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_ultimate_ice_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/1/13/Ultimate_Ice_Strike.gif",
+      "id": "ultimate_ice_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 30,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Ice_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 100,
+      "grupo_secundario": "ultimate-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ultimate Terra Strike",
+      "elemento": "terra",
+      "bp": 195,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "exori max tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "ultimate-strikes",
+      "nivel": 90,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Terra_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_ultimate_terra_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/f/f0/Ultimate_Terra_Strike.gif",
+      "id": "ultimate_terra_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 30,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Terra_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 100,
+      "grupo_secundario": "ultimate-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Ultimate Flame Strike",
+      "elemento": "fogo",
+      "bp": 210,
+      "cd": 30,
+      "grupo": 2,
+      "palavras": "exori max flam",
+      "vocs": [
+        "MS"
+      ],
+      "runa": false,
+      "alvos": 1,
+      "familia": "ultimate-strikes",
+      "nivel": 90,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Flame_Strike",
+      "observacao": "",
+      "imagem": "/ui/magia_ultimate_flame_strike.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/1/14/Ultimate_Flame_Strike.gif",
+      "id": "ultimate_flame_strike",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 30,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Flame_Strike",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 100,
+      "grupo_secundario": "ultimate-strikes",
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Terra Burst",
+      "elemento": "terra",
+      "bp": 115,
+      "cd": 22,
+      "grupo": 2,
+      "palavras": "exevo ulus tera",
+      "vocs": [
+        "ED"
+      ],
+      "runa": false,
+      "alvos": null,
+      "familia": "bursts",
+      "nivel": null,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Burst",
+      "observacao": "",
+      "imagem": "/ui/magia_terra_burst.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/4/45/Terra_Burst.gif",
+      "id": "terra_burst",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": 22,
+      "requer_roda": true,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [
+        "Bonus por HP e estágio da roda não aplicado ao cenário base"
+      ],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Terra_Burst",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?subtopic=spells",
+          "auditado_em": "2026-10-12",
+          "unidade": "mana"
+        }
+      },
+      "mana": 230,
+      "grupo_secundario": "bursts",
+      "requer_revelation": 10,
+      "estado_regra": "completa"
+    },
+    {
+      "nome": "Avalanche Rune",
+      "elemento": "gelo",
+      "bp": 50,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "adori mas frigo",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": true,
+      "alvos": null,
+      "familia": "Avalanche Rune",
+      "nivel": 0,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Avalanche_Rune",
+      "observacao": "",
+      "imagem": "/ui/magia_avalanche_rune.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/05/Avalanche_Rune.gif",
+      "id": "avalanche_rune",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Avalanche_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Avalanche_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Avalanche_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": 0,
+      "mana_origem": "uso da runa; não confundir com custo de conjuração",
+      "estado_regra": "completa",
+      "campos_rtc": {
+        "prioridade": true,
+        "creatures": true,
+        "mana_percent": false
+      }
+    },
+    {
+      "nome": "Great Fireball Rune",
+      "elemento": "fogo",
+      "bp": 50,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "adori mas flam",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": true,
+      "alvos": null,
+      "familia": "Great Fireball Rune",
+      "nivel": 0,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fireball_Rune",
+      "observacao": "",
+      "imagem": "/ui/magia_great_fireball_rune.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/f/f1/Great_Fireball_Rune.gif",
+      "id": "great_fireball_rune",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fireball_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fireball_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Great_Fireball_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": 0,
+      "mana_origem": "uso da runa; não confundir com custo de conjuração",
+      "estado_regra": "completa",
+      "campos_rtc": {
+        "prioridade": true,
+        "creatures": true,
+        "mana_percent": false
+      }
+    },
+    {
+      "nome": "Stone Shower Rune",
+      "elemento": "terra",
+      "bp": 50,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "adori mas tera",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": true,
+      "alvos": null,
+      "familia": "Stone Shower Rune",
+      "nivel": 0,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Stone_Shower_Rune",
+      "observacao": "",
+      "imagem": "/ui/magia_stone_shower_rune.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/e/ea/Stone_Shower_Rune.gif",
+      "id": "stone_shower_rune",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Stone_Shower_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Stone_Shower_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Stone_Shower_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": 0,
+      "mana_origem": "uso da runa; não confundir com custo de conjuração",
+      "estado_regra": "completa",
+      "campos_rtc": {
+        "prioridade": true,
+        "creatures": true,
+        "mana_percent": false
+      }
+    },
+    {
+      "nome": "Thunderstorm Rune",
+      "elemento": "energia",
+      "bp": 50,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "adori mas vis",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": true,
+      "alvos": null,
+      "familia": "Thunderstorm Rune",
+      "nivel": 0,
+      "periodico": false,
+      "fonte": "https://www.tibiawiki.com.br/wiki/Thunderstorm_Rune",
+      "observacao": "",
+      "imagem": "/ui/magia_thunderstorm_rune.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/a/a4/Thunderstorm_Rune.gif",
+      "id": "thunderstorm_rune",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Thunderstorm_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Thunderstorm_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Thunderstorm_Rune",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": 0,
+      "mana_origem": "uso da runa; não confundir com custo de conjuração",
+      "estado_regra": "completa",
+      "campos_rtc": {
+        "prioridade": true,
+        "creatures": true,
+        "mana_percent": false
+      }
+    },
+    {
+      "nome": "Sudden Death Rune",
+      "elemento": "morte",
+      "bp": 150,
+      "cd": 2,
+      "grupo": 2,
+      "palavras": "",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "runa": true,
+      "alvos": 1,
+      "familia": "Sudden Death Rune",
+      "nivel": 45,
+      "periodico": false,
+      "fonte": "https://github.com/kik-tibia/tibiatools/blob/main/src/data/spells.json",
+      "observacao": "Base Power da pesquisa de Kikaro; complemento ao catálogo BR.",
+      "imagem": "/ui/magia_sudden_death_rune.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/c/c2/Sudden_Death_Rune.gif",
+      "id": "sudden_death_rune",
+      "tipo": "ofensiva",
+      "regras_rubinot": true,
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "cd_compartilhado": null,
+      "requer_roda": false,
+      "forma_area": null,
+      "limite_alvos_validado": false,
+      "efeitos_condicionais": [],
+      "unidade": "Base Power",
+      "grupo_id": "ataque",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://github.com/kik-tibia/tibiatools/blob/main/src/data/spells.json",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado"
+        },
+        "cd": {
+          "fonte": "https://github.com/kik-tibia/tibiatools/blob/main/src/data/spells.json",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        },
+        "grupo": {
+          "fonte": "https://github.com/kik-tibia/tibiatools/blob/main/src/data/spells.json",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "catalogado"
+        }
+      },
+      "mana": 0,
+      "mana_origem": "uso da runa; não confundir com custo de conjuração",
+      "estado_regra": "completa",
+      "campos_rtc": {
+        "prioridade": true,
+        "creatures": false,
+        "mana_percent": false
+      }
+    },
+    {
+      "id": "intense_healing",
+      "nome": "Intense Healing",
+      "palavras": "exura gran",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "tipo": "cura",
+      "destino": "propria",
+      "bp": 120,
+      "cd": 1,
+      "grupo": 1,
+      "regras_rubinot": true,
+      "fonte": "https://www.tibia.com/library/?spell=intensehealing&subtopic=spells",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Intense_Healing",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=intensehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=intensehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=intensehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "mana": 70,
+      "nivel": 20,
+      "runa": false,
+      "imagem": "/ui/magia_intense_healing.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/d/dd/Intense_Healing.gif",
+      "alcance": 0,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "ultimate_healing",
+      "nome": "Ultimate Healing",
+      "palavras": "exura vita",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "tipo": "cura",
+      "destino": "propria",
+      "bp": 250,
+      "cd": 1,
+      "grupo": 1,
+      "regras_rubinot": true,
+      "fonte": "https://www.tibia.com/library/?spell=ultimatehealing&subtopic=spells",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Ultimate_Healing",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=ultimatehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=ultimatehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=ultimatehealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "mana": 160,
+      "nivel": 30,
+      "runa": false,
+      "imagem": "/ui/magia_ultimate_healing.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/3/31/Ultimate_Healing.gif",
+      "alcance": 0,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "heal_friend",
+      "nome": "Heal Friend",
+      "palavras": "exura sio",
+      "vocs": [
+        "ED"
+      ],
+      "tipo": "cura",
+      "destino": "party",
+      "bp": 260,
+      "cd": 1,
+      "grupo": 1,
+      "regras_rubinot": true,
+      "fonte": "https://www.tibia.com/library/?spell=healfriend&subtopic=spells",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Heal_Friend",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=healfriend&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=healfriend&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=healfriend&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "mana": 120,
+      "nivel": 18,
+      "runa": false,
+      "imagem": "/ui/magia_heal_friend.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/c/c6/Heal_Friend.gif",
+      "alcance": 7,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "mass_healing",
+      "nome": "Mass Healing",
+      "palavras": "exura gran mas res",
+      "vocs": [
+        "ED"
+      ],
+      "tipo": "cura",
+      "destino": "party_e_propria",
+      "bp": 200,
+      "cd": 2,
+      "grupo": 1,
+      "regras_rubinot": true,
+      "fonte": "https://www.tibia.com/library/?spell=masshealing&subtopic=spells",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Mass_Healing",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=masshealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=masshealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=masshealing&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "mana": 150,
+      "nivel": 36,
+      "runa": false,
+      "imagem": "/ui/magia_mass_healing.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/6/6a/Mass_Healing.gif",
+      "alcance": 0,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "restoration",
+      "nome": "Restoration",
+      "palavras": "exura max vita",
+      "vocs": [
+        "ED",
+        "MS"
+      ],
+      "tipo": "cura",
+      "destino": "propria",
+      "bp": 375,
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Restoration",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=restoration&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=restoration&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=restoration&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "cd": 6,
+      "grupo": 1,
+      "mana": 260,
+      "nivel": 300,
+      "runa": false,
+      "fonte": "https://www.tibia.com/library/?spell=restoration&subtopic=spells",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "imagem": "/ui/magia_restoration.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/4/4b/Restoration.gif",
+      "alcance": 0,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "nature_s_embrace",
+      "nome": "Nature's Embrace",
+      "palavras": "exura gran sio",
+      "vocs": [
+        "ED"
+      ],
+      "tipo": "cura",
+      "destino": "party",
+      "bp": 2000,
+      "unidade": "Base Power",
+      "grupo_id": "cura",
+      "proveniencia": {
+        "bp": {
+          "fonte": "https://www.tibiawiki.com.br/wiki/Nature's_Embrace",
+          "consultado": "2026-10-11",
+          "unidade": "Base Power",
+          "estado": "catalogado_auxiliar",
+          "normativa": "Tibia Global"
+        },
+        "cd": {
+          "fonte": "https://www.tibia.com/library/?spell=naturesembrace&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "grupo": {
+          "fonte": "https://www.tibia.com/library/?spell=naturesembrace&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "s",
+          "estado": "auditado_oficial"
+        },
+        "mana": {
+          "fonte": "https://www.tibia.com/library/?spell=naturesembrace&subtopic=spells",
+          "consultado": "2026-10-11",
+          "unidade": "mana",
+          "estado": "auditado_oficial"
+        }
+      },
+      "cd": 60,
+      "grupo": 1,
+      "mana": 400,
+      "nivel": 275,
+      "runa": false,
+      "fonte": "https://www.tibia.com/library/?spell=naturesembrace&subtopic=spells",
+      "origem_temporal": "Tibia Global; regras vigentes",
+      "observacao": "Potência comparativa; HP depende de nível, ML e cura observada.",
+      "imagem": "/ui/magia_nature_s_embrace.png",
+      "imagem_fonte": "https://www.tibiawiki.com.br/images/0/05/Nature%27s_Embrace.gif",
+      "alcance": 7,
+      "estado_regra": "completa"
+    },
+    {
+      "id": "shared_conservation",
+      "nome": "Shared Conservation",
+      "palavras": "utura sio",
+      "tipo": "suporte",
+      "vocs": [
+        "ED"
+      ],
+      "bp": null,
+      "unidade": null,
+      "cd": 10,
+      "grupo": 2,
+      "grupo_id": "suporte",
+      "grupo_secundario": "stance",
+      "cd_compartilhado": 10,
+      "nivel": 20,
+      "mana": 400,
+      "fonte": "https://www.tibia.com/library/?subtopic=spells",
+      "efeito_persistente": true,
+      "origem_temporal": "Tibia Global; regras vigentes"
+    },
+    {
+      "id": "elemental_synthesis",
+      "nome": "Elemental Synthesis",
+      "palavras": "utito dru",
+      "tipo": "suporte",
+      "vocs": [
+        "ED"
+      ],
+      "bp": null,
+      "unidade": null,
+      "cd": 10,
+      "grupo": 2,
+      "grupo_id": "suporte",
+      "grupo_secundario": "stance",
+      "cd_compartilhado": 10,
+      "nivel": 20,
+      "mana": 400,
+      "fonte": "https://www.tibia.com/library/?subtopic=spells",
+      "efeito_persistente": true,
+      "origem_temporal": "Tibia Global; regras vigentes"
+    },
+    {
+      "id": "master_of_flames",
+      "nome": "Master of Flames",
+      "palavras": "uteta flam",
+      "tipo": "suporte",
+      "vocs": [
+        "MS"
+      ],
+      "bp": null,
+      "unidade": null,
+      "cd": 10,
+      "grupo": 2,
+      "grupo_id": "suporte",
+      "grupo_secundario": "stance",
+      "cd_compartilhado": 10,
+      "nivel": 20,
+      "mana": 400,
+      "fonte": "https://www.tibia.com/library/?subtopic=spells",
+      "efeito_persistente": true,
+      "origem_temporal": "Tibia Global; regras vigentes"
+    },
+    {
+      "id": "master_of_thunder",
+      "nome": "Master of Thunder",
+      "palavras": "uteta vis",
+      "tipo": "suporte",
+      "vocs": [
+        "MS"
+      ],
+      "bp": null,
+      "unidade": null,
+      "cd": 10,
+      "grupo": 2,
+      "grupo_id": "suporte",
+      "grupo_secundario": "stance",
+      "cd_compartilhado": 10,
+      "nivel": 20,
+      "mana": 400,
+      "fonte": "https://www.tibia.com/library/?subtopic=spells",
+      "efeito_persistente": true,
+      "origem_temporal": "Tibia Global; regras vigentes"
+    },
+    {
+      "id": "master_of_decay",
+      "nome": "Master of Decay",
+      "palavras": "uteta mort",
+      "tipo": "suporte",
+      "vocs": [
+        "MS"
+      ],
+      "bp": null,
+      "unidade": null,
+      "cd": 10,
+      "grupo": 2,
+      "grupo_id": "suporte",
+      "grupo_secundario": "stance",
+      "cd_compartilhado": 10,
+      "nivel": 20,
+      "mana": 400,
+      "fonte": "https://www.tibia.com/library/?subtopic=spells",
+      "efeito_persistente": true,
+      "origem_temporal": "Tibia Global; regras vigentes"
+    }
+  ],
+  "versao": "20261012-integrado-2",
+  "unidade": "Base Power",
+  "regras_rubinot_validadas": true,
+  "imagens_vocacao": {
+    "ED": {
+      "arquivo": "/ui/voc_ed.png",
+      "fonte": "https://www.tibiawiki.com.br/images/b/b4/Outfit_Druid_Male_Addon_3.gif"
+    },
+    "MS": {
+      "arquivo": "/ui/voc_ms.png",
+      "fonte": "https://www.tibiawiki.com.br/images/d/da/Outfit_Mage_Male_Addon_3.gif"
+    }
+  },
+  "regras": "Tibia Global",
+  "vigencia": "2026-07-07",
+  "auditoria_em": "2026-10-11",
+  "auditado_em": "2026-10-12"
+}

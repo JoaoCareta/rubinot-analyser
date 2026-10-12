@@ -1,0 +1,61 @@
+{
+ "nome": "Massive Fire Elemental",
+ "categoria": "Elementais",
+ "hp": 1800,
+ "xp": 1400,
+ "toma": {
+  "físico": 50,
+  "terra": 100,
+  "fogo": 0,
+  "morte": 80,
+  "energia": 70,
+  "sagrado": 100,
+  "gelo": 115,
+  "cura": 100
+ },
+ "bate": {
+  "físico": [
+   "Corpo a corpo (0-300)"
+  ],
+  "fogo": [
+   "Fire Bomb (20) em si, causando Burning",
+   "Wave (230-650)",
+   "Berserk, causando Burning em 20 hp",
+   "Fire Bomb (20) no alvo, causando Burning"
+  ]
+ },
+ "loot": {
+  "comum": [
+   "1-212 Gold Coins"
+  ],
+  "incomum": [
+   "0-2 Small Rubies",
+   "Platinum Coin",
+   "Rusted Armor"
+  ],
+  "semi-raro": [
+   "Might Ring",
+   "Wand of Inferno"
+  ],
+  "raro": [
+   "Magma Amulet",
+   "Magma Boots",
+   "Fire Sword"
+  ],
+  "muito raro": [
+   "Magma Legs"
+  ]
+ },
+ "gif": "massive_fire_elemental.gif",
+ "local": [
+  "Banuta",
+  "Demon Forge (The Dark Path)",
+  "Edron Northern Ruins",
+  "Fury Hell",
+  "Gnomegate Lava Hot Spot",
+  "Hellgorge",
+  "Lower Glooth Factory"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Massive_Fire_Elemental",
+ "catalogado": "2026-09-26"
+}

@@ -1,0 +1,151 @@
+HUNT ANALYZER - analisador de hunt do RubinOT
+=============================================
+
+O QUE ELE FAZ
+-------------
+Enquanto você caça, o programa grava a janela do RubinOT e lê os painéis do jogo.
+Ele percebe sozinho quando a hunt começa e fecha as voltas. A cada volta, a tela
+dele mostra:
+  - XP raw/h, profit, supplies e bichos mortos, comparando com a volta anterior;
+  - o mapa da hunt: onde você ficou mais tempo e onde tinha mais bicho;
+  - o histórico de todas as voltas.
+Passados 15 minutos de hunt, o card vira a MÉDIA da hunt (volta a volta continua
+no histórico logo abaixo).
+
+Tem mais três abas no topo:
+  - histórico: as hunts guardadas, uma por cartão, com o bicho da hunt na capa;
+  - evolução: gráficos das suas sessões (XP raw/h, profit, supplies e bichos por
+    hora), com filtro por período e por hunt;
+  - auxiliadores: apitos para as jogadas do meio da luta. Hoje tem o do
+    UTAMO VITA, para druida: ele avisa na hora em que o escudo cai (o dano volta
+    a bater no HP), quando a vida chega a 60%, quando vários bichos estão em cima
+    de você e quando você vai entrar numa box pesada sem escudo. Cada aviso tem
+    um interruptor, e dá para ele ligar sozinho quando o programa abrir.
+
+Tudo roda no seu PC. Não precisa de conta nem de cadastro.
+
+
+O QUE PRECISA
+-------------
+- Windows 10 ou 11.
+- Internet na instalação (ele baixa o Python e as bibliotecas, se faltar).
+- Uns 20 GB livres no disco (a gravação usa cerca de 3 GB por hora de hunt).
+- Escala do Windows em 100%: Configurações > Sistema > Tela > Escala.
+  Notebook costuma vir em 125% ou 150%, e aí o programa não lê nada. Se não
+  quiser mudar a escala, faça isto uma vez: na pasta do RubinOT, abra bin\x64,
+  clique com o botão direito no rubinot_dx.exe > Propriedades > Compatibilidade >
+  "Alterar configurações de DPI alto" > marque "Substituir o comportamento de
+  dimensionamento de DPI alto" e escolha "Aplicativo" > OK. Feche e abra o jogo.
+  (A calibração avisa se a escala estiver atrapalhando.)
+- No jogo, com a janela MAXIMIZADA, deixe abertos e visíveis:
+    Battle List
+    Hunt Analyser
+    XP Analyser
+    Supply Analyser
+    Party Hunt
+    Input Analyser
+    o console com a aba Server Log
+    outro console com a aba Spells
+    o Map View (minimapa)
+  (O Loot Analyser é opcional: se você não usa, pode deixar fechado.)
+- O Map View precisa ser grande: pelo menos 281 x 179 pixels (no PC de quem
+  fez o programa ele tem 333 x 179, ocupando as duas colunas de painéis da
+  direita). E precisa estar no zoom de 2 pixels por quadrado do chão, no modo
+  normal (não o HD). A calibração confere as duas coisas.
+
+
+COMO INSTALAR (uma vez só)
+--------------------------
+1. Antes de extrair: clique com o botão direito no arquivo
+   "Hunt Analyzer - instalador.zip" > Propriedades. Se aparecer embaixo a
+   caixa "Desbloquear", marque e clique em OK. (Arquivo que veio pelo Discord
+   ou WhatsApp vem marcado como "da internet", e o Windows reclama de cada
+   arquivo.)
+2. Botão direito no zip > "Extrair tudo...". No destino, escreva  C:\  e
+   clique em Extrair. Vai aparecer a pasta C:\HuntAnalyzer.
+   Não extraia dentro do OneDrive (Documentos ou Área de Trabalho podem estar
+   nele): as gravações são grandes e ele tenta subir tudo para a nuvem.
+3. Abra a pasta C:\HuntAnalyzer e dê dois cliques no  instalar.bat
+4. Se o Windows avisar "O Windows protegeu o computador", clique em
+   "Mais informações" e depois em "Executar assim mesmo". Se aparecer
+   "O fornecedor não pôde ser verificado", clique em Executar.
+5. Uma janela preta vai trabalhar sozinha por alguns minutos. Espere aparecer
+   "Pronto!" e aperte qualquer tecla.
+6. Na Área de Trabalho aparece o atalho "Hunt Analyzer".
+
+Se o antivírus (Avast, AVG, Norton...) reclamar, libere a pasta
+C:\HuntAnalyzer nele: o programa tira print da janela do jogo e roda sem
+janela, e alguns antivírus desconfiam disso.
+Se der erro, tire um print da janela preta e mande para quem te passou o programa.
+
+
+COMO USAR
+---------
+1. Abra o RubinOT e entre com o personagem (janela maximizada, painéis abertos).
+2. Dê dois cliques no atalho "Hunt Analyzer". A interface abre diretamente no navegador.
+3. Não há painel intermediário: o programa já está ligado.
+
+Na primeira vez, faça a calibração (tela "calibração"):
+4. Clique em Capturar e, em seguida, clique na janela do RubinOT. O programa
+   tira um print do jogo e acha sozinho os painéis e a tela do jogo.
+   Dica: deixe o nome do seu personagem aparecendo em cima dele.
+5. O Server Log, o Spells e o Map View ele não acha: clique em cada um na lista ao lado
+   do print e arraste sobre o print para marcar a região.
+   Para o Map View, pegue o minimapa inteiro. A conferência dele demora uns
+   segundos na primeira vez.
+   Nos consoles, pegue o cabeçalho com a aba ativa e todo o texto, sem o campo
+   de digitação. Server Log e Spells: deixe 5–6 linhas visíveis em cada console.
+   Calibre em local seguro: lista vazia, contadores zerados e console vazio são válidos.
+   O título confirma o painel/aba; dados de combate só são necessários durante a hunt.
+6. Confira cada região na lista:
+     verde = certo;
+     amarelo = confira;
+     vermelho = errado (o programa não deixa salvar assim).
+   Para corrigir uma região, clique nela na lista e arraste sobre o print.
+   Se mudou algum painel de lugar, clique em Detectar painéis.
+7. Clique em Salvar calibração.
+
+Depois disso:
+8. Vá para a aba "hunt" (no topo da tela).
+9. Cace normalmente. Quando tiver bicho na Battle List e você andar, ele
+   percebe que a hunt começou. Os números aparecem quando a primeira volta fecha.
+
+10. Terminou de caçar? Clique em "Encerrar hunt" no topo da tela: a sessão vai
+    para o histórico e os quadros das hunts antigas são apagados. Para começar
+    outra, "Iniciar hunt" no mesmo lugar.
+
+Se você é druida e quer o apito do Utamo Vita, vá na aba "auxiliadores" e
+clique em Ligar (ou marque "Ligar sozinho quando o analisador abrir"). Os dois
+apitos dá para ouvir antes, nos botões "caiu" e "perigo". Ele só funciona com a
+gravação ligada, porque lê o Server Log que ela recorta.
+
+Refaça a calibração se mudar os painéis de lugar ou o tamanho da janela (a tela
+de hunt avisa quando a janela do jogo muda de tamanho).
+Para parar: clique em Desligar na interface ou feche a janela do programa.
+A hunt é salva e todos os processos do analisador são encerrados. Minimizar não desliga.
+
+
+ESPAÇO NO DISCO
+---------------
+As gravações ficam em C:\HuntAnalyzer\capture, cerca de 3 GB por hora de hunt.
+Quando você encerra a hunt (ou desliga o programa), ele APAGA sozinho os quadros
+das hunts anteriores e guarda só os números delas — os quadros da hunt atual
+ficam, porque é deles que ele continua se você religar em menos de 1 hora.
+As análises (voltas, mapas, gráficos) ficam em C:\HuntAnalyzer\hunt_data e
+nunca são apagadas.
+Com menos de 10 GB livres o programa para de gravar e avisa na tela de hunt.
+
+
+PRIVACIDADE
+-----------
+- Ele só grava a janela do RubinOT, e só quando ela está na frente. Com outra
+  janela na frente, ele não grava nada.
+- Nada sai do seu PC. A internet só é usada para buscar os dados dos monstros
+  no TibiaWiki e para baixar as fontes de letra da tela.
+- A tela do programa só abre neste computador.
+
+
+COMO DESINSTALAR
+----------------
+1. Clique em Desligar na interface ou feche a janela do Hunt Analyzer.
+2. Apague a pasta C:\HuntAnalyzer e o atalho "Hunt Analyzer" da Área de Trabalho.
