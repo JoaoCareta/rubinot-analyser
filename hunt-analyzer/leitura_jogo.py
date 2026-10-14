@@ -157,12 +157,20 @@ def validar_roda(catalogo,voc,pontos,total):
     return all(n==0 or k in alcancadas for k,n in pontos.items())
 
 
-def destinatarios(slots,campos,party):
-    """Só o registro explícito da party resolve EK/RP; nome não contém vocação."""
+def destinatarios(slots,campos,party,regras=None):
+    """A lista é compartilhada pelas regras; sua ordem não identifica EK/RP."""
     membros={p['nome'].casefold():p for p in party if p.get('nome') and p.get('vocacao') in ('EK','RP','ED','MS','MO')}
+    regras=regras or {}
     for s in slots:
         if s.get('tipo')!='party':continue
-        nomes=(campos.get(s['id']+'.destinos_texto') or '').splitlines();i=s['destino_indice']-1
-        if i<len(nomes) and nomes[i].strip().casefold() in membros:
-            p=membros[nomes[i].strip().casefold()];s.update(destinatario=p['nome'],vocacao_destino=p['vocacao'],destinatario_origem='party_identificada')
+        if s.get('destinatario_origem')=='party_identificada':
+            # Versão antiga confundia a lista compartilhada com a ordem das
+            # regras. A leitura original permanece no arquivo de evidência.
+            for k in ('vocacao_destino','destinatario','destinatario_origem'):s.pop(k,None)
+        voc=regras.get('slots',{}).get(s['id'],{}).get(str(s['destino_indice'])) if regras.get('origem')=='usuario' and regras.get('provas') else None
+        if voc not in ('EK','RP'):continue
+        s.update(vocacao_destino=voc,destinatario_origem='regra_helper_confirmada')
+        nomes=(campos.get(s['id']+'.destinos_texto') or '').splitlines()
+        candidatos=[membros[n.strip().casefold()] for n in nomes if n.strip().casefold() in membros and membros[n.strip().casefold()]['vocacao']==voc]
+        if len(candidatos)==1:s['destinatario']=candidatos[0]['nome']
     return slots

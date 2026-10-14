@@ -4,8 +4,8 @@ Cadencias:
   - recorte do chat (Server Log) a cada 0.5s  -> c_HHMMSS_mmm.png
   - recorte da Battle List a cada 0.5s        -> b_HHMMSS_mmm.png
   - janela inteira a cada 4s                  -> f_HHMMSS_mmm.png
-  - buffer completo sincronizado (60s)        -> q_HHMMSS_mmm.png
-Todos os recortes saem da mesma captura; KS preserva o quadro exato antes do buffer expirar.
+  - sequência completa sincronizada, permanente -> q_HHMMSS_mmm.png
+Todos os recortes saem da mesma captura; nenhuma imagem expira automaticamente.
 
 Uso:  python capture.py [pasta_da_sessao]   (Ctrl+C para parar)
 Saida: capture/session_YYYYMMDD_HHMMSS/ (ou a pasta dada, que continua sendo gravada)
@@ -13,7 +13,6 @@ Recortes: layout.atual() (calibracao.json; sem ela, os fixos de antes), gravados
 layout.json da sessao para os leitores.
 """
 import ctypes
-import collections
 import contextlib
 import ctypes.wintypes as wt
 from rubinot.adapters.historico import reservar_sessao
@@ -37,8 +36,8 @@ ctypes.windll.user32.SetProcessDPIAware()
 
 TICK_S = 0.5
 FULL_EVERY_TICKS = 8  # 4s
-KS_BUFFER_TICKS = 120  # últimos 60 s completos, enquanto o detector lê o console
-MAX_HOURS = 3  # ponytail: auto-stop 3h para nao encher o disco se esquecerem ligado
+KS_BUFFER_TICKS = 120  # compatibilidade; não limita mais a retenção
+MAX_HOURS = float('inf')  # grava até encerrar ou atingir a reserva de disco
 MIN_LIVRE_GB = 10  # 21/09: ~3 GB por hora de hunt; para antes de encher o disco (ao_vivo avisa)
 TITLE_MARK = "RubinOT Client"
 # Recortes relativos a janela: layout da calibracao (21/09); o historico dos fixos
@@ -92,10 +91,14 @@ def pouco_disco(pasta=pathlib.Path(__file__).parent):
     return shutil.disk_usage(pasta).free < MIN_LIVRE_GB * 1e9
 
 
-def salva_quadro(img, destino):
+def salva_quadro(img, destino, metadados=None):
     """Publica somente PNG completo, para os leitores não pegarem escrita parcial."""
     tmp = destino.with_suffix('.tmp')
-    img.save(tmp, format='PNG', compress_level=1)
+    from PIL.PngImagePlugin import PngInfo
+    info = PngInfo()
+    if metadados:
+        info.add_text('leitura', json.dumps(metadados,separators=(',',':')))
+    img.save(tmp, format='PNG', compress_level=1, pnginfo=info)
     tmp.replace(destino)
 
 
@@ -155,7 +158,6 @@ def main():
 
     ticks = 0
     total_bytes = 0
-    buffer_ks = collections.deque(sorted(session.glob('q_*.png')))
     with contextlib.ExitStack() as recursos:
         leitor = stream_twitch.Leitor(fonte['canal']) if live else None
         if leitor:
@@ -163,8 +165,8 @@ def main():
         sct = None if live else recursos.enter_context(mss.MSS())
         sequencia = 0
         mudou_resolucao = False
-        # 22/09: 3 h GRAVADAS (so conta tick com o jogo na frente); relogio de parede cortava a
-        # hunt de quem da Ligar horas antes com o jogo atras de outra janela
+        # Sem prazo de expiração ou limite de duração. Disco baixo interrompe,
+        # mas nunca remove evidências das hunts anteriores.
         while ticks * TICK_S < MAX_HOURS * 3600:
             t0 = time.time()
             if live:
@@ -195,22 +197,30 @@ def main():
                 inteiro = Image.frombytes('RGB', shot.size, shot.rgb)
             prova = session / f'q_{stamp}.png'
             salva_quadro(inteiro, prova)
-            buffer_ks.append(prova)
-            while len(buffer_ks) > KS_BUFFER_TICKS:
-                antigo = buffer_ks[0]
-                try:
-                    antigo.unlink(missing_ok=True)
-                except OSError:
-                    break  # leitor usando o quadro: tentar no próximo tick
-                buffer_ks.popleft()
+            total_bytes += prova.stat().st_size
 
             if ticks % FULL_EVERY_TICKS == 0:
                 path = session / f'f_{stamp}.png'
                 shutil.copyfile(prova, path.with_suffix('.tmp'))
                 path.with_suffix('.tmp').replace(path)
                 total_bytes += path.stat().st_size
+                from rubinot.adapters import paineis as diario_paineis
+                try:
+                    import lap_watch
+                    diario_paineis.registrar(inteiro, session, path.name, lap_watch.fsec(path.name))
+                except Exception as erro:
+                    # O quadro permanece pendente e recuperável; não interromper as outras fontes.
+                    print(f'Leitura de painéis pendente em {path.name}: {erro}', flush=True)
 
-            lanes = [("c", chat_rel), ("b", battle_rel)] + ([("s", spell_rel)] if spell_rel else [])
+            from rubinot.observacao import geometria_paineis
+            geometria = geometria_paineis.detectar(inteiro)
+            batalha = geometria['regioes'].get('battle')
+            if batalha:
+                path = session / f'b_{stamp}.png'
+                salva_quadro(geometria_paineis.recorte(inteiro,batalha), path,
+                    {'versao':1,'layout':geometria['revisao'],'regiao':batalha,'battle_y_min':0})
+                total_bytes += path.stat().st_size
+            lanes = [("c", chat_rel)] + ([("s", spell_rel)] if spell_rel else [])
             if ticks % MAP_EVERY_TICKS == 0:
                 lanes.append(("m", map_rel))
             for prefix, rel in lanes:

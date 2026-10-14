@@ -13,6 +13,31 @@ from aprendizado_hunt import Registro
 
 
 class PersistenciaTest(unittest.TestCase):
+    def test_plunder_no_historico_sem_alterar_registros(self):
+        import ao_vivo
+        with tempfile.TemporaryDirectory() as d:
+            raiz = pathlib.Path(d)
+            for dia, qtd in ((1, 7), (2, 0), (3, None)):
+                pasta = raiz / 'qa' / 'sessoes' / f'2026010{dia}_010000'
+                publicar(pasta, {'pasta': f'session_2026010{dia}_010000',
+                    'sessao': {'hunt': 'QA', 'char': 'QA', 'data': f'0{dia}/01/2026',
+                               'inicio': '01:00:00', 'fim': '01:05:00'},
+                    'fechada': True, 'especies': {'undertaker': 100},
+                    'voltas': [{'n': 1, 'especies': {'Plunder Patriarch': qtd}}]}, {})
+            antes = {p: p.read_bytes() for p in raiz.rglob('*') if p.is_file()}
+            with patch.object(ao_vivo, 'HUNT_DATA', raiz), \
+                 patch.object(ao_vivo, '_ks_hist', return_value={'episodios': [], 'party': []}):
+                lista = ao_vivo.historico()
+            self.assertEqual([s['tem_plunder'] for s in lista], [False, False, True])
+            self.assertEqual(antes, {p: p.read_bytes() for p in antes})
+            self.assertTrue(ao_vivo._plunder_avistado({'especies': {' plunder   patriarch ': 1}}))
+            self.assertFalse(ao_vivo._plunder_avistado({}))
+            self.assertFalse(ao_vivo._plunder_avistado({'especies': {'plunder': 1, 'plunder patriarch': -1}}))
+            grupos = [(pathlib.Path('qa/sessoes/a/resumo.json'), {'sessao': {}, 'voltas': []}),
+                      (pathlib.Path('qa/sessoes/b/resumo.json'), {'sessao': {},
+                       'voltas': [{'especies': {'plunder patriarch': 2}}]})]
+            self.assertTrue(ao_vivo._plunder_avistado(ao_vivo._mescla_historico(grupos)))
+
     def test_reserva_duas_capturas_no_mesmo_segundo(self):
         with tempfile.TemporaryDirectory() as d:
             agora = datetime.datetime(2026, 1, 1, 1, 0, 1)

@@ -21,4 +21,6 @@ O pacote fica diretamente em `hunt-analyzer/rubinot/`, para funcionar com as CLI
 
 Interface: `ui/app/hunt.js` coordena a página em escopo fechado e publica `HuntApp`. Planejamento consulta essa API, sem usar variáveis internas da página. Cards e grade são módulos testáveis; histórico renderiza dados prontos. Apresentação comum vive em `HuntUI`. Os motores RTC/Temporal/Roda conservam os contratos existentes.
 
+Atualizações da interface preservam conteúdo durante consultas assíncronas. O resumo da calibração atualiza textos nos mesmos cards e publica a resposta completa, sem esvaziar a grade antes da consulta. Planejamento separa a assinatura das categorias de magias da assinatura do contexto de cálculo; horários/provas de releituras não invalidam conteúdo equivalente. RTC e roda mantêm seus containers, expansão e controles entre consultas. O lote de rodas só redesenha a combinação selecionada quando ela muda; resultados anteriores durante recálculo ficam identificados e indisponíveis para interação até a conclusão. Tempos dos estudos/modelos continuam significativos e não entram no filtro de metadados das leituras.
+
 O teste de arquitetura percorre imports tardios e pacotes; nenhum ciclo é aceito. Testes negativos provam que o verificador detecta ciclos e imports proibidos. APIs HTTP e formatos antigos continuam legíveis; gerações novas são aditivas.

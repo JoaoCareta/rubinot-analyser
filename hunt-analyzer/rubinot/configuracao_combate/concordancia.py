@@ -1,6 +1,17 @@
 """Comparação pura entre sugerido e observado; não presume aplicação."""
 def comparar(sugestao, observado, catalogo):
     diferencas, pendentes = [], []
+    esperados = {(s.get('tipo'), s.get('slot')) for s in sugestao.get('rtc', {}).get('linhas', [])}
+    for slot in observado.get('rtc', {}).get('slots', []):
+        if (slot.get('tipo'), slot.get('slot')) not in esperados:
+            if slot.get('id') and slot.get('atual') is not False:
+                diferencas.append(f"RTC {slot.get('tipo')} {slot.get('slot')}: slot extra")
+            elif slot.get('estado') != 'vazio_confirmado':
+                pendentes.append(f"RTC {slot.get('tipo')} {slot.get('slot')}: conteúdo desconhecido")
+    for campo, valor in sugestao.get('rtc', {}).get('opcoes', {}).items():
+        lido = observado.get('rtc', {}).get('campos', {}).get(campo, {}).get('valor')
+        if lido is None: pendentes.append('RTC opção '+campo)
+        elif lido != valor: diferencas.append('RTC opção '+campo)
     for linha in sugestao.get('rtc', {}).get('linhas', []):
         slot = next((s for s in observado.get('rtc', {}).get('slots', [])
                      if s.get('tipo') == linha.get('tipo') and s.get('slot') == linha.get('slot')), {})
@@ -42,6 +53,24 @@ def comparar(sugestao, observado, catalogo):
         if campo.startswith('gemas.') and campo[6:] not in dominios and lido.get('valor',{}).get('equipada'):diferencas.append('gema extra '+campo[6:])
     for tipo in ('cura','roda'):
         if not observado.get(tipo,{}).get('completo'):pendentes.append(tipo)
+    componentes = {}
+    for tipo in ('rtc','cura','roda'):
+        ds = [d for d in diferencas if d.lower().startswith(tipo) or tipo=='roda' and d.startswith('gema')]
+        ps = [p for p in pendentes if p.lower().startswith(tipo) or tipo=='roda' and p.startswith('gema')]
+        componentes[tipo] = {'estado':'divergente' if ds else 'parcial' if ps else 'confere',
+                            'diferencas':ds, 'pendentes':ps}
+    campos = []
+    for linha in sugestao.get('rtc', {}).get('linhas', []):
+        candidatos = [s for s in observado.get('rtc', {}).get('slots', []) if s.get('id')==linha.get('id') and s.get('atual') is not False and s.get('ativo') is not False and observado.get('rtc',{}).get('atual') is not False]
+        slot = candidatos[0] if len(candidatos)==1 else {}
+        for campo in ('creatures','prioridade','mana_percent'):
+            if campo not in linha:
+                continue
+            valor = slot.get(campo)
+            campos.append({'id':linha.get('id'),'campo':campo,'sugerido':linha[campo],
+                'observado':valor,'estado':'parcial' if valor is None else 'confere' if valor==linha[campo] else 'divergente',
+                'instante':slot.get('instante',observado.get('rtc',{}).get('instante')),
+                'prova':slot.get('prova'), 'uso_automatico':observado.get('uso_componentes',{}).get('rtc',{}).get('estado','uso_desconhecido')})
     return {'estado': 'divergente' if diferencas else 'parcial' if pendentes else 'confere',
-            'diferencas': diferencas, 'pendentes': pendentes}
+            'diferencas': diferencas, 'pendentes': pendentes, 'componentes':componentes, 'campos':campos}
 

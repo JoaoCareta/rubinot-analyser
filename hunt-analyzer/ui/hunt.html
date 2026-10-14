@@ -47,6 +47,21 @@
   </section>
 
   <div id="conteudo" class="conteudo">
+    <details id="gravacaoHistorica" hidden>
+      <summary>Rever gravação da hunt</summary>
+      <p id="gravacaoAviso" role="status">Abra para carregar os quadros preservados.</p>
+      <div id="gravacaoControles" hidden>
+        <label>Trecho <select id="gravacaoTrecho"></select></label>
+        <button id="gravacaoAnterior" type="button">← Anterior</button>
+        <button id="gravacaoPlay" type="button">Reproduzir</button>
+        <button id="gravacaoProximo" type="button">Próximo →</button>
+        <label>Quadro <input id="gravacaoPosicao" type="range" min="0" value="0" step="1"></label>
+        <output id="gravacaoHorario"></output>
+        <a id="gravacaoOriginal" target="_blank" rel="noopener">Abrir imagem original</a>
+        <img id="gravacaoImagem" alt="Quadro preservado da hunt" style="display:block;max-width:100%;margin-top:12px">
+      </div>
+    </details>
+    <script src="/ui/features/historico/gravacao.js"></script>
     <section class="tiles" id="tiles"></section>
 
     <section class="tempo" id="tempo" hidden>
@@ -82,9 +97,9 @@
       </div>
       <aside class="lateral">
         <section class="painel-alternavel" aria-label="Painel da hunt e KS">
-          <div class="painel-tabs" role="tablist" aria-label="Hunt ou KS">
-            <button id="abaHunt" role="tab" aria-controls="painel" aria-selected="true">Hunt</button>
-            <button id="abaKS" role="tab" aria-controls="ksPainel" aria-selected="false" tabindex="-1">KS</button>
+          <div class="painel-tabs" role="tablist" aria-label="Hunt ou KS" hidden>
+            <button id="abaHunt" role="tab" aria-controls="painel" aria-selected="true"><span aria-hidden="true">⚔️</span> Hunt</button>
+            <button id="abaKS" role="tab" aria-controls="ksPainel" aria-selected="false" tabindex="-1" disabled><span class="icone-ks" aria-hidden="true"></span> KS</button>
           </div>
           <div class="painel" id="painel" role="tabpanel" aria-labelledby="abaHunt"></div>
           <section id="ksPainel" role="tabpanel" aria-labelledby="abaKS" hidden></section>
@@ -96,7 +111,15 @@
         </section>
       </aside>
       <div class="baixo">
-        <section class="party-dano" id="partyDano" aria-label="Dano individual da party"></section>
+        <section class="party-dano" id="partyDano" aria-label="Dano e cura da hunt"></section>
+        <section id="historicoCuras" class="curas-historico" aria-label="Curas da party" hidden>
+          <h2>Curas da party</h2>
+          <div id="historicoCurasResumo"></div>
+          <details class="planejamento-painel">
+    <summary>Vida e curas por faixa de vida</summary>
+            <div id="historicoCurasConteudo" class="planejamento-conteudo"></div>
+          </details>
+        </section>
         <div class="secao-tit"><div class="rotulo">histórico das voltas</div><span class="sub" id="histInfo" style="font-size:12px"></span></div>
         <section class="historico" id="historico"></section>
 
@@ -108,8 +131,10 @@
           </table>
         </div>
         <section class="hunt-planejamento" aria-label="Magias, RTC e roda de habilidade">
-          <div class="secao-tit"><div class="rotulo">magias e elementos</div></div>
-          <div id="recomendacaoMagias"></div>
+          <details id="painelMagiasElementos" class="planejamento-painel" open>
+            <summary>Magias e elementos</summary>
+            <div class="planejamento-conteudo"><div id="recomendacaoMagias"></div></div>
+          </details>
           <div id="otimizacaoRTC"></div>
         </section>
       </div>
@@ -137,15 +162,20 @@
 <script src="/ui/taxas.js"></script>
 <script src="/ui/rtc.js?v=20261011_final"></script>
 <script src="/ui/fflate.js"></script>
-<script src="/ui/roda_motor.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/roda_motor.js?v=20261014_rodas_objetivos"></script>
 <script src="/ui/roda_visual.js?v=20261011_final"></script>
-<script src="/ui/temporal.js?v=20261012_rtc_roda_ml_v1"></script>
-<script src="/ui/integracao.js?v=20261012_rtc_roda_ml_v1"></script>
+<script src="/ui/temporal.js?v=20261014_feedback_cura"></script>
+<script src="/ui/personalizacao.js?v=20261012"></script>
+<script src="/ui/integracao.js?v=20261014_rodas_objetivos"></script>
 <script src="/ui/shared/apresentacao.js"></script>
+<script src="/ui/features/historico/curas.js?v=20261014"></script>
+<script src="/ui/shared/correcoes_party.js"></script>
+<script src="/ui/shared/releituras_xp.js"></script>
 <script src="/ui/features/hunt/card.js"></script>
 <script src="/ui/features/mapas/grade.js"></script>
 <script src="/ui/features/historico/lista.js"></script>
-<script src="/ui/features/planejamento/painel.js"></script>
-<script src="/ui/app/hunt.js"></script>
+<script src="/ui/rodas_preparadas.js?v=20261014_rodas_objetivos"></script>
+<script src="/ui/features/planejamento/painel.js?v=20261014_sugestoes_icones"></script>
+<script src="/ui/app/hunt.js?v=20261014_especies_raras"></script>
 </body>
 </html>

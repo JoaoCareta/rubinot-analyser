@@ -1,7 +1,7 @@
 """Card da volta em PT x4 na Livraria de Energy (28/07, char Hetero afeminado).
 
 Profit = delta Balance do painel PARTY HUNT. XP raw = delta Raw XP Gain do
-Hunting Analyser pessoal (fallback: delta XP Gain / mult). Bichos = raw / fator
+XP Analyser exclusivamente. Bichos = raw / fator
 medido na sessao de 24/07 da MESMA pt x4 (22.477.907 raw / 3.520 kills).
 
 Uso: python pt_card.py capture\\session_X [volta]
@@ -37,7 +37,25 @@ JANELA_S = 900                    # o Raw XP/h do XP Analyser olha os ultimos 15
 PAUSA_S = 360                     # volta >= 6 min dentro da janela = refill/pausa (normal: 2-4 min)
 BURACO_S = 60                     # tempo sem volta entre duas voltas acima disto = refill/pausa
 # 21/09: sobe quando o leitor muda; card em cache (cards.jsonl) de outra versao e recalculado
-VERSAO = 5  # Party Hunt pela mesma leitura de nomes/valores do motor de dano.
+VERSAO = 7  # Geometria do próprio quadro e economia sem mistura de instantes.
+RELEITURAS_XP = pathlib.Path(__file__).resolve().parent / 'ui' / 'xp_releituras.json'
+
+
+def aplicar_releitura_xp(sessao, L, card):
+    """Revisão medida por quadro, sem reescrever o card nem previsões originais."""
+    try:
+        dados = json.loads(RELEITURAS_XP.read_text(encoding='utf-8'))
+        chave = f"{L['volta']}|{sec(L['inicio'])}|{sec(L['fim'])}"
+        r = dados.get(sessao.name, {}).get('voltas', {}).get(chave, {})
+        if r.get('xp_origem') != 'XP Analyser' or not r.get('provas'):
+            return card
+        valor = r.get('xp_raw')
+        if type(valor) is not int or valor < 0:
+            return card
+        return {**card, 'xp_raw_painel': valor, 'xp_origem': 'XP Analyser',
+                'xp_raw_15min': r.get('xp_raw_15min'), 'xp_releitura': True}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return card
 
 # o painel abrevia valores grandes com sufixo k ("XP Gain: 11,529k" = 11.529.000)
 RX = {
@@ -81,48 +99,23 @@ def leia(d, glyphs, gap, t, box, scroll_x, chaves, jan=35):
         if p.exists():
             char = json.loads(p.read_text(encoding='utf-8')).get('char') or char
     for f in fs[:10]:
-        img = Image.open(f).convert("RGB").crop(box)
-        img.paste((0, 0, 0), (scroll_x, 0, img.width, img.height))
-        if eh_party:
-            valores, _ = painel_stream.ler(img)
-            for k, campo in (('sup','Supplies'), ('bal','Balance'), ('tipo','LootType')):
-                if k in chaves and campo in valores and k not in out:
-                    out[k] = valores[campo]
-            if 'membros' in chaves:
-                leitura = _leitor_party().party(f, lay, char)
-                if leitura:
-                    out['membros'] = 0 if leitura.get('solo') else len(leitura['nomes'])
-            if all(k in out for k in chaves):
-                break
-            continue
-        if live:
-            with Image.open(f) as inteiro:
-                valores, textos = painel_stream.ler_quadro(inteiro, d, box, scroll_x)
-            nomes = {'sup': 'Supplies', 'bal': 'Balance', 'raw': 'RawXPGain', 'xpg': 'XPGain', 'tipo': 'LootType'}
-            out = {k: valores[nomes[k]] for k in chaves if k in nomes and nomes[k] in valores}
-            if 'membros' in chaves:
-                out['membros'] = sum(1 for x in textos if NOME_MEMBRO.fullmatch(x) and '?' not in x)
-            return out
-        # 21/09: a borda da scrollbar acesa so em ~50% da altura ficava abaixo do corte de 60%
-        # e emendava Session..Loot numa banda so; trecho vertical > 40 px sai antes
-        b = lw.clean_binary(ab.binarize_arr(np.asarray(img)))
-        # 18/09: borda/scrollbar que entra no recorte funde todas as bandas -> apagar
-        # qualquer coluna branca em >=60% da altura (texto nunca chega perto disso)
-        b[:, b.sum(axis=0) >= 0.6 * b.shape[0]] = False
-        linhas = [re.sub(r"[�\s]+$", "", x) for x in lw.decode_painel(b, glyphs, gap)]
-        if "membros" in chaves:  # maior contagem entre os frames lidos (nome que nao decodificou num frame)
-            out["membros"] = max(out.get("membros", 0), sum(1 for x in linhas if NOME_MEMBRO.match(x)))
-        for line in linhas:
-            for k in chaves:
-                if k not in out:
-                    m = RX[k].search(line)
-                    if m:
-                        if k == "tipo":
-                            out[k] = m.group(1)
-                        else:
-                            out[k] = int(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
-        if all(k in out for k in chaves):
-            break
+        with Image.open(f) as inteiro:
+            if eh_party:
+                valores, _ = painel_stream.ler_painel(inteiro, d, 'party')
+            else:
+                valores, _ = painel_stream.ler_quadro(inteiro, d, box, scroll_x)
+        nomes = {'sup': 'Supplies', 'bal': 'Balance', 'raw': 'RawXPGain',
+                 'xpg': 'XPGain', 'tipo': 'LootType'}
+        atual = {k: valores[nomes[k]] for k in chaves if k in nomes and nomes[k] in valores}
+        if eh_party and 'membros' in chaves:
+            leitura = _leitor_party().party(f, lay, char)
+            if leitura:
+                atual['membros'] = 0 if leitura.get('solo') else len(leitura['nomes'])
+        # Não compor uma economia fictícia juntando campos de instantes diferentes.
+        if len(atual) > len(out):
+            out = atual
+        if all(k in atual for k in chaves):
+            return atual
     return out
 
 
@@ -144,11 +137,24 @@ def raw_15min(d, glyphs, gap, laps, L):
         sec(x["fim"]) > ini and sec(x["inicio"]) < t1 and x.get("dur_s", 0) >= PAUSA_S for x in laps)
     if suja:
         return True, None
-    hunt = layout.da_sessao(d)["hunt"]
-    a = leia(d, glyphs, gap, ini, tuple(hunt["box"]), hunt["scroll_x"], ["raw"])
-    b = leia(d, glyphs, gap, t1, tuple(hunt["box"]), hunt["scroll_x"], ["raw"])
-    ok = "raw" in a and "raw" in b and b["raw"] > a["raw"]
+    a = leia_xp(d,ini)
+    b = leia_xp(d,t1)
+    ok = "raw" in a and "raw" in b and b["raw"] >= a["raw"]
     return False, (b["raw"] - a["raw"] if ok else None)
+
+
+def leia_xp(d,t,jan=4):
+    for f in sorted((f for f in d.glob('f_*.png') if abs(lw.fsec(f.name)-t)<=jan),key=lambda f:abs(lw.fsec(f.name)-t)):
+        with Image.open(f) as img: valores=painel_stream.ler_xp(img,d)
+        if 'RawXPGain' in valores:return {'raw':valores['RawXPGain']}
+    return {}
+
+
+def leia_input(d,t,jan=4):
+    for f in sorted((f for f in d.glob('f_*.png') if abs(lw.fsec(f.name)-t)<=jan),key=lambda f:abs(lw.fsec(f.name)-t)):
+        with Image.open(f) as img: valores=painel_stream.ler_input(img,d)
+        if valores.get('total') is not None:return valores
+    return {}
 
 
 def volta(d, glyphs, gap, L, laps=None):
@@ -158,8 +164,8 @@ def volta(d, glyphs, gap, L, laps=None):
     party, hunt = (tuple(lay["party"]["box"]), lay["party"]["scroll_x"]), (tuple(lay["hunt"]["box"]), lay["hunt"]["scroll_x"])
     p0 = leia(d, glyphs, gap, t0, *party, ["bal", "sup", "tipo"])
     p1 = leia(d, glyphs, gap, t1, *party, ["bal", "sup", "tipo", "membros"])
-    m0 = leia(d, glyphs, gap, t0, *hunt, ["raw", "xpg", "bal", "sup"])
-    m1 = leia(d, glyphs, gap, t1, *hunt, ["raw", "xpg", "bal", "sup"])
+    m0 = leia(d, glyphs, gap, t0, *hunt, ["bal", "sup"])
+    m1 = leia(d, glyphs, gap, t1, *hunt, ["bal", "sup"])
 
     # base do loot e tamanho da pt no fim da volta (antes do solo trocar p1 pelo painel pessoal)
     base, membros = p1.get("tipo"), p1.get("membros", 0)
@@ -183,20 +189,17 @@ def volta(d, glyphs, gap, L, laps=None):
         # 22/09: marcado: nao compara com as voltas vizinhas (dava -100% e +322350%)
         profit, supplies = p1["bal"], p1.get("sup")
 
-    dxp_raw = None
-    if "raw" in m0 and "raw" in m1 and m1["raw"] > m0["raw"]:
-        dxp_raw = m1["raw"] - m0["raw"]
-    elif "xpg" in m0 and "xpg" in m1 and m1["xpg"] > m0["xpg"]:
-        # painel raw parado na pt: mult medido dos acumulados. 21/09: sem Raw XP Gain legivel, sem
-        # raw (o 8,25 fixo era a rate do dono; boost e rate de outro char mudam o mult, nunca fixar)
-        mult = next((m["xpg"] / m["raw"] for m in (m1, m0) if m.get("raw") and m.get("xpg")), None)
-        dxp_raw = round((m1["xpg"] - m0["xpg"]) / mult) if mult else None
+    x0, x1 = leia_xp(d,t0), leia_xp(d,t1)
+    dxp_raw = x1['raw']-x0['raw'] if 'raw' in x0 and 'raw' in x1 and x1['raw']>=x0['raw'] else None
+    i0, i1 = leia_input(d,t0), leia_input(d,t1)
+    recebido = i1['total']-i0['total'] if i0.get('total') is not None and i1.get('total') is not None and i1['total']>=i0['total'] else None
 
     fator = FATOR_ENV if FATOR_ENV is not None else locais.raw_por_bicho(os.environ.get("HUNT_NOME"), membros)
     kills = round(dxp_raw / fator) if dxp_raw and fator else None  # sem fator conhecido: a contagem fica com o chat
     out = {
         "volta": L["volta"], "inicio": L["inicio"], "fim": L["fim"], "dur_s": dur,
-        "xp_raw_painel": dxp_raw, "balance_atual": profit, "supplies": supplies,
+        "xp_raw_painel": dxp_raw, "xp_origem":"XP Analyser",
+        "dmg_in_painel":recebido, "dmg_in_origem":"Input Analyser", "balance_atual": profit, "supplies": supplies,
         "supplies_eu": sup_eu, "kills_total": kills, "kills_piso_chat": L.get("kills_total"),
         "base": base, "membros": membros, "solo": solo, "reset": reset,
     }

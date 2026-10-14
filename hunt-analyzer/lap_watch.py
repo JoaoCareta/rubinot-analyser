@@ -135,13 +135,16 @@ def _y_min(pasta):
 
 def battle_count(path):
     # 21/09: titulo mascarado conforme o layout com que a sessao do frame foi gravada
-    return battle_count_bin(ab.binarize(path), _y_min(str(pathlib.Path(path).parent)))
+    with Image.open(path) as im:
+        meta = json.loads(im.info.get('leitura', '{}'))
+        largura = im.width if meta.get('versao') == 1 else BATTLE_X_MAX
+    return battle_count_bin(ab.binarize(path), meta.get('battle_y_min', _y_min(str(pathlib.Path(path).parent))), largura)
 
 
-def battle_count_bin(binary, y_min=BATTLE_Y_MIN):
+def battle_count_bin(binary, y_min=BATTLE_Y_MIN, x_max=BATTLE_X_MAX):
     binary = clean_binary(binary)  # scrollbar/borda emendam as bandas
     binary[:y_min, :] = False
-    binary[:, BATTLE_X_MAX:] = False
+    binary[:, x_max:] = False
     # entrada = icone+nome+barra, ate ~21px (pitch entre entradas = 22px)
     return sum(1 for y0, y1 in ab.find_bands(binary) if 6 <= y1 - y0 <= 21)
 
@@ -187,10 +190,12 @@ def battle_especies(session, t0, t1, glyphs, conhecidas):
         if not (t0 <= s <= t1) or (ult is not None and s - ult < BATTLE_AMOSTRA_S):
             continue
         ult = s
-        a = np.asarray(Image.open(f).convert("RGB"))
+        with Image.open(f) as im:
+            meta = json.loads(im.info.get('leitura','{}'))
+            a = np.asarray(im.convert("RGB"))
         mx = a.max(axis=2)
         b = (mx > ab.LUM_T) & (mx - a.min(axis=2) < 30)
-        b[:y_min] = False
+        b[:meta.get('battle_y_min', y_min)] = False
         b[:, b.sum(axis=0) >= 0.6 * b.shape[0]] = False  # scrollbar/borda
         quadro = collections.Counter()
         for y0, y1 in ab.find_bands(b):
@@ -287,29 +292,15 @@ def panel_read(session, target_s, glyphs, gap, window_s=90, max_frames=24):
     hunt = layout.da_sessao(session)["hunt"]  # 21/09: caixa do Hunt Analyser da calibracao
     out = {}
     for f in cands[:max_frames]:
-        img = Image.open(f).convert("RGB").crop(tuple(hunt["box"]))
-        # thumb da scrollbar (claro) atravessa as linhas de cima e funde as
-        # bandas do line-finder — apagar a coluna dele antes de decodificar
-        img.paste((0, 0, 0), (hunt["scroll_x"], 0, img.width, img.height))
-        if live:
-            with Image.open(f) as inteiro:
-                lidos, _ = painel_stream.ler_quadro(inteiro, session, tuple(hunt['box']), hunt['scroll_x'])
-            nomes = {'xp_gain': 'XPGain', 'raw_xp_gain': 'RawXPGain', 'raw_xph': 'RawXP/h',
-                     'loot': 'Loot', 'supplies': 'Supplies', 'balance': 'Balance'}
-            return {k: lidos[v] for k, v in nomes.items() if v in lidos}
-        binary = clean_binary(ab.binarize_arr(np.asarray(img)))
-        text = "\n".join(decode_painel(binary, glyphs, gap))
-        for key, rx in PANEL_RX.items():
-            if key in out:
-                continue
-            m = rx.search(text)
-            if m:
-                v = int(m.group(1).replace(",", ""))
-                if m.group(2) == "k":
-                    v *= 1000
-                out[key] = v
-        if len(out) == len(PANEL_RX):
-            break
+        with Image.open(f) as inteiro:
+            lidos, _ = painel_stream.ler_quadro(inteiro, session, tuple(hunt['box']), hunt['scroll_x'])
+        nomes = {'xp_gain':'XPGain','raw_xp_gain':'RawXPGain','raw_xph':'RawXP/h',
+                 'loot':'Loot','supplies':'Supplies','balance':'Balance'}
+        atual = {k:lidos[v] for k,v in nomes.items() if v in lidos}
+        if len(atual)>len(out):
+            out=atual
+        if len(atual)==len(nomes):
+            return atual
     return out
 
 
@@ -502,15 +493,8 @@ def lap_summary(session, t0, t1, glyphs, gap):
         "especies_battle": esp_battle,
         "xp": xp_total,
         "xp_painel": delta("raw_xp_gain"),
-        # XP RAW da volta pelo painel: campo direto quando legivel; senao
-        # XP Gain / mult, com mult medido do proprio painel (o rate muda com
-        # XP boost — 7,2 boosted vs 4,95 normal no Traps — nunca fixar)
-        "xp_raw_painel": (delta("raw_xp_gain") if delta("raw_xp_gain") is not None
-                          else (round(delta("xp_gain") / (p1["xp_gain"] / p1["raw_xp_gain"]))
-                                if delta("xp_gain") is not None
-                                and p1.get("raw_xp_gain") and p1.get("xp_gain")
-                                else (round(delta("xp_gain") / PANEL_MULT)
-                                      if delta("xp_gain") is not None else None))),
+        "xp_raw_painel": delta("raw_xp_gain"),
+        "xp_origem": "XP Analyser",
         "profit": delta("balance") if delta("balance") is not None else (
             delta("loot") - delta("supplies")
             if delta("loot") is not None and delta("supplies") is not None else None),

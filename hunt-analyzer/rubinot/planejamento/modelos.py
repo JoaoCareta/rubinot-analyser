@@ -11,6 +11,7 @@ import hashlib
 import math
 import bisect
 import json
+import re
 
 import numpy as np
 
@@ -27,7 +28,11 @@ def exemplos(char, sessao, eventos, magias, rtc, intervalos):
     if not rtc.get('instante') or rtc.get('char') != char or rtc.get('sessao') != sessao:
         return []
     dt = datetime.datetime.fromtimestamp(rtc['instante'])
-    desde = dt.hour*3600+dt.minute*60+dt.second+dt.microsecond/1e6
+    try:
+        dia = datetime.datetime.strptime(sessao.split('_')[1], '%Y%m%d').date()
+    except (ValueError, IndexError):
+        dia = dt.date()
+    desde = (dt.date()-dia).days*86400+dt.hour*3600+dt.minute*60+dt.second+dt.microsecond/1e6
     por_id = {m['id']: m for m in magias}
     slots = {s['id']: s for s in rtc.get('slots', []) if s.get('id')}
     unicos = {(e['t'], e['magia_id']): e for e in eventos
@@ -37,7 +42,7 @@ def exemplos(char, sessao, eventos, magias, rtc, intervalos):
     por_magia = collections.defaultdict(list)
     for t, ident in sorted(unicos):
         por_magia[ident].append(t)
-    fase = assinatura([cx.chave_rtc(rtc), rtc.get('roda_efeitos')])
+    fase = assinatura([cx.chave_rtc(rtc), rtc.get('roda_efeitos'), rtc.get('declaracao_uso_id')])
     saida = []
     for ident, ts in por_magia.items():
         m, slot = por_id[ident], slots[ident]
@@ -60,9 +65,12 @@ def treinar(dados, atuais, rtc):
     escopo = {'char': rtc.get('char'), 'sessao': rtc.get('sessao'), 'preset': rtc.get('preset'), 'rtc_chave': cx.chave_rtc(rtc)}
     if rtc.get('roda_efeitos') is not None:
         escopo['roda_efeitos'] = rtc['roda_efeitos']
+    fases = {d['fase'] for d in atuais}
+    dados = [d for d in dados if d['fase'] in fases]
     base = {'versao': VERSAO, 'algoritmo': 'regressao_quantilica_regularizada', 'quantil': QUANTIL,
             'escopo': escopo, 'amostras': len(dados), 'intervalos_efetivos': {}, 'validacao': {},
-            'estado': 'coletando', 'cobertura_completa': False}
+            'estado': 'coletando', 'cobertura_completa': False,
+            'semantica': 'cadencia_observada_nao_cooldown', 'uso_personalizacao': 'diagnostico'}
     if len(atuais) < 50:
         return base
     atuais = sorted(atuais, key=lambda d: (d['instante'], d['id']))
@@ -90,6 +98,11 @@ def treinar(dados, atuais, rtc):
                  'treino': len(treino), 'teste': len(teste), 'treino_ate': max(d['instante'] for d in treino),
                  'teste_desde': min(d['instante'] for d in teste),
                  'perda_treino': perda(y-x@pesos)})
+    base['estudo_previsto'] = [{'id':d['id'], 'instante':d['instante'], 'magia_id':d['magia_id'],
+        'unidade':'segundos_entre_casts', 'modo':'replay_teste_posterior',
+        'previsto':max(d['grupo'], d['cd']+float(np.asarray(features(d))@pesos)),
+        'observado':d['gap'],
+        'erro':d['gap']-max(d['grupo'], d['cd']+float(np.asarray(features(d))@pesos))} for d in teste]
     por_id = collections.defaultdict(list)
     for d in teste:
         por_id[d['magia_id']].append(d)
@@ -121,7 +134,7 @@ def atualizar(pasta, char, sessao, eventos, magias, rtc, intervalos):
     arquivo = armazenamento.ler_json(caminho)
     anteriores = arquivo.get('amostras', []) if arquivo.get('char') == char and arquivo.get('versao') == VERSAO else []
     unicos = {d['id']: d for d in [*anteriores, *atuais]}
-    dados = sorted(unicos.values(), key=lambda d: (d['instante'], d['id']))[-5000:]
+    dados = sorted(unicos.values(), key=lambda d: (d['instante'], d['id']))
     armazenamento.gravar_json(caminho, {'versao': VERSAO, 'char': char, 'amostras': dados})
     return treinar(dados, atuais, rtc)
 
@@ -150,7 +163,11 @@ def referencia_roda(roda, catalogo):
                     destino[str(ident)] = n
     fatias = {k[7:]: v['valor'] for k, v in campos.items() if k.startswith('fatias.')}
     gemas = {k[6:]: v['valor'] for k, v in campos.items() if k.startswith('gemas.')}
-    fatos = {'ranks': ranks, 'revelation': revelation, 'gemas': gemas}
+    bonus_base = {}
+    frigo = campos.get('vessels.Strong Ice Wave', {})
+    if frigo.get('qualidade') == 'texto_integral' and re.fullmatch(r'\+\d+(?:[.,]\d+)?%', str(frigo.get('valor', ''))):
+        bonus_base['strong_ice_wave'] = float(frigo['valor'].strip('+%').replace(',', '.'))/100
+    fatos = {'ranks': ranks, 'revelation': revelation, 'gemas': gemas, 'bonus_base': bonus_base}
     return {'id': roda.get('id'), 'char': roda.get('char'), 'preset': roda.get('preset'), 'instante': roda.get('instante'),
             'prova': roda.get('prova'), 'completo': roda.get('completo', False),
             'total': campos.get('pontos.total', {}).get('valor'), 'fatias': fatias,
@@ -172,6 +189,7 @@ def estado_magia(m, roda):
     adicional = bool(ident.startswith('forked_') and rank >= 2)
     fator = 1 + (.06 if ident == 'strong_ice_wave' and rank else
                  .065 if ident == 'terra_wave' and rank else .10 if ident == 'energy_wave' and rank == 2 else 0)
+    fator += roda.get('bonus_base', {}).get(ident, 0)
     return {'chave': f'{ident}|area:{int(area)}|extra:{int(adicional)}|twin:{twin}',
             'area_ampliada': area, 'alvo_adicional': adicional, 'twin_estagio': twin,
             'multiplicador_base': fator}
@@ -247,24 +265,31 @@ def exemplos_combate(char, sessao, eventos, magias, rtcs, rodas, amostras, inter
                       'regras_versao': catalogo['versao'], 'estado_magia': estado['chave'],
                       'criaturas': n, 'rendimento': rendimento, 'dano_associado': sum(d['value'] for d in ds),
                       'cobertura_completa': False, 'origem': 'cast_e_dano_associado_parcial'})
+        saida[-1]['declaracao_uso_id'] = cast.get('declaracao_uso_id')
+        saida[-1]['contexto_aprendizado'] = a.get('contexto_aprendizado')
     return saida
 
 
-def treinar_combate(dados, referencia, regras):
+def treinar_combate(dados, referencia, regras, agrupar_contextos=True):
     """Ridge em log do rendimento por cast, validada no trecho posterior.
 
     Cada geometria/Twin tem perfil próprio: uma roda única não identifica o
     ganho causal de trocar estágio. O simulador fornece as regras normativas.
     """
-    dados = sorted([d for d in dados if d['regras_versao'] == regras], key=lambda d: (d['instante'], d['id']))
+    dados = sorted([d for d in dados if d['regras_versao'] == regras and
+                    (not referencia.get('exigir_uso_declarado') or d.get('declaracao_uso_id'))], key=lambda d: (d['instante'], d['id']))
     saida = {'versao': COMBATE_VERSAO, 'algoritmo': 'ridge_log_rendimento_por_estado',
              'regras_versao': regras, 'char': referencia.get('char'), 'referencia_inicial': referencia, 'perfis': {},
              'amostras': len(dados), 'cobertura_completa': False, 'estado': 'coletando',
              'uso': ['rtc', 'roda'], 'estagios_nao_observados': 'regras_e_intervalo_sem_ganho_aprendido'}
+    saida['estudo_previsto'] = []
     por_estado = collections.defaultdict(list)
     for d in dados:
         por_estado[d['estado_magia']].append(d)
-    escala = float(np.median([d['rendimento'] for d in dados])) if dados else 1
+    corte_global = min((rows[len(rows)-max(8, math.ceil(len(rows)*.2))]['instante']
+                       for rows in por_estado.values() if len(rows) >= 40), default=float('inf'))
+    referencia_treino = [d['rendimento'] for d in dados if d['instante'] < corte_global]
+    escala = float(np.median(referencia_treino)) if referencia_treino else 1
     saida['escala_comum'] = escala
     for estado, rows in por_estado.items():
         if len(rows) < 40:
@@ -286,10 +311,19 @@ def treinar_combate(dados, referencia, regras):
         erros = [abs(math.log(d['rendimento'])-(coef[0]+coef[1]*math.log1p(d['criaturas']))) for d in teste]
         antes = float(np.mean([abs(math.log(d['rendimento'])-math.log(escala)) for d in teste]))
         depois = float(np.mean(erros))
+        for d in teste:
+            previsto = math.exp(float(coef[0]+coef[1]*math.log1p(d['criaturas'])))
+            saida['estudo_previsto'].append({'id':d['id'], 'instante':d['instante'],
+                'magia_id':d['magia_id'], 'estado_magia':estado,
+                'unidade':'rendimento_associado_parcial', 'modo':'replay_teste_posterior',
+                'previsto':previsto, 'observado':d['rendimento'], 'erro':d['rendimento']-previsto,
+                'modelo_aceito':False})
         # Sem melhoria fora do treino, o modelo permanece coletando esse perfil.
         aceita = depois < antes*.95 or abs(base-math.log(escala)) < .05 and depois <= antes+.01
         if not aceita:
             continue
+        for estudo in saida['estudo_previsto']:
+            if estudo['estado_magia']==estado: estudo['modelo_aceito']=True
         saida['perfis'][estado] = {'magia_id': rows[-1]['magia_id'], 'coeficientes': coef.tolist(),
                                    'escala_comum': escala, 'treino': len(treino), 'validacao': len(teste),
                                    'treino_ate': treino[-1]['instante'], 'teste_desde': teste[0]['instante'],
@@ -301,22 +335,106 @@ def treinar_combate(dados, referencia, regras):
                                    'sessao': rows[-1]['sessao']}
     if saida['perfis']:
         saida['estado'] = 'aprendizado_validado_parcial'
+    if agrupar_contextos:
+        # Não transformar facilidade de posicionamento do solo em rendimento
+        # de uma box em PT (nem transferir entre hunts/Hazard). Legado preservado.
+        grupos = collections.defaultdict(list)
+        for d in dados:
+            cx_dado = d.get('contexto_aprendizado') or {}
+            pt = str(cx_dado.get('pt', '')).strip().lower()
+            modo = 'solo' if pt in ('solo', 'x1', '1', 'pt x1') else 'party' if re.fullmatch(r'(pt\s*)?x?[2-5]', pt) else None
+            if modo is None or not cx_dado.get('hunt') or cx_dado.get('hazard') is None:
+                continue
+            chave = json.dumps([modo, cx_dado['hunt'], cx_dado['hazard']], ensure_ascii=False, separators=(',', ':'))
+            grupos[chave].append(d)
+        saida['contextos'] = {chave: treinar_combate(rows, referencia, regras, False) for chave, rows in grupos.items()}
     return saida
 
 
-def atualizar_combate(pasta, char, sessao, eventos, magias, amostras, intervalos, catalogo, monstros):
+def atualizar_combate(pasta, char, sessao, eventos, magias, amostras, intervalos, catalogo, monstros, contexto=None):
     rtcs = [armazenamento.ler_json(p) for p in pasta.glob('[0-9]*_rtc.json')]
     rodas = [armazenamento.ler_json(p) for p in pasta.glob('[0-9]*_roda.json')]
+    # Associação declarada à sessão não altera os snapshots originais nem
+    # transforma a calibração anterior em leitura visual durante esta hunt.
+    declaracoes = {r.get('id'): r for r in (armazenamento.ler_json(p) for p in pasta.glob('uso_*.json'))}
+    for d in declaracoes.values():
+        if d.get('char') != char or d.get('sessao') != sessao or d.get('resposta') != 'uso_confirmado': continue
+        for tipo, destino in (('rtc',rtcs),('roda',rodas)):
+            revisao = d.get('revisoes',{}).get(tipo)
+            original = next((r for r in destino if r.get('id') == revisao), None)
+            if original and original.get('sessao') in ('calibracao', 'observacao'):
+                destino.append({**original, 'sessao':sessao,
+                                'sessao_leitura_original':original['sessao'],
+                                'instante':max(original['instante'],d['confirmado_em']),
+                                'declaracao_uso_id':d['id']})
     conhecidas = [r for r in rodas if r.get('char') == char]
     referencia = referencia_roda(max(conhecidas, key=lambda r: r['instante']), catalogo) if conhecidas else {}
+    referencia['exigir_uso_declarado'] = any(e.get('declaracao_uso_id') for e in eventos)
     arquivo = pasta/'combate_ml_dados.json'
     anterior = armazenamento.ler_json(arquivo)
     dados = anterior.get('amostras', []) if anterior.get('char') == char and anterior.get('versao') == COMBATE_VERSAO else []
     atuais = exemplos_combate(char, sessao, eventos, magias, rtcs, rodas, amostras, intervalos, catalogo, monstros)
+    conhecidos = {d['id']:d for d in dados}
+    for d in atuais:
+        if d['id'] in conhecidos:
+            d['contexto_aprendizado'] = conhecidos[d['id']].get('contexto_aprendizado')
     unicos = {d['id']: d for d in [*dados, *atuais]}
-    dados = sorted(unicos.values(), key=lambda d: (d['instante'], d['id']))[-10000:]
+    dados = sorted(unicos.values(), key=lambda d: (d['instante'], d['id']))
     armazenamento.gravar_json(arquivo, {'versao': COMBATE_VERSAO, 'char': char, 'amostras': dados})
     semente = armazenamento.ler_json(pasta/'roda_ml_inicio.json')
     if not semente and referencia:
         armazenamento.gravar_json(pasta/'roda_ml_inicio.json', referencia)
-    return treinar_combate(dados, semente or referencia, catalogo['versao'])
+    resultado = treinar_combate(dados, semente or referencia, catalogo['versao'])
+    resultado['residual_sessoes'] = atualizar_residual(pasta, dados, sessao)
+    return resultado
+
+
+def atualizar_residual(pasta, dados, sessao):
+    """Previsões congeladas por sessão; histórico de exemplos/modelos preservado."""
+    from rubinot.planejamento import residual
+    arquivo = pasta/'residual_exemplos.json'
+    anteriores = armazenamento.ler_json(arquivo).get('amostras', [])
+    conhecidos = {d['origem_id']:d for d in anteriores}
+    vigente = armazenamento.ler_json(pasta/'residual_vigente.json')
+    # Fonte parcial continua parcial. Só contextos novos e declarações reais;
+    # não enriquecer retroativamente o histórico com o contexto de hoje.
+    elegiveis = [d for d in dados if (d.get('contexto_aprendizado') or {}).get('hunt') and d.get('declaracao_uso_id')
+                 and not d.get('qa') and not d.get('sintetico')]
+    inicios = {}
+    for d in elegiveis:
+        inicios[d['sessao']] = min(inicios.get(d['sessao'], float('inf')), d['instante'])
+    for d in elegiveis:
+        if d['id'] in conhecidos:
+            continue
+        contexto = {**d['contexto_aprendizado'], 'char':d['char'], 'regras':d['regras_versao'],
+                    'rtc':d['rtc_chave'], 'roda':d['roda_chave']}
+        treino = [a for a in anteriores if a['sessao']!=d['sessao'] and a['instante']<inicios[d['sessao']]
+                  and a['contexto']==contexto and a['grupo']==d['estado_magia']]
+        if not treino:
+            # Referência unitária inicial, sem alegar estimativa física do catálogo.
+            base = 1.0
+        else:
+            base = float(np.median([a['observado'] for a in treino]))
+        conhecidos[d['id']] = {'origem_id':d['id'], 'sessao':d['sessao'], 'instante':d['instante'],
+            'contexto':contexto, 'grupo':d['estado_magia'], 'faixa':min(12,d['criaturas']),
+            'previsto':base, 'observado':d['rendimento'], 'origens_treino':[a['origem_id'] for a in treino],
+            'modo':'referencia_anterior_a_sessao', 'unidade':'rendimento_associado_parcial'}
+        row = conhecidos[d['id']]
+        pode = vigente.get('perfis') and vigente.get('avaliado_ate',float('inf'))<inicios[d['sessao']]
+        row['previsto_modelo'] = residual.prever(vigente['perfis'],row) if pode else base
+        row['modelo_id'] = vigente.get('id') if pode else None
+        row['modo'] = 'replay_com_referencia_anterior_a_sessao'
+    exemplos = list(conhecidos.values())
+    armazenamento.gravar_json(arquivo, {'versao':residual.VERSAO, 'amostras':exemplos})
+    vigente = armazenamento.ler_json(pasta/'residual_vigente.json')
+    # Só sessões anteriores: a sessão corrente nunca promove sua própria previsão.
+    inicio = inicios.get(sessao, float('-inf'))
+    candidato = residual.treinar([d for d in exemplos if d['sessao']!=sessao and d['instante']<inicio], vigente)
+    candidato['exemplos_coletados'] = len(exemplos)
+    candidato['uso'] = 'diagnostico_de_rendimento_parcial'
+    identificador = assinatura(candidato)
+    armazenamento.gravar_json(pasta/'residual_modelos'/f'{identificador}.json', candidato)
+    if candidato.get('promover'):
+        armazenamento.gravar_json(pasta/'residual_vigente.json', candidato)
+        vigente = candidato
+    return {**candidato, 'vigente_id':vigente.get('id'), 'vigente':vigente}

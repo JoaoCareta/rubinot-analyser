@@ -1,9 +1,21 @@
 # Documentação
 
+- [RTC e experimentos da Twin por XP: implementação e limites](rtc-xp-experimentos-twin-implementacao-20261014.md)
+
+- [Implementação e limites da leitura adaptativa dos painéis](paineis-adaptativos-implementacao-20261013.md)
+
+- [Planejamento da leitura adaptativa dos painéis](paineis-adaptativos-plano-20261013.md)
+- [Relação dos campos por painel e mapa de leitura](paineis-campos-20261013.md)
 - [Arquitetura e donos](arquitetura.md)
 - [Linguagem ubíqua](linguagem-ubiqua.md)
 - [Contratos e compatibilidade](contratos/README.md)
 - [Aprendizado e limites](aprendizado.md)
+- [Aprendizado integrado: roda, Utamo, supplies e painéis](aprendizado-integrado-plano-20261012.md)
+- [Reaproveitamento das sessões e previsto × observado](aprendizado-previsto-20261012.md)
+- [Hazard no contexto das sessões e previsões](hazard-aprendizado-20261012.md)
+- [Insights para planejar o aprendizado da execução do RTC](rtc-aprendizado-insights-20261012.md)
+- [Plano de aprendizado e confirmação de uso do RTC](rtc-aprendizado-plano-20261012.md)
+- [Implementação, validação e instalação do aprendizado RTC](rtc-aprendizado-implementacao-20261012.md)
 - [Testes e harness](testes.md)
 - [Operação](operacao.md)
 - [Dados, retenção e recuperação](dados.md)

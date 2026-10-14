@@ -1,30 +1,119 @@
 (function(root){
 let rodaModoVida='utamo',rtcRodaObjetivo='dano',rtcTier=0;
 const rtcCacheIntegrado=new Map(),rtcWorkers=new Map();
+const rtcBibliotecaRodas=new HuntRodasPreparadas.Biblioteca(),rtcContextosRoda=new Map();
+let rtcRodaDesobservar=null;
+let rtcIntegradoAssinatura='',rtcIntegradoUI=null;
+// Provas e horários de uma releitura não mudam o conteúdo calculável.
+// Não aplicar este filtro ao modelo/estudos: neles o tempo é significativo.
+function rtcConteudoLeitura(leitura){
+  if(Array.isArray(leitura))return leitura.map(rtcConteudoLeitura);
+  if(!leitura||typeof leitura!=='object')return leitura;
+  return Object.fromEntries(Object.entries(leitura).filter(([k])=>!['instante','prova','capturado_em','processado_em','visto_por_ultimo_em'].includes(k)).map(([k,v])=>[k,rtcConteudoLeitura(v)]));
+}
+function rtcChaveContexto(ctx){return {...ctx,observado:rtcConteudoLeitura(ctx.observado),helper:rtcConteudoLeitura(ctx.helper)};}
+function rtcPrepararPainel(painel,id){
+  painel.classList.add('planejamento-painel');painel.dataset.painel=id;
+  try{painel.open=localStorage.getItem('hunt:painel:'+id)!=='fechado';}catch{painel.open=true;}
+  painel.addEventListener('toggle',()=>{try{localStorage.setItem('hunt:painel:'+id,painel.open?'aberto':'fechado');}catch{}});
+}
+function rtcPainel(id,titulo,classe){
+  const painel=HuntUI.el('details',classe),conteudo=HuntUI.el('div','planejamento-conteudo');
+  painel.append(HuntUI.el('summary',null,titulo),conteudo);rtcPrepararPainel(painel,id);return {painel,conteudo};
+}
 function rtcCancelaCalculos(){for(const w of rtcWorkers.values())w.terminate();rtcWorkers.clear();}
 async function rtcOperacao(dados){
   const r=await fetch('/api/configuracoes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)}),d=await r.json();
   if(!r.ok||!d.ok)throw Error(d.erro||'Não foi possível guardar.');return d.resultado;
 }
-function rtcLinhasConfiguradas(linhas,bloco,cura=false){
+function rtcIconeConfere(escopo){
+  const selo=HuntUI.el('span','rtc-confere','✓');
+  selo.setAttribute('role','img');selo.setAttribute('aria-label','Similar à sugestão: '+escopo);
+  selo.title='Similar à sugestão: '+escopo;return selo;
+}
+function rtcLeituraConfigurada(m,cura,observado){
+  const leitura=cura?observado?.cura:observado?.rtc;
+  if(leitura?.atual===false)return null;
+  const candidatas=(leitura?.slots||[]).filter(s=>s.id===m.id&&(cura?
+    (m.vocacao_destino?s.vocacao_destino===m.vocacao_destino:s.tipo==='autocura'):
+    (!s.tipo||s.tipo===(m.runa||m.tipo==='runa'?'runa':'magia'))));
+  // Uma leitura ambígua, antiga ou desativada não confirma a sugestão.
+  const s=candidatas.length===1?candidatas[0]:null;
+  return s&&s.atual!==false&&s.ativo!==false?s:null;
+}
+function rtcLinhasConfiguradas(linhas,bloco,cura=false,observado=rtcObservado){
   const lista=HuntUI.el('div','rtc-slots');
-  for(const m of linhas){const c=HuntUI.el('article','rtc-slot');if(m.imagem)c.append(rtcImagem(m));
-    c.append(HuntUI.el('strong',null,`${cura?(m.vocacao_destino?m.vocacao_destino+' · ':''):m.tipo==='runa'?'Runa '+m.slot+' · ':'Magia '+m.slot+' · '}${rtcNome(m)}`));
-    c.append(HuntUI.el('p','nota',cura?`Vida ${m.vida_percent}%${m.origem_percentual==='observado'?' · lido no jogo':''}`:`${m.tipo==='runa'?'':`Mana ${m.mana_percent}% · `}${m.runa&&m.alvos===1?'':`Criaturas ${m.creatures}+ · `}Prioridade ${m.prioridade}º`));
+  for(const m of linhas){const c=HuntUI.el('article','rtc-slot'),cab=HuntUI.el('div','rtc-slot-cabecalho'),titulo=HuntUI.el('div','rtc-slot-titulo');
+    c.dataset.magia=m.id;if(m.vocacao_destino)c.dataset.destino=m.vocacao_destino;
+    const lida=rtcLeituraConfigurada(m,cura,observado),runa=m.runa||m.tipo==='runa';
+    if(m.imagem)cab.append(rtcImagem(m));
+    if(!cura){const pos=HuntUI.el('span','rtc-slot-posicao',`${runa?'Runa':'Magia'} ${m.slot??'—'}`);
+      if(lida&&Number.isFinite(m.slot)&&lida.slot===m.slot)pos.append(rtcIconeConfere('posição'));
+      titulo.append(pos);}
+    titulo.append(HuntUI.el('strong',null,`${cura&&m.vocacao_destino?m.vocacao_destino+' · ':''}${rtcNome(m)}`));cab.append(titulo);c.append(cab);
+    const campos=HuntUI.el('div','rtc-slot-campos');let ajustes=0;
+    const campo=(chave,nome,sufixo='',anterior=null)=>{
+      const valor=m[chave],atual=lida?.[chave],confere=Number.isFinite(valor)&&Number.isFinite(atual)&&valor===atual;
+      const antes=Number.isFinite(atual)?atual:anterior,mudou=Number.isFinite(valor)&&Number.isFinite(antes)&&valor!==antes;
+      const linha=HuntUI.el('div','rtc-slot-campo'+(mudou?' rtc-slot-mudanca':'')),valores=HuntUI.el('span','rtc-slot-valores');
+      linha.dataset.campo=chave;linha.append(HuntUI.el('span','rtc-slot-rotulo',nome+' '));
+      if(mudou){ajustes++;const de=HuntUI.el('span','rtc-slot-anterior',`${antes}${sufixo}`);de.title='Atual';
+        valores.append(de,HuntUI.el('span','rtc-slot-seta',' → '));}
+      const para=HuntUI.el('strong',null,Number.isFinite(valor)?`${valor}${sufixo}`:'—');if(mudou)para.title='Sugerido para a próxima hunt';valores.append(para);
+      if(confere)valores.append(rtcIconeConfere(nome));linha.append(valores);campos.append(linha);
+    };
+    if(cura){
+      const proposta=['feedback_analisado','aprendizado_sio_parcial','estudo_cura_observacional','aprendizado_validado'].includes(m.origem_percentual);
+      campo('vida_percent','Vida','%',proposta?m.vida_percent_anterior:null);
+    }else{
+      if(!runa)campo('mana_percent','Mana','%');
+      if(!(runa&&m.alvos===1))campo('creatures','Criaturas','+');
+      campo('prioridade','Prioridade','º');
+      if(lida&&Number.isFinite(lida.slot)&&Number.isFinite(m.slot)&&lida.slot!==m.slot)campo('slot','Posição');
+    }
+    c.append(campos);
+    if(ajustes){c.classList.add('rtc-slot-sugerido');c.append(HuntUI.el('span','rtc-slot-proxima','Próxima hunt'));}
+    if(cura&&!lida){const notas={informado_usuario:'Configuração atual informada por você.',feedback_usuario:'Sua correção de emergência · referência, ainda não otimizada.',recomendado:'Referência inicial · sem avaliação individual.'};
+      if(notas[m.origem_percentual])c.append(HuntUI.el('p','nota',notas[m.origem_percentual]));}
     if(m.frequencia!=null)c.append(HuntUI.el('p','nota',`Frequência de ativação: ${rtcFmt(m.frequencia)} /min · previsão`));
-    if(!cura){const conf=HuntRTC.conferirRTC(m,m,rtcObservado.rtc);c.append(HuntUI.el('span',conf.estado==='Ajustar'?'rtc-ajustar':'nota',conf.estado));}
     lista.append(c);
   }
   if(!linhas.length)lista.append(HuntUI.el('p','nota','Aguardando leitura e contexto da hunt.'));bloco.append(lista);
 }
 function rtcMostrarRoda(r,roda,cat){
   roda.replaceChildren();
-  rtcMostrarAprendizado(r.roda.aprendizado,roda);
+  const cmp=r.roda.comparacao_atual;
+  if(cmp){
+    const box=HuntUI.el('section','rtc-comparacao-atual');box.setAttribute('aria-label','Comparação com sua roda atual');
+    box.append(HuntUI.el('h3',null,cmp.estado),HuntUI.el('p','nota','Sua roda e suas gemas são a referência. A distribuição abaixo é uma candidata para comparação.'));
+    if(cmp.feedback)box.append(HuntUI.el('p','nota','Revisão do foco Dano após seu relato. A distribuição preserva os benefícios lidos após a troca; os pontos não lidos foram calculados. Proposta sem ganho real confirmado.'));
+    if(cmp.similaridade?.similar)box.querySelector('h3').append(rtcIconeConfere(cmp.similaridade.escopo||'benefícios da roda'));
+    const tabela=(cabecalhos,linhas)=>{const t=HuntUI.el('table'),head=HuntUI.el('thead'),tr=HuntUI.el('tr'),body=HuntUI.el('tbody');
+      for(const nome of cabecalhos)tr.append(HuntUI.el('th',null,nome));head.append(tr);
+      for(const valores of linhas){const row=HuntUI.el('tr');for(const valor of valores)row.append(HuntUI.el('td',null,String(valor)));body.append(row);}t.append(head,body);return t;};
+    const pct=n=>n==null?'Não lido':rtcFmt(n)+'%',sinal=n=>n==null?'Não medido':(n>0?'+':'')+rtcFmt(n);
+    const g=cmp.ganhos;
+    if(g)box.append(tabela(['Benefício','Atual','Candidata'],[
+      ['Sio · bônus de cura base',pct(g.sio_base_atual),pct(g.sio_base_candidato)],
+      ['Cura crítica',g.critico_atual==null?'Não lida':g.critico_atual?'Ativa':'Inativa',g.critico_candidato?'Ativa':'Inativa'],
+      ['Dano/cura fixos por aplicação',g.fixo_atual==null?'Não lido':'+'+rtcFmt(g.fixo_atual),'+'+rtcFmt(g.fixo_candidato)+' · diferença '+sinal(g.fixo_delta)]
+    ]));
+    const relevantes=(cmp.magias||[]).filter(m=>['strong_ice_wave','terra_wave','forked_glacier','forked_thorns','ice_burst'].includes(m.id));
+    if(relevantes.length)box.append(tabela(['Magia','Bônus base atual → candidata','Área / alvos'],relevantes.map(m=>[
+      rtcNome(m),`${m.bonus_base_atual==null&&m.bonus_roda_atual!=null?pct(m.bonus_roda_atual)+' da roda · gemas pendentes':pct(m.bonus_base_atual)} → ${pct(m.bonus_base_candidato)}`,
+      m.area_atual==null?'Área atual não lida':m.area_atual&&!m.area_candidata?'Perde área ampliada':!m.area_atual&&m.area_candidata?'Ganha área ampliada':m.alvos_atual!==m.alvos_candidato?`${m.alvos_atual??'Não lido'} → ${m.alvos_candidato??'Área'} alvos`:'Mantidos'
+    ])));
+    roda.append(box);
+  }
   if(r.roda.estado==='Calculado'){
     roda.append(HuntUI.el('p','nota',`${r.roda.investidos} investidos · ${r.roda.livres} ${r.roda.livres===3?"reservados":"livres"} / ${r.contexto.total} totais`));
     const atual=Object.fromEntries(Object.entries(rtcObservado.roda?.campos||{}).filter(([k])=>k.startsWith('fatias.')).map(([k,v])=>[k.slice(7),v.valor]));
     const visual=HuntRodaVisual.montar(cat,r.roda.pontos,r.contexto.total,atual);if(visual.elemento)roda.append(visual.elemento);
     const e=r.roda.efeitos,beneficios=HuntUI.el('div','rtc-beneficios');
+    if(Number.isFinite(e.fixo_hp))beneficios.append(HuntUI.el('p','nota',`Bônus fixo de dano e cura: +${e.fixo_hp} HP por aplicação · soma dos estágios e ressonâncias. Não é percentual nem vida máxima.`));
+    for(const b of e.beneficios||[])beneficios.append(HuntUI.el('p','nota',`${b.nome} ${['','I','II','III'][b.estagio]} · +${b.bonus_fixo_hp} dano/cura${b.uso==='ativacao_ou_contingencia'?' · efeito especial depende de ativação; sem uso presumido':''}`));
+    if(r.roda.comparacao_bonus)beneficios.append(HuntUI.el('p','nota',r.roda.comparacao_bonus.criterio));
+    if(r.roda.prioridade_sio?.ativa)beneficios.append(HuntUI.el('p','nota',`Prioridade ao sio: estágio ${['—','I','II'][r.roda.prioridade_sio.estagio]} · ${r.roda.prioridade_sio.criterio}`));
     if(e.ranks[28])beneficios.append(HuntUI.el('p','nota','Healing Link completo · autocura de 25% da cura aplicada por sio/gran sio'));
     if(e.revelation[10])beneficios.append(HuntUI.el('p','nota',`Twin Bursts · estágio ${e.revelation[10]} · cooldown ${[0,22,18,14][e.revelation[10]]} s · dano adicional condicionado à vida do alvo`));
     if(e.revelation[11])beneficios.append(HuntUI.el('p','nota',`Blessing of the Grove · estágio ${e.revelation[11]} · bônus condicionado à vida e ao crítico`));
@@ -40,60 +129,125 @@ function rtcMostrarRoda(r,roda,cat){
     roda.append(rtcBotao('Copiar código dos pontos',async()=>{try{await navigator.clipboard.writeText(codigo);}catch{const campo=HuntUI.el('input');campo.readOnly=true;campo.value=codigo;campo.setAttribute('aria-label','Código dos pontos');roda.append(campo);campo.select();}}));
   }else roda.append(HuntUI.el('p','nota',r.roda.estado));
 }
-function rtcMostrarConfiguracao(r,bloco){
+function rtcMostrarConfiguracao(r,bloco,observado=rtcObservado){
   bloco.replaceChildren();
-  rtcMostrarAprendizado(r.rtc.aprendizado,bloco);
-  rtcMostrarCura(r,bloco);
+  rtcMostrarCura(r,bloco,observado);
   bloco.append(HuntUI.el('h3',null,'Magias e runas'),HuntUI.el('p','nota','Sugestão para a próxima hunt'));
+  const pessoal=r.rtc.personalizacao;
+  if(pessoal?.personalizada)for(const ajuste of pessoal.alteracoes.slice(0,2))bloco.append(HuntUI.el('p','nota',`${ajuste.campo}: ${ajuste.antes??'vazio'} → ${ajuste.depois??'vazio'} · sugestão para a próxima hunt.`));
   if(r.rtc.equalizacao?.estado==='replay_validado')bloco.append(HuntUI.el('p','nota','Criaturas ajustadas pelo cooldown e pelo equilíbrio entre ativações e dano previsto.'));
-  rtcLinhasConfiguradas(r.rtc.linhas||[],bloco);
+  rtcLinhasConfiguradas(r.rtc.linhas||[],bloco,false,observado);
 }
-function rtcMostrarAprendizado(a,bloco){
-  if(!a)return;
-  bloco.append(HuntUI.el('p','nota',a.estado==='aprendizado_validado_parcial'?`Aprendizado ativo · ${a.amostras} exemplos · validado em dados posteriores. Cobertura de dano parcial.`:`Aprendizado em coleta · ${a.amostras} exemplos · sua roda atual é a referência.`));
-}
-function rtcMostrarCura(r,bloco){
+function rtcMostrarCura(r,bloco,observado=rtcObservado){
   const cura=HuntUI.el('div','rtc-cura-paineis'),eu=HuntUI.el('section'),pt=HuntUI.el('section');
   eu.append(HuntUI.el('h3',null,'Autocura · '+(r.cura.postura==='utamo'?'Utamo':'Vida')));
-  rtcLinhasConfiguradas((r.cura.linhas||[]).filter(m=>!m.vocacao_destino),eu,true);
+  rtcLinhasConfiguradas((r.cura.linhas||[]).filter(m=>!m.vocacao_destino),eu,true,observado);
   pt.append(HuntUI.el('h3',null,'Cura da party · sio e gran sio'));
-  rtcLinhasConfiguradas((r.cura.linhas||[]).filter(m=>m.vocacao_destino),pt,true);
+  rtcLinhasConfiguradas((r.cura.linhas||[]).filter(m=>m.vocacao_destino),pt,true,observado);
   cura.append(eu);if((r.cura.linhas||[]).some(m=>m.vocacao_destino))cura.append(pt);bloco.append(cura);
 }
-function rtcEscolhas(opcoes,valor,acao,nome){
+function rtcEscolhas(opcoes,valor,acao,nome,habilitada=()=>true){
   const grupo=HuntUI.el('div','rtc-classes');grupo.setAttribute('aria-label',nome);
-  for(const [id,label] of opcoes){const b=rtcBotao(label,()=>acao(id));b.setAttribute('aria-pressed',String(id===valor));grupo.append(b);}
+  for(const [id,label] of opcoes){const b=rtcBotao(label,()=>acao(id));b.setAttribute('aria-pressed',String(id===valor));b.disabled=!habilitada(id);grupo.append(b);}
   return grupo;
 }
+function rtcAtualizarTwin(){
+  const alvo=rtcIntegradoUI?.twin;
+  if(!alvo)return;
+  const obs=rtcObservado.rtc||{},t=rtcObservado.twin||{};
+  const slots=(obs.slots||[]).filter(s=>['ice_burst','terra_burst'].includes(s.id)&&s.atual!==false&&obs.atual!==false);
+  const slot=slots.length===1?slots[0]:null;
+  const rtcDesligado=obs.ativo===false||rtcObservado.uso_componentes?.rtc?.estado==='rtc_desligado';
+  const desligado=slot?.ativo===false||rtcDesligado;
+  const sugerido=t.proposta?.candidato??t.referencia??rtcIntegradoUI.twinSugerida;
+  const fila=rtcObservado.leitor?.fila;
+  const chave=JSON.stringify([slot,sugerido,obs.visto_por_ultimo_em,t.estado,t.proposta,t.resultado,fila,desligado,rtcObservado.uso_componentes?.rtc?.uso_confirmado]);
+  if(alvo.dataset.chave===chave)return;alvo.dataset.chave=chave;alvo.replaceChildren();
+  if(!slot&&!sugerido)return;
+  if(t.pode_propor&&!t.proposta&&!HuntApp.previa){
+    for(const candidato of t.candidatos||[4,6])alvo.append(rtcBotao(`Preparar teste em ${candidato}+ para a próxima hunt`,async()=>{
+      try{await rtcOperacao({acao:'experimento_twin',char:rtcIdentidade().char,sessao:rtcIdentidade().sessao,candidato});rtcObservado=await rtcCarregarObservacao(rtcIdentidade());rtcAtualizarTwin();renderMagiasRTC();}
+      catch(e){alvo.append(HuntUI.el('p','nota',e.message));}
+    }));
+  }
+  const linha=HuntUI.el('p','nota');
+  linha.append(HuntUI.el('strong',null,'Twin · '),document.createTextNode(`Última leitura: ${slot?.creatures==null?'não legível':slot.creatures+'+'}${sugerido==null?'':` · Próxima hunt: ${sugerido}+`}`));
+  if(!desligado&&slot?.creatures!=null&&slot.creatures===sugerido){const selo=HuntUI.el('span','rtc-confere',' ✓');selo.title='Limiar da Twin confere com a sugestão';selo.setAttribute('aria-label',selo.title);linha.append(selo);}
+  const instante=obs.visto_por_ultimo_em??slot?.instante;
+  if(instante)linha.append(document.createTextNode(' · '+new Date(instante*1000).toLocaleTimeString('pt-BR')));
+  alvo.append(linha);
+  if(slot)alvo.append(HuntUI.el('p','nota',desligado?(rtcDesligado?'RTC desligado.':'Twin desativada.'):rtcObservado.uso_componentes?.rtc?.uso_confirmado?'Uso informado por você.':'Configuração visível; ativação automática ainda não comprovada.'));
+  if(t.proposta){alvo.append(HuntUI.el('p','nota',`Próximo teste: Twin ${t.proposta.candidato}+ · ${t.proposta.motivo}`));}
+  if(t.resultado){alvo.append(HuntUI.el('p','nota',`Resultado do teste: ${t.resultado.estado.replaceAll('_',' ')} · manter ${t.resultado.manter}+.${t.resultado.ganho_raw_h==null?'':` Diferença observada: ${rtcFmt(t.resultado.ganho_raw_h/1e6)} kk raw XP/h.`}`));}
+  if(fila?.erro)alvo.append(HuntUI.el('p','nota','Não foi possível concluir a leitura do RTC.'));
+  else if(fila?.pendentes)alvo.append(HuntUI.el('p','nota','Leitura do RTC em atraso.'));
+  // Cobertura e amostragem do estudo permanecem internas (AGENTS.md).
+}
 function renderIntegradoRTC(bloco){
+  rtcAtualizarTwin();
   const cat=RTC_RODA?.vocacoes?HuntRodaMotor.selecionar(RTC_RODA,rtcVoc):RTC_RODA;
-  if(!cat?.fatias?.length)return;
-  rtcCancelaCalculos();bloco.replaceChildren();
-  const ctx=HuntIntegracao.contexto({...HuntApp.dados,voltas:rtcVoltas()},rtcObservado,rtcVoc),geracao=rtcGeracao;
-  const paineis=HuntUI.el('div','rtc-independentes'),rtc=HuntUI.el('section','rtc-config-painel'),roda=HuntUI.el('section','rtc-roda-painel');
-  rtc.setAttribute('aria-label','Configuração do RTC');roda.setAttribute('aria-label','Roda de habilidade');
+  if(!cat?.fatias?.length||!RTC_CATALOGO||rtcObsChave!==JSON.stringify(rtcIdentidade()))return;
+  const ctx=HuntIntegracao.contexto({...HuntApp.dados,voltas:rtcVoltas()},rtcObservado,rtcVoc);
+  const especies=especiesDe(rtcVoltas()),catalogo=Object.entries(HuntApp.catalogo).map(([n,m])=>[n,m.toma]);
+  const assinatura=JSON.stringify([rtcChaveContexto(ctx),especies,catalogo,RTC_CATALOGO.versao,cat.versao,HuntApp.recorte,
+    rtcVoltas().map(v=>[v.n,v.ini,v.fim]),rtcObservado.uso_componentes,rtcObservado.confirmacao]);
+  if(assinatura===rtcIntegradoAssinatura)return;
+  rtcIntegradoAssinatura=assinatura;
+  const geracao=++rtcGeracao;
+  rtcCancelaCalculos();
+  rtcRodaDesobservar?.();rtcRodaDesobservar=null;
+  const identidade=JSON.stringify([rtcIdentidade(),rtcVoc]);
+  if(rtcIntegradoUI?.identidade!==identidade){
+  bloco.replaceChildren();
+  const paineis=HuntUI.el('div','rtc-independentes'),pRTC=rtcPainel('rtc','RTC','rtc-config-painel'),pRoda=rtcPainel('roda','Roda de habilidades','rtc-roda-painel'),rtc=pRTC.conteudo,roda=pRoda.conteudo;
+  pRTC.painel.setAttribute('aria-label','Configuração do RTC');pRoda.painel.setAttribute('aria-label','Roda de habilidades');
   rtc.append(HuntUI.el('div','rotulo','RTC'),HuntUI.el('h2',null,'Otimizar curas e magias'),HuntUI.el('p','nota','Autocura, cura da party, magias e runas para a próxima hunt.'));
-  if(HuntApp.historico)rtc.append(HuntUI.el('p','nota',ctx.referencia_roda==='atual_para_proxima_hunt'?'Sugestão recalculada para esta hunt com sua roda atual. Os registros da sessão permanecem como foram observados.':'Sugestão recalculada com os dados disponíveis desta sessão.'));
   roda.append(HuntUI.el('div','rotulo','RODA DE HABILIDADE'),HuntUI.el('h2',null,'Distribuir os pontos'),HuntUI.el('p','nota','Escolha o foco da roda.'));
   const rtcControles=HuntUI.el('div'),rodaControles=HuntUI.el('div'),rtcResultado=HuntUI.el('div'),rodaResultado=HuntUI.el('div'),conf=HuntUI.el('div','rtc-confirmacao');
+  const rtcAviso=HuntUI.el('p','nota'),rodaAviso=HuntUI.el('p','nota'),twin=HuntUI.el('div','rtc-twin-resultado');
+  twin.setAttribute('aria-live','polite');
+  rtcAviso.hidden=rodaAviso.hidden=true;
   rtcResultado.setAttribute('aria-live','polite');rodaResultado.setAttribute('aria-live','polite');
-  rtc.append(rtcControles,rtcResultado);roda.append(rodaControles,rodaResultado);paineis.append(rtc,roda);bloco.append(paineis,conf);
-  const especies=especiesDe(rtcVoltas()),magias=[...HuntRTC.comparar(RTC_CATALOGO.magias,especies,HuntApp.catalogo,rtcVoc),...RTC_CATALOGO.magias.filter(m=>m.tipo==='cura'&&m.vocs.includes(rtcVoc))];
-  const baseChave=JSON.stringify([ctx,especies,Object.entries(HuntApp.catalogo).map(([n,m])=>[n,m.toma]),RTC_CATALOGO.versao,cat.versao]);
+  rtc.append(rtcControles,twin,rtcAviso,rtcResultado);roda.append(rodaControles,rodaAviso,rodaResultado);paineis.append(pRTC.painel,pRoda.painel);bloco.append(paineis,conf);
+  rtcIntegradoUI={identidade,rodaControles,rtcResultado,rodaResultado,rtcAviso,rodaAviso,conf,twin};
+  }
+  const {rodaControles,rtcResultado,rodaResultado,conf}=rtcIntegradoUI;
+  const magias=[...HuntRTC.comparar(RTC_CATALOGO.magias,especies,HuntApp.catalogo,rtcVoc),...RTC_CATALOGO.magias.filter(m=>m.tipo==='cura'&&m.vocs.includes(rtcVoc))];
+  const baseChave=JSON.stringify([rtcChaveContexto(ctx),especies,catalogo,RTC_CATALOGO.versao,cat.versao]);
+  // Preparar a matriz uma vez por conjunto de voltas/configuração. Leituras
+  // posteriores alimentam o próximo conjunto, sem reiniciar por troca de aba.
+  const perfilContextual=ctx.modelo?.combate_ml?.contextos?.[JSON.stringify([HuntIntegracao.modalidade(ctx.pt),ctx.hunt||'',ctx.hazard??null])]?.perfis;
+  const chaveContexto=JSON.stringify([ctx.char,ctx.sessao,ctx.hunt,ctx.pt,ctx.hazard,perfilContextual,rtcVoc,ctx.total,HuntApp.recorte,
+    rtcVoltas().map(v=>[v.n,v.ini,v.fim]),especies,rtcConteudoLeitura(ctx.observado),ctx.modelo?.versao,ctx.modelo?.feedback_cura,ctx.modelo?.feedback_roda,cat.versao,HuntIntegracao.versao]);
+  if(!rtcContextosRoda.has(chaveContexto))rtcContextosRoda.set(chaveContexto,ctx);
+  const contextoRoda=rtcContextosRoda.get(chaveContexto);
+  const rodas=ctx.total==null?null:rtcBibliotecaRodas.preparar(JSON.stringify([HuntRodasPreparadas.versao,contextoRoda,magias,cat.versao]),
+    {catalogo:cat,magias,contexto:contextoRoda,opcoes:{limite_ms:12000,finais:8}});
   const resultados={};
   function confirmar(){
+    if(resultados.rtc){rtcIntegradoUI.twinSugerida=resultados.rtc.rtc.linhas?.find(s=>['ice_burst','terra_burst'].includes(s.id))?.creatures;rtcAtualizarTwin();}
     conf.replaceChildren();
+    const link=HuntUI.el('a',null,'Conferir configuração detectada');link.href='/configuracoes?'+new URLSearchParams({char:ctx.char||'',sessao:ctx.sessao||''});conf.append(HuntUI.el('p','nota',rtcObservado.uso_componentes?.rtc?.uso_confirmado?'Uso do RTC detectado confirmado na calibração.':'Uso do RTC detectado ainda não confirmado.'),link);
     if(!resultados.rtc||!resultados.roda)return;
     const a=resultados.rtc,b=resultados.roda;
+    if(b.roda.referencia_reprovada){conf.append(HuntUI.el('p','nota','Roda reprovada retirada das sugestões. Conferir a referência após a troca.'));return;}
+    if(b.roda.comparacao_atual&&!b.roda.comparacao_atual.recomendar){conf.append(HuntUI.el('p','nota',b.roda.manter_atual?'Roda reprovada retirada das sugestões. Manter sua referência atual; melhoria ainda não demonstrada.':'A roda permanece como cenário de comparação. Manter sua roda atual: vantagem e segurança ainda não comprovadas.'));return;}
     if(HuntApp.historico||HuntApp.previa||!ctx.char||!a.rtc.linhas?.length||b.roda.estado!=='Calculado')return;
     const payload={versao:2,regras_versao:b.regras_versao,modelo_versao:b.modelo_versao,contexto:b.contexto,
       objetivo:rtcRodaObjetivo,estrategia:b.estrategia,modo_vida:rodaModoVida,tier:rtcTier,independentes:true,revisao_interface:'roda_rtc_uso_v3',
       rtc:a.rtc,cura:a.cura,roda:b.roda,revisao_rtc:'rtc_cura_ml_v1'};
+    payload.personalizada=!!a.rtc.personalizada||!!b.roda.personalizada;
+    payload.alteracoes=HuntPersonalizacao.alteracoesPacote({rtc:ctx.observado.rtc.slots,
+      cura:ctx.observado.cura.slots,pontos:Object.fromEntries(Object.entries(ctx.observado.roda.campos).filter(([k])=>k.startsWith('fatias.')).map(([k,v])=>[k.slice(7),v.valor]))},
+      {rtc:a.rtc.linhas,cura:a.cura.linhas||[],pontos:b.roda.pontos});
+    payload.expectativa=a.rtc.expectativa||b.roda.expectativa||null;
+    payload.objetivo_declarado=rtcRodaObjetivo;
     const escolha=JSON.stringify([rodaModoVida,rtcRodaObjetivo,rtcTier]),mensagem=HuntUI.el('p','nota');mensagem.setAttribute('role','status');
+    if(payload.personalizada&&payload.alteracoes.length>2){conf.append(HuntUI.el('p','nota','Este conjunto de RTC e roda excede dois ajustes. As propostas permanecem separadas; confirme na calibração somente o que aplicar.'));return;}
     let id=null;
-    const botao=rtcBotao('Estou usando esta configuração',async()=>{
+    const botao=rtcBotao('Pretendo adotar esta sugestão na próxima hunt',async()=>{
       if(!id)return;botao.disabled=true;
-      try{const c=await rtcOperacao({acao:'confirmar',char:ctx.char,id});rtcObservado.confirmacao={...c,valida:true};mensagem.textContent='Confirmado por você. A leitura do jogo continua conferindo cada componente.';}
+      try{const c=await rtcOperacao({acao:'confirmar',char:ctx.char,id});rtcObservado.confirmacao={...c,valida:true};mensagem.textContent='Intenção registrada. Confirme o uso da leitura na calibração depois de aplicar.';}
       catch(e){mensagem.textContent=e.message;}finally{botao.disabled=false;}
     });botao.disabled=true;conf.append(botao,mensagem);
     const salvo=rtcObservado.sugestao;
@@ -101,39 +255,71 @@ function renderIntegradoRTC(bloco){
     const pronta=igual?Promise.resolve(salvo):rtcOperacao({acao:'sugestao',char:ctx.char,sugestao:payload});
     pronta.then(s=>{if(geracao!==rtcGeracao||escolha!==JSON.stringify([rodaModoVida,rtcRodaObjetivo,rtcTier]))return;
       id=s.id;rtcObservado.sugestao=s;botao.disabled=false;
-      if(rtcObservado.confirmacao?.valida&&rtcObservado.confirmacao.sugestao_id===id)mensagem.textContent='Confirmado por você.';
+      if(rtcObservado.confirmacao?.valida&&rtcObservado.confirmacao.sugestao_id===id)mensagem.textContent='Intenção de adoção registrada.';
     }).catch(e=>{if(geracao===rtcGeracao)mensagem.textContent=e.message;});
   }
+  let rodaExibida,rodaEstado;
   function calcular(tipo){
     const alvo=tipo==='rtc'?rtcResultado:rodaResultado;
+    const aviso=tipo==='rtc'?rtcIntegradoUI.rtcAviso:rtcIntegradoUI.rodaAviso;
+    const pronto=()=>{alvo.removeAttribute('aria-busy');alvo.inert=false;aviso.hidden=true;};
+    const aguardar=mensagem=>{alvo.setAttribute('aria-busy','true');alvo.inert=true;aviso.textContent=mensagem;aviso.hidden=false;};
+    if(tipo==='roda'){
+      const id=HuntRodasPreparadas.id(rtcRodaObjetivo,rodaModoVida,rtcTier),r=rodas?.resultados[id];
+      const estado=rodas?.erros[id]||(ctx.total==null?'Aguardando o total de pontos da roda.':'Preparando as rodas desta hunt… As opções ficam disponíveis assim que estiverem prontas.');
+      if(r ? r===rodaExibida : estado===rodaEstado)return;
+      rodaExibida=r;rodaEstado=estado;
+      delete resultados.roda;conf.replaceChildren();
+      if(r){pronto();resultados.roda=r;if(rtcIntegradoUI.rodaExibida!==r)rtcMostrarRoda(r,alvo,cat);rtcIntegradoUI.rodaExibida=r;confirmar();}
+      else aguardar(estado+(alvo.childElementCount?' Abaixo, resultado anterior enquanto a atualização termina.':''));
+      return;
+    }
     const escolha=tipo==='rtc'?null:[rtcRodaObjetivo,rtcTier,rodaModoVida],chave=JSON.stringify([tipo,baseChave,escolha]);
     rtcWorkers.get(tipo)?.terminate();rtcWorkers.delete(tipo);delete resultados[tipo];conf.replaceChildren();
-    const mostrar=r=>{resultados[tipo]=r;if(tipo==='rtc')rtcMostrarConfiguracao(r,alvo);else rtcMostrarRoda(r,alvo,cat);confirmar();};
+    const mostrar=r=>{pronto();resultados[tipo]=r;if(rtcIntegradoUI.rtcExibido!==r)rtcMostrarConfiguracao(r,alvo,ctx.observado);rtcIntegradoUI.rtcExibido=r;confirmar();};
     const salva=rtcObservado.sugestao,c=rtcObservado.confirmacao;
     
     if(rtcCacheIntegrado.has(chave)){mostrar(rtcCacheIntegrado.get(chave));return;}
-    alvo.replaceChildren(HuntUI.el('p','nota',tipo==='rtc'?'Calculando magias e cura…':'Calculando a roda…'));
-    const w=new Worker('/ui/rtc_worker.js?v=20261012_rtc_roda_ml_v1');rtcWorkers.set(tipo,w);
+    aguardar(alvo.childElementCount?'Atualizando magias e cura… Abaixo, resultado anterior.':'Calculando magias e cura…');
+    const w=new Worker('/ui/rtc_worker.js?v=20261014_rodas_objetivos');rtcWorkers.set(tipo,w);
     w.onmessage=e=>{if(geracao!==rtcGeracao||rtcWorkers.get(tipo)!==w)return;w.terminate();rtcWorkers.delete(tipo);
-      if(e.data.erro){alvo.textContent=e.data.erro;return;}
+      if(e.data.erro){aguardar('Não foi possível atualizar: '+e.data.erro);return;}
       rtcCacheIntegrado.set(chave,e.data.resultado);if(rtcCacheIntegrado.size>48)rtcCacheIntegrado.delete(rtcCacheIntegrado.keys().next().value);mostrar(e.data.resultado);
     };
-    w.onerror=()=>{if(geracao===rtcGeracao){alvo.textContent='Não foi possível calcular. Tente outra opção.';w.terminate();rtcWorkers.delete(tipo);}};
+    w.onerror=()=>{if(geracao===rtcGeracao){aguardar('Não foi possível calcular. Tente outra opção.');w.terminate();rtcWorkers.delete(tipo);}};
     w.postMessage({chave:geracao,modo:tipo==='rtc'?'rtc_independente':'roda_independente',catalogo:cat,magias,contexto:ctx,objetivo:rtcRodaObjetivo,tier:rtcTier,opcoes:{limite_ms:12000,finais:8,modo_vida:rodaModoVida}});
   }
   function controlesRoda(){
-    rodaControles.replaceChildren(rtcEscolhas([['dano','Dano'],['cura','Cura']],rtcRodaObjetivo,id=>{rtcRodaObjetivo=id;controlesRoda();calcular('roda');},'Foco da roda'));
-    if(rtcRodaObjetivo==='cura')rodaControles.append(HuntUI.el('p','nota','Como você vai jogar?'),rtcEscolhas([['vida','Vida'],['utamo','Utamo']],rodaModoVida,id=>{rodaModoVida=id;controlesRoda();calcular('roda');},'Modo de jogo da roda'));
+    const assinatura=JSON.stringify([rtcRodaObjetivo,rodaModoVida,rtcTier,ctx.total]);
+    if(assinatura===rtcIntegradoUI.assinaturaControles){
+      // Um resultado de outra combinação apenas habilita seu botão.
+      for(const b of rodaControles.querySelectorAll('button[data-roda-opcao]'))b.disabled=!rodas?.resultados[b.dataset.rodaOpcao];
+      return;
+    }
+    rtcIntegradoUI.assinaturaControles=assinatura;
+    const pronta=(objetivo,modo,tier)=>!!rodas?.resultados[HuntRodasPreparadas.id(objetivo,modo,tier)];
+    rodaControles.replaceChildren(rtcEscolhas([['dano','Dano'],['cura','Cura']],rtcRodaObjetivo,id=>{rtcRodaObjetivo=id;rtcIntegradoUI.selecionarRoda();},'Foco da roda',id=>pronta(id,rodaModoVida,rtcTier)));
+    if(rtcRodaObjetivo==='cura')rodaControles.append(HuntUI.el('p','nota','Como você vai jogar?'),rtcEscolhas([['vida','Vida'],['utamo','Utamo']],rodaModoVida,id=>{rodaModoVida=id;rtcIntegradoUI.selecionarRoda();},'Modo de jogo da roda',id=>pronta(rtcRodaObjetivo,id,rtcTier)));
     rodaControles.append(HuntUI.el('p','nota','Qualidade das gemas'));
     const gemas=HuntUI.el('div','rtc-gemas');
-    for(const [tier,nome] of [[0,'Sem gemas'],[1,'T1 · Lesser'],[2,'T2 · Regular'],[3,'T3 · Greater']]){
-      const b=rtcBotao(nome,()=>{rtcTier=tier;controlesRoda();calcular('roda');});b.setAttribute('aria-pressed',String(tier===rtcTier));gemas.append(b);
+    for(const [tier,nome] of [[0,'Sem gemas'],[1,'Lesser'],[2,'Regular'],[3,'Greater']]){
+      const b=rtcBotao('',()=>{rtcTier=tier;rtcIntegradoUI.selecionarRoda();});
+      if(tier){const img=HuntUI.el('img','rtc-gema-icone');img.src=`/ui/gema_${rtcVoc.toLowerCase()}_${tier}.png`;img.alt='';img.width=32;img.height=32;b.append(img);}
+      else b.append(HuntUI.el('span','rtc-gema-vazia','—'));
+      b.append(HuntUI.el('span',null,nome));b.disabled=!pronta(rtcRodaObjetivo,rodaModoVida,tier);b.setAttribute('aria-pressed',String(tier===rtcTier));gemas.append(b);
     }rodaControles.append(gemas);
     if(ctx.total==null){
       const l=HuntUI.el('label','rtc-escolha','Qual é o total de pontos mostrado na roda?'),n=HuntUI.el('input');n.type='number';n.min='0';n.max='10000';n.step='1';l.append(n);const msg=HuntUI.el('p','nota');
       rodaControles.append(l,rtcBotao('Guardar total',async()=>{try{const v=Number(n.value);if(n.value===''||!Number.isInteger(v))throw Error('Informe o total de pontos.');const r=await rtcOperacao({acao:'pontos',char:ctx.char,valor:v});rtcObservado.pontos=r;rtcAssinatura='';renderMagiasRTC();}catch(e){msg.textContent=e.message;}}),msg);
     }
+    const grupos=rodaControles.querySelectorAll('.rtc-classes');
+    [...grupos[0].querySelectorAll('button')].forEach((b,i)=>b.dataset.rodaOpcao=HuntRodasPreparadas.id(['dano','cura'][i],rodaModoVida,rtcTier));
+    if(grupos[1])[...grupos[1].querySelectorAll('button')].forEach((b,i)=>b.dataset.rodaOpcao=HuntRodasPreparadas.id(rtcRodaObjetivo,['vida','utamo'][i],rtcTier));
+    [...gemas.children].forEach((b,i)=>b.dataset.rodaOpcao=HuntRodasPreparadas.id(rtcRodaObjetivo,rodaModoVida,i));
   }
+  // Controles persistem entre consultas, mas usam o conjunto vigente.
+  rtcIntegradoUI.selecionarRoda=()=>{controlesRoda();calcular('roda');};
+  if(rodas)rtcRodaDesobservar=rodas.observar(()=>{if(geracao!==rtcGeracao)return;controlesRoda();calcular('roda');});
   controlesRoda();calcular('rtc');calcular('roda');
 }
 
@@ -162,8 +348,8 @@ async function rtcCarregarObservacao(identidade){
   ]);
   // Preserva os snapshots usados pelos selos de leitura da sessão.
   return identidade.historico?{...historica,referencia_atual:atual?{
-    char:atual.char,rtc:{vocacao:atual.rtc?.vocacao},roda:atual.roda,pontos:atual.pontos,
-    modelo:{combate_ml:atual.modelo?.combate_ml}
+    char:atual.char,rtc:atual.rtc,cura:atual.cura,roda:atual.roda,pontos:atual.pontos,
+    modelo:{combate_ml:atual.modelo?.combate_ml,feedback_cura:atual.modelo?.feedback_cura,feedback_roda:atual.modelo?.feedback_roda}
   }:null}:historica;
 }
 function iniciaPainelDano() {
@@ -173,7 +359,7 @@ function iniciaPainelDano() {
   const campos=HuntUI.el('div','dano-sessao'),label=HuntUI.el('label',null,'Sessão da hunt'),select=HuntUI.el('select');
   const vivo=HuntUI.el('option',null,'Hunt atual');vivo.value='';select.append(vivo);label.append(select);campos.append(label);pagina.append(campos);
   const contexto=HuntUI.el('p','sub');contexto.id='danoContexto';pagina.append(contexto);
-  pagina.append(document.querySelector('section.filtros'),HuntUI.$('#recomendacaoMagias'),HuntUI.$('#otimizacaoRTC'));document.querySelector('main').prepend(pagina);
+  pagina.append(document.querySelector('section.filtros'),HuntUI.$('#painelMagiasElementos'),HuntUI.$('#otimizacaoRTC'));document.querySelector('main').prepend(pagina);
   select.onchange=()=>{const q=new URLSearchParams();q.set('dano','');if(select.value)q.set('h',select.value);location.href='/hunt?'+q;};
   fetch('/api/historico',{cache:'no-store'}).then(r=>r.json()).then(r=>{
     for(const s of r.sessoes||[]) {const o=HuntUI.el('option',null,`${s.hunt} · ${s.data||s.id} · ${s.char||''}`);o.value=s.id;select.append(o);}
@@ -185,7 +371,7 @@ function rtcClasses() {
   for(const [voc,nome] of [['MS','Master Sorcerer'],['ED','Elder Druid']]) {
     const b=rtcBotao('',()=>{rtcVoc=voc;if(!HuntRTC.categoriasDe(voc).includes(rtcCategoria))rtcCategoria=voc==='MS'?'Beam':'Twin';rtcAssinatura='';renderMagiasRTC();});
     b.setAttribute('aria-pressed',String(voc===rtcVoc));
-    const img=HuntUI.el('img','rtc-classe-icone');img.src=`/ui/voc_${voc.toLowerCase()}.png`;img.alt='';img.width=44;img.height=44;
+    const img=HuntUI.el('img','rtc-classe-icone');img.src=voc==='MS'?'/ui/magia_hell_s_core.png':'/ui/magia_eternal_winter.png';img.alt='';img.width=44;img.height=44;
     const texto=HuntUI.el('span');texto.append(HuntUI.el('strong',null,voc),HuntUI.el('small',null,nome));b.append(img,texto);grupo.append(b);
   }return grupo;
 }
@@ -217,20 +403,22 @@ function renderMagiasRTC() {
   if(obsChave!==rtcObsChave && obsChave!==rtcObsSolicitada){
     rtcObsSolicitada=obsChave;rtcObservado={};
     rtcCarregarObservacao(identidade)
-      .then(d=>{if(rtcObsSolicitada!==obsChave)return;rtcObservado=d;rtcObsChave=obsChave;rtcAssinatura='';renderMagiasRTC();}).catch(()=>{rtcObsSolicitada='';});
+      .then(d=>{if(rtcObsSolicitada!==obsChave)return;rtcObservado=d;rtcObsChave=obsChave;renderMagiasRTC();}).catch(()=>{rtcObsSolicitada='';});
   }
-  const assinatura=JSON.stringify([especies,rtcVoc,rtcAlvo,rtcCategoria,rtcDuracao,HuntApp.recorte,HuntApp.selecao,identidade,[rtcObservado.rtc,rtcObservado.cura,rtcObservado.roda,rtcObservado.pontos,rtcObservado.contexto,rtcObservado.modelo,rtcObservado.referencia_atual],Object.entries(HuntApp.catalogo).map(([n,m])=>[n,m.toma])]);
+  renderIntegradoRTC(opt);
+  const assinatura=JSON.stringify([especies,rtcVoc,rtcAlvo,rtcCategoria,rtcDuracao,HuntApp.recorte,identidade,
+    rtcObservado.rtc?.vocacao,rtcConteudoLeitura(rtcObservado.rtc?.slots),RTC_CATALOGO?.versao,Object.entries(HuntApp.catalogo).map(([n,m])=>[n,m.toma])]);
   if(assinatura===rtcAssinatura)return;
   const abertos=new Set([bloco,opt].flatMap(p=>[...p.querySelectorAll('details[open]')].map(d=>d.querySelector('summary')?.textContent)));
   const restaura=()=>{for(const p of [bloco,opt])for(const d of p.querySelectorAll('details'))if(abertos.has(d.querySelector('summary')?.textContent))d.open=true;};
-  rtcAssinatura=assinatura;rtcGeracao++;rtcWorker?.terminate();rtcWorker=null;rtcCancelaCalculos();bloco.replaceChildren();opt.replaceChildren();
+  rtcAssinatura=assinatura;bloco.replaceChildren();
   // Um cálculo, duas instâncias do mesmo componente, com o mesmo HuntApp.recorte.
   const elementos=HuntRTC.elementos(especies,HuntApp.catalogo);
   HuntUI.$('#elementosHunt')?.replaceChildren(rtcBarras(elementos));
   if(RTC_DANO)HuntUI.$('#danoContexto').textContent=[HuntApp.dados.sessao?.hunt,identidade.char,HuntApp.dados.sessao?.data,HuntApp.recorte==='volta'?`Volta ${HuntApp.voltaEscolhida()?.n||'—'}`:`${rtcVoltas().length} voltas`].filter(Boolean).join(' · ');
   bloco.append(rtcClasses(),HuntUI.el('p','nota',`Vocação consultada: ${rtcVoc} · personagem observado: ${identidade.char||'não lido'}. A consulta não altera o perfil real.`));
   if(!RTC_CATALOGO){bloco.append(HuntUI.el('p','nota','Carregando o catálogo de magias…'));return;}
-  if(!Object.keys(especies).length){bloco.append(HuntUI.el('p','nota','Aguardando criaturas nas voltas fechadas. Você também pode escolher uma sessão no histórico.'));renderIntegradoRTC(opt);restaura();return;}
+  if(!Object.keys(especies).length){bloco.append(HuntUI.el('p','nota','Aguardando criaturas nas voltas fechadas. Você também pode escolher uma sessão no histórico.'));restaura();return;}
   const amostra=especies;bloco.append(rtcBarras(elementos));
   const resultados=Object.fromEntries(HuntRTC.categoriasDe(rtcVoc).map(c=>[c,HuntRTC.compararCategoria(RTC_CATALOGO.magias,amostra,HuntApp.catalogo,rtcVoc,c,rtcDuracao)]));
   const tabs=HuntUI.el('div','rtc-tabs');tabs.setAttribute('aria-label','Categorias');
@@ -257,17 +445,21 @@ function renderMagiasRTC() {
   if(r.linhas.length&&r.linhas.every(m=>m.total===0))res.append(HuntUI.el('p','nota','Todos os elementos desta categoria são imunes na população lida. Sem recomendação.'));
   bloco.append(res);
   if(r.linhas.length>2)res.append(HuntUI.el('p','nota rtc-comparativo-nota',`${r.linhas.length} opções comparadas. As duas melhores estão acima.`));
-  renderIntegradoRTC(opt);restaura();
+  restaura();
 }
 Promise.all([fetch('/ui/magias.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json();}),fetch('/ui/roda_catalogo.json',{cache:'no-store'}).then(r=>r.ok?r.json():{})])
   .then(([magias,roda])=>{RTC_CATALOGO=magias;RTC_RODA=roda;rtcAssinatura='';renderMagiasRTC();})
   .catch(()=>{document.querySelector('#recomendacaoMagias').textContent='Catálogo indisponível. Reabra a tela para tentar novamente.';});
+let rtcConsultando=false;
 setInterval(async()=>{
-  if(!HuntApp.dados)return;const identidade=rtcIdentidade(),chave=JSON.stringify(identidade);
+  if(!HuntApp.dados||rtcConsultando)return;
+  if(rtcObsChave!==JSON.stringify(rtcIdentidade())){renderMagiasRTC();return;}
+  rtcConsultando=true;const identidade=rtcIdentidade(),chave=JSON.stringify(identidade);
   try{const d=await rtcCarregarObservacao(identidade);if(chave!==JSON.stringify(rtcIdentidade()))return;
-    const relevantes=x=>JSON.stringify([x.char,x.rtc,x.cura,x.roda,x.pontos,x.contexto,x.modelo,x.referencia_atual]);const mudou=relevantes(d)!==relevantes(rtcObservado);rtcObservado=d;rtcObsChave=chave;if(mudou){rtcAssinatura='';renderMagiasRTC();}
-  }catch{}
+    rtcObservado=d;rtcObsChave=chave;renderMagiasRTC();
+  }catch{}finally{rtcConsultando=false;}
 },5000);
 
 root.HuntPlanejamento={renderizar:renderMagiasRTC,iniciar:iniciaPainelDano, get modoDano(){return RTC_DANO;}};
+rtcPrepararPainel(HuntUI.$('#painelMagiasElementos'),'magias-elementos');
 })(globalThis);

@@ -5,6 +5,7 @@ O dano é o OBSERVADO no console, nunca uma estimativa do total real.
 """
 import argparse
 import collections
+import copy
 import datetime as dt
 import functools
 import hashlib
@@ -53,6 +54,69 @@ def dano_periodo(ep):
     return saida
 
 
+def declaracao_party(sessao):
+    """Correção explícita do usuário, restrita à gravação; nunca inferida de sio."""
+    try:
+        dados = json.loads((AQUI / 'ui' / 'party_correcoes.json').read_text(encoding='utf-8'))
+        d = dados.get(sessao, {})
+        return d if d.get('origem') == 'usuario' and isinstance(d.get('aliados'), list) else {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def corrigir_relatorio(r, declaracao=None):
+    """Reclassifica uma cópia e conserva episódios invalidados para auditoria."""
+    d = declaracao_party(r.get('sessao', '')) if declaracao is None else declaracao
+    if not d or d.get('origem') != 'usuario' or not d.get('aliados'):
+        return r
+    nomes = [n for n in d['aliados'] if isinstance(n, str) and n.strip()]
+    if not nomes:
+        return r
+    saida = copy.deepcopy(r)
+    releitura = d.get('relatorio_releitura', {})
+    if releitura.get('origem') == 'releitura_paineis_e_console' and releitura.get('provas'):
+        for campo in ('party_paineis', 'dano_hunt_observado'):
+            if campo in releitura:
+                saida[campo] = copy.deepcopy(releitura[campo])
+    detector = Detector.__new__(Detector)
+    detector.party = saida.get('party') or []
+    detector.dano_hunt = saida.setdefault('dano_hunt_observado', {'party': {}, 'fora': {}})
+    detector.golpes = [e for ep in saida.get('episodios', []) for e in ep.get('golpes_observados', [])]
+    detector.eventos = []
+    detector.episodios = saida.get('episodios') or []
+    detector.atual = None
+    originais = copy.deepcopy(detector.episodios)
+    detector.confirma_party(nomes, 0)
+    saida['party'] = detector.party
+    saida['episodios'] = detector.episodios
+    ids = {ep['id'] for ep in detector.episodios}
+    auditoria = saida.setdefault('episodios_reclassificados', [])
+    conhecidos = {ep['id'] for ep in auditoria}
+    auditoria.extend(dict(ep, motivo_reclassificacao='aliado_confirmado_pelo_usuario')
+                     for ep in originais if ep['id'] not in ids and ep['id'] not in conhecidos)
+    saida['correcao_party'] = d
+    for ep in d.get('episodios_recuperados', []):
+        if (ep.get('origem') != 'releitura_server_log' or
+                not ep.get('prova_inicio', {}).get('sha256_log_original') or
+                not ep.get('dano', {}).get('fora')):
+            continue
+        if any(nome_key(n) in {nome_key(p) for p in saida['party']} for n in ep['dano']['fora']):
+            continue
+        golpes = {e.get('id') for e in ep.get('golpes_observados', [])}
+        if any(e['id'] == ep['id'] or
+               any(g.get('id') in golpes for g in e.get('golpes_observados', [])) or
+               (e['inicio'] <= ep['inicio'] <= (e.get('fim') or e.get('ultimo_evento', {}).get('ts') or e['inicio']) and
+                set(e['dano']['fora']) & set(ep['dano']['fora'])) for e in saida['episodios']):
+            continue
+        saida['episodios'].append(copy.deepcopy(ep))
+    ocultos = set(d.get('episodios_baixo_impacto', []))
+    saida['episodios_ocultos'] = [e for e in saida['episodios'] if e['id'] in ocultos]
+    saida['episodios'] = [e for e in saida['episodios'] if e['id'] not in ocultos]
+    saida['episodios'].sort(key=lambda e: e['inicio'])
+    saida['estatisticas_party'] = estatisticas_party([saida])
+    return saida
+
+
 def painel_party(relatorios):
     """Acumulado visível: inclui o que aconteceu antes de abrir o analisador.
 
@@ -64,22 +128,41 @@ def painel_party(relatorios):
         ps = r.get('party_paineis')
         if ps is None:  # sessões antigas ainda guardam os dois limites do painel
             ps = [r.get('party_painel_primeiro'), r.get('party_painel_ultimo')]
+        tem_party = any(p and not p.get('solo') and p.get('danos') for p in ps)
         for p in ps:
-            if p and not p.get('solo'):
+            # O painel vazio ao sair da PT não substitui o acumulado da hunt em grupo.
+            if p and tem_party and p.get('solo'):
+                continue
+            if p and (p.get('danos') or not p.get('solo')):
                 quadros[(r.get('sessao', '')[8:16], p['t'], p.get('frame', ''))] = p
-    segmentos, atual, anterior = [], {}, None
+    segmentos, atual, anterior, ultimos_danos = [], {}, None, {}
     for _, p in sorted(quadros.items()):
         comuns = set((anterior or {}).get('danos', {})) & set(p.get('danos', {}))
-        reset = anterior and (any(p['danos'][n] < anterior['danos'][n] for n in comuns)
+        reset = anterior and (any(v < ultimos_danos[nome_key(n)] for n, v in p.get('danos', {}).items()
+                                 if v is not None and nome_key(n) in ultimos_danos)
                               or (not comuns and p.get('tipo') == anterior.get('tipo')
                                   and p.get('supplies') is not None and anterior.get('supplies') is not None
                                   and p['supplies'] < anterior['supplies']))
         if reset:
             segmentos.append(atual)
             atual = {}
+            ultimos_danos = {}
         for n, v in p.get('danos', {}).items():
-            atual.setdefault('jogadores', {})[n] = {'dano': v,
-                'profit': (p.get('profits') or {}).get(n), 'cura': (p.get('curas') or {}).get(n)}
+            if v is not None:
+                ultimos_danos[nome_key(n)] = v
+            jogadores = atual.setdefault('jogadores', {})
+            identidade = next((nome for nome in jogadores if nome_key(nome) == nome_key(n)), n)
+            jogador = jogadores.setdefault(identidade, {})
+            for campo, valor in {'dano': v, 'profit': (p.get('profits') or {}).get(n),
+                                 'cura': (p.get('curas') or {}).get(n)}.items():
+                if valor is not None:
+                    jogador[campo] = valor
+                else:
+                    jogador.setdefault(campo, None)
+        if p.get('fonte_dano'):
+            atual['fonte_dano'] = p['fonte_dano']
+        elif not p.get('solo'):
+            atual['fonte_dano'] = 'Party Hunt'
         for k in ('loot', 'supplies', 'profit', 'tipo', 't'):
             if p.get(k) is not None:
                 atual[k] = p[k]
@@ -92,7 +175,9 @@ def painel_party(relatorios):
             dest = pessoas.setdefault(nome_key(n), dict(nome=n, dano=0, profit=0, cura=0))
             for k in ('dano', 'profit', 'cura'):
                 dest[k] = dest[k] + v[k] if dest[k] is not None and v[k] is not None else None
+    fontes = {s['fonte_dano'] for s in segmentos if s.get('fonte_dano')}
     return {'jogadores': pessoas, 'resets': max(0, len(segmentos)-1),
+            'fonte_dano': ' / '.join(sorted(fontes)) if fontes else 'Party Hunt',
             **{k: sum(s[k] for s in segmentos) if segmentos and all(k in s for s in segmentos) else None
                for k in ('loot', 'supplies', 'profit')},
             'tipo': segmentos[-1].get('tipo') if segmentos else None,
@@ -135,7 +220,7 @@ def estatisticas_party(relatorios):
         p['criticos_pct'] = p['criticos'] / p['golpes'] * 100 if p['golpes'] else None
         p['fatais_pct'] = p['fatais'] / p['golpes'] * 100 if p['golpes'] and p['fatais'] is not None else None
     return {'jogadores': sorted(pessoas.values(), key=lambda p: -(p['dano'] or 0)),
-            'total': total, 'fonte_dano': 'Party Hunt',
+            'total': total, 'fonte_dano': painel['fonte_dano'],
             **{k: painel[k] for k in ('loot', 'supplies', 'profit', 'tipo', 'painel_t', 'resets')}}
 
 
@@ -187,11 +272,14 @@ class Leitor:
 
     def party(self, p, lay, char):
         with Image.open(p) as img:
-            box = lay['party']['box']
-            im = img.crop(box).convert('RGB')
-            im.paste((0, 0, 0), (lay['party']['scroll_x'], 0, im.width, im.height))
+            im = painel_stream.recortar_painel(img, p.parent, 'party', lay['party']['box'], lay['party']['scroll_x'])
+            if im is None:
+                return None
             linhas = [s for s, _, _ in self.linhas(im)]
+            # O atlas por forma tolera diferenças de alinhamento da fonte nos painéis.
+            formas = painel_stream.linhas(im)
             pessoal, _ = painel_stream.ler_quadro(img, p.parent, lay['hunt']['box'], lay['hunt']['scroll_x'])
+            xp = painel_stream.ler_xp(img, p.parent)
         nomes, danos, profits, curas = [], {}, {}, {}
         totais, _ = painel_stream.ler(im)
         # Nome seguido das três linhas numéricas (balance, dano, cura).
@@ -208,16 +296,52 @@ class Leitor:
         # Se algum bloco numérico perdeu o nome, não aceitar uma party parcial.
         blocos = sum(1 for i in range(len(linhas) - 2)
                      if all(re.fullmatch(r'[� +\-]*[\d,]+k?[� ]*', x) for x in linhas[i:i + 3]))
-        valido = char in nomes and len(nomes) >= 2 and len(nomes) == blocos and all(v is not None for v in danos.values())
+        valido = any(nome_key(n) == nome_key(char or '') for n in nomes) and len(nomes) >= 2 and len(nomes) == blocos
+        if not valido and formas != linhas:
+            nomes, danos, profits, curas = self.blocos_party(formas)
+            blocos = sum(1 for i in range(len(formas) - 2)
+                         if all(re.fullmatch(r'[?� +\-]*[\d,?]+k?[?� ]*', x) for x in formas[i:i + 3]))
+            valido = any(nome_key(n) == nome_key(char or '') for n in nomes) and len(nomes) >= 2 and len(nomes) == blocos
         solo = not nomes and all(totais.get(k) == 0 for k in ('Loot', 'Supplies', 'Balance'))
-        return {'nomes': nomes if valido else [char], 'danos': danos if valido else {},
-                'profits': profits if valido else {}, 'curas': curas if valido else {},
-                'loot': totais.get('Loot'), 'supplies': totais.get('Supplies'),
-                'profit': totais.get('Balance'), 'tipo': totais.get('LootType'),
-                'xp_raw': pessoal.get('RawXPGain'),
+        # Um quarto nome cortado não transforma três membros em uma PT completa.
+        # A soma de balances confere a cobertura, sem exigir igualdade de cura pessoal/PT.
+        from rubinot.observacao.paineis import membros_party
+        blocos_visiveis = membros_party(formas)
+        parcial = (not solo and (not valido or any(not m['completo'] for m in blocos_visiveis)
+                   or len(blocos_visiveis) != len(nomes) or any(v is None for v in profits.values())
+                   or totais.get('Balance') != sum(v for v in profits.values() if v is not None)))
+        if parcial:
+            return None
+        return {'nomes': nomes if valido else [char],
+                'danos': danos if valido else {char: pessoal.get('Damage')},
+                'profits': profits if valido else {char: pessoal.get('Balance')},
+                'curas': curas if valido else {char: pessoal.get('Healing')},
+                'fonte_dano': 'Party Hunt' if valido else 'Hunt Analyser',
+                'loot': pessoal.get('Loot') if solo else totais.get('Loot'),
+                'supplies': pessoal.get('Supplies') if solo else totais.get('Supplies'),
+                'profit': pessoal.get('Balance') if solo else totais.get('Balance'),
+                'tipo': None if solo else totais.get('LootType'),
+                'xp_raw': xp.get('RawXPGain'), 'fonte_xp': 'XP Analyser',
                 'loot_periodo': pessoal.get('Loot') if solo else totais.get('Loot'),
                 'fonte_loot': 'Hunt Analyser' if solo else 'Party Hunt',
+                'tempo_sessao_s': painel_stream.tempo_sessao(formas), 'tempo_sessao_origem': 'Party Hunt',
                 'solo': solo, 'frame': p.name, 't': lw.fsec(p.name)} if valido or (solo and char) else None
+
+    @staticmethod
+    def blocos_party(linhas):
+        nomes, danos, profits, curas = [], {}, {}, {}
+        for i, s in enumerate(linhas[:-3]):
+            nome = s.strip(' ?�')
+            seguintes = linhas[i + 1:i + 4]
+            if re.fullmatch(r"[A-Za-z][A-Za-z '\-]{2,59}", nome) and all(
+                    re.fullmatch(r'[?� +\-]*[\d,?]+k?[?� ]*', x) for x in seguintes):
+                nomes.append(nome)
+                for destino, valor in zip((profits, danos, curas), seguintes):
+                    # Ícone separado por espaço é descartável; '?' colado ao número
+                    # pode ser um dígito perdido e continua invalidando a medida.
+                    valor = re.sub(r'^[?�]+\s+', '', valor.strip())
+                    destino[nome] = painel_stream.numero(valor.lstrip('+ '))
+        return nomes, danos, profits, curas
 
 
 class Detector:
@@ -318,7 +442,8 @@ class Detector:
                 return None
             return b[chave]-a[chave]
         bases = {(p.get('fonte_loot'),p.get('tipo') if p.get('fonte_loot') == 'Party Hunt' else None) for p in ps}
-        return {'xp_raw': delta('xp_raw'), 'loot': delta('loot_periodo') if len(bases)==1 else None,
+        xp_valida = all(p.get('fonte_xp') == 'XP Analyser' for p in (a, b))
+        return {'xp_raw': delta('xp_raw') if xp_valida else None, 'loot': delta('loot_periodo') if len(bases)==1 else None,
                 'inicio_t':a['t'],'fim_t':b['t'],'fonte_loot':b.get('fonte_loot'),
                 'limite':'Raw XP do personagem e loot do painel entre quadros próximos (até 5 s de cada fronteira). Não mede os ganhos da outra party.'}
 
@@ -525,6 +650,16 @@ class Detector:
             if not golpes:
                 # Episódio fechado: o ledger integral permite recompor o período.
                 golpes = [e for e in self.golpes if lw.to_s(ep['inicio']) <= e['t'] <= ep['ultimo_t']]
+            if not golpes:
+                # Relatórios antigos podem ter somente totais: não apagar um intruso
+                # real porque suas linhas individuais já não estão no relatório.
+                for nome in list(ep['dano']['fora']):
+                    if nome_key(nome) in novos:
+                        ep['dano']['party'][nome] = ep['dano']['fora'].pop(nome)
+                if ep['dano']['fora']:
+                    ep['party'] = list(self.party)
+                    mantidos.append(ep)
+                    continue
             fora = [e for e in golpes if e['grupo'] == 'fora']
             if not fora:
                 if self.atual is ep:
@@ -624,6 +759,7 @@ class Detector:
              'party_painel_ultimo': self.paineis[-1] if self.paineis else None,
              'limite': 'Dano observado nas linhas legíveis do Server Log. Console curto perde golpes; não é dano total. Ausência de linha não prova ausência de dano. Guild não é identificada.'}
         r['estatisticas_party'] = estatisticas_party([r])
+        r = corrigir_relatorio(r)
         escreve(self.relatorio_path, r)
         escreve(self.sessao / 'ks.json', r)
         if self.eventos or self._reescrever_ledger:

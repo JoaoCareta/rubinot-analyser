@@ -34,6 +34,21 @@ class AreasTest(unittest.TestCase):
         self.assertEqual(r['voltas'][0]['especies'],{'crusader':4})
         self.assertNotIn('parcial',dados['voltas'][1])
 
+    def test_recorte_preserva_raro_posterior_sem_trazer_area_anterior(self):
+        areas = [{'inicio': 0, 'andar': 15, 'especies': ['primal pack beast']},
+                 {'inicio': 120, 'andar': 14, 'especies': ['undertaker']}]
+        dados = {'voltas': [
+            {'ini': 0, 'fim': 100, 'especies': {'primal pack beast': 3}},
+            {'ini': 100, 'fim': 150, 'especies': {'primal pack beast': 2, 'undertaker': 4}},
+            {'ini': 150, 'fim': 300, 'especies': {'undertaker': 6, 'plunder patriarch': 1}},
+        ]}
+        r = recortar(dados, areas)
+        self.assertEqual(r['voltas'][0]['especies'], {'undertaker': 4})
+        self.assertEqual(r['voltas'][1]['especies'], {'undertaker': 6, 'plunder patriarch': 1})
+        self.assertNotIn('plunder patriarch', areas[-1]['especies'])
+        self.assertEqual(len(dados['voltas']), 3)
+        self.assertEqual(recortar(dados, areas[:1]), dados)
+
     def test_motor_reusa_quadros_e_persiste_fronteira(self):
         from rubinot.hunt.aplicacao import Gravacao
         from rubinot.hunt import aplicacao as motor

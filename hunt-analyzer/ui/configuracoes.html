@@ -9,21 +9,48 @@
 <header class="topo"><span class="marca">Hunt Analyzer</span><nav><a class="ativo" href="/">calibração</a><a href="/hunt">hunt</a><a href="/hunt?h">histórico</a><a href="/evolucao">evolução</a><a href="/auxiliadores">auxiliadores</a></nav><a class="botao" id="voltarCalibracao" href="/">← Voltar à calibração</a><a class="botao" href="/hunt?dano">Magias e elementos</a></header>
 <main><div class="rotulo">— reconhecimento pela tela</div><h1>Leitura de RTC, Cura e roda</h1>
 <p class="sub">Abra RTC, Cura ou Roda no RubinOT. A leitura é automática, inclusive com a gravação desligada e o jogo em primeiro plano. Os campos reconhecidos aparecem abaixo.</p>
-<p class="sub">Os ajustes são para a próxima hunt. Confirmação de uso, configuração lida e aplicação no cliente têm estados separados. A captura manual abaixo serve para recuperar uma referência que não foi reconhecida.</p>
-<div class="controles"><label>Janela<select id="tipo"><option value="roda">Roda de habilidades</option><option value="rtc">RTC</option><option value="cura">Cura</option></select></label><button id="capturar">Capturar janela do jogo</button><button id="salvar" disabled>Guardar referência e leitura</button></div>
+<p class="sub">Os ajustes são para a próxima hunt. Confirmação de uso, configuração lida e aplicação no cliente têm estados separados. Para guardar uma referência, abra a aba no jogo, capture e clique em Guardar janela aberta. Não é necessário marcar um retângulo.</p>
+<div class="controles"><label>Janela<select id="tipo"><option value="auto">Reconhecer automaticamente</option><option value="roda">Roda de habilidades</option><option value="rtc">RTC</option><option value="cura">Cura</option></select></label><button id="capturar">Capturar janela do jogo</button><button id="salvar" disabled>Guardar janela aberta</button></div>
 <p id="mensagem" role="status">A captura não inicia uma gravação.</p><div class="print"><canvas id="print" hidden></canvas></div>
-<div class="cards" id="registros"></div>
-<details><summary>Como a leitura funciona</summary><p class="nota">Cinco magias e duas runas no RTC; autocura e destinatários na Cura; pontos e casas destacadas na roda. Casas e gemas são acumuladas quando seus números e tooltips aparecem, sem usar a cor de preenchimento para inventar pontos. Campo oculto ou ilegível permanece pendente.</p><p class="nota">Uma janela aberta prova observação. Fechar não confirma aplicação; o conjunto exato é confirmado em Magias e elementos. Total de pontos informado é substituído quando uma leitura visual confiável o corrige.</p></details>
+<div class="cards" id="registros"></div><section class="card" id="declaracaoUso" aria-label="Uso da configuração detectada"></section>
+<details><summary>Como a leitura funciona</summary><p class="nota">Cinco magias e duas runas no RTC; autocura e destinatários na Cura; pontos e casas destacadas na roda. Casas e gemas são acumuladas quando seus números e tooltips aparecem, sem usar a cor de preenchimento para inventar pontos. Campo oculto ou ilegível permanece pendente.</p><p class="nota">Uma janela aberta prova observação. Fechar não confirma aplicação; o uso do conteúdo detectado é declarado nesta calibração. Total de pontos informado é substituído quando uma leitura visual confiável o corrige.</p></details>
 </main>
 <script src="/ui/navegacao.js"></script><script>
 const canvas=document.querySelector('#print'),ctx=canvas.getContext('2d'),msg=document.querySelector('#mensagem'),salvar=document.querySelector('#salvar');
 let imagem=null,inicio=null,regiao=null,char=new URLSearchParams(location.search).get('char')||'',sessao='',token=0;
 const texto=(tag,t)=>{const e=document.createElement(tag);e.textContent=t;return e;};
+function usoDetectado(r){
+ const area=document.querySelector('#declaracaoUso');area.replaceChildren();
+ area.append(texto('h2','Uso da configuração detectada'));
+ if(!r.rtc){area.append(texto('p','Abra o RTC para identificar a configuração. A coleta geral continua.'));return;}
+ const sessoes=[r.rtc.sessao,sessao].filter(Boolean),atual=sessao||sessoes[0];
+ area.append(texto('p',`${r.char} · ${atual} · ${({'uso_declarado':'Uso confirmado do RTC detectado','rtc_desligado':'RTC desligado informado','outro_rtc':'Uso de outro RTC informado'}[r.uso_componentes?.rtc?.estado]||'Uso ainda não confirmado para esta leitura')}`));
+ const revisoes={rtc:r.rtc.id};
+ for(const tipo of ['cura','roda']){
+   const s=r[tipo],label=texto('label','');
+   if(s){const cb=document.createElement('input');cb.type='checkbox';cb.checked=false;
+     cb.onchange=()=>{if(cb.checked)revisoes[tipo]=s.id;else delete revisoes[tipo];};
+     label.append(cb,texto('span',`Incluir ${tipo==='cura'?'Cura':'Roda'} apresentada acima${s.completo?'':' · leitura parcial'}`));area.append(label);
+   }else area.append(texto('p',`${tipo==='cura'?'Cura':'Roda'} ainda não lida; não será confirmada.`));
+ }
+ for(const tipo of ['rtc','cura','roda'])if(r[tipo]&&!r[tipo].completo)area.append(texto('p',`${tipo.toUpperCase()}: campos ausentes/ilegíveis permanecem desconhecidos. ${(r[tipo].pendencias||[]).join('; ')}`));
+ const resultado=texto('p','');resultado.setAttribute('role','status');
+ const botoes=[];
+ for(const [resposta,nome] of [['uso_confirmado','Estou usando o que foi detectado'],['outro_rtc','Não estou usando: uso outro RTC'],['rtc_desligado','Não estou usando: RTC desligado']]){
+   const b=texto('button',nome);botoes.push(b);b.onclick=async()=>{
+     botoes.forEach(x=>x.disabled=true);
+     try{const d=await post('/api/configuracoes',{acao:'declarar_uso',char:r.char,sessao:atual,revisoes:{...revisoes},resposta});if(!d.ok)throw Error(d.erro);await atualizar();msg.textContent='Declaração registrada para a leitura apresentada. Campos desconhecidos continuam pendentes.';}
+     catch(e){resultado.textContent=e.message;}finally{botoes.forEach(x=>x.disabled=false);}
+   };area.append(b);
+ }
+ area.append(resultado);
+}
 function leituraHumana(s,c){
  if(s.tipo==='rtc'&&s.slots?.length){const wrap=texto('div','');wrap.style.overflowX='auto';const table=texto('table','');table.style.cssText='width:100%;border-collapse:collapse;font-size:12px';const head=texto('tr','');
  for(const t of ['Slot','Identificação','Mana','Criaturas','Prioridade']){const th=texto('th',t);th.style.cssText='text-align:left;padding:10px;border-bottom:1px solid var(--borda)';head.append(th);}table.append(head);
  for(const slot of s.slots){const row=texto('tr','');for(const t of [`${slot.tipo==='runa'?'Runa':'Magia'} ${slot.slot}`,(slot.nome||(slot.estado==='vazio_confirmado'?'Vazio':'Ícone não identificado'))+(slot.atual===false?' · leitura anterior':''),slot.mana_percent==null?'—':slot.mana_percent+'%',slot.creatures==null?'—':slot.creatures+'+',slot.prioridade==null?'—':slot.prioridade+'º']){const td=texto('td',t);td.style.cssText='padding:10px;border-bottom:1px solid var(--borda)';row.append(td);}table.append(row);}wrap.append(table);c.append(wrap);
  }
+ if(s.tipo==='cura'){for(const slot of s.slots||[])c.append(texto('p',`${slot.nome||slot.id||'Campo não identificado'} · ${slot.destinatario||slot.vocacao_destino||'Autocura'} · Vida ${slot.vida_percent??'—'}%`));}
  if(s.tipo==='roda'&&s.campos['selection.limite']){const f=s.campos;c.append(texto('p',`${f['selection.nome']?.valor||'Fatia selecionada'} · ${f['selection.pontos']?.valor??'—'} / ${f['selection.limite'].valor} pontos`));
  for(const efeito of f['selection.efeitos_texto']?.valor||[])c.append(texto('p',efeito));if(f['selection.texto_parcial']?.valor)c.append(texto('p','Descrição parcialmente visível.'));c.append(texto('p','Descrição observada; efeito ativo e aplicação não confirmados.'));
  }
@@ -35,12 +62,13 @@ canvas.onpointermove=e=>{if(!inicio)return;const p=ponto(e);regiao={left:Math.ro
 canvas.onpointerup=()=>{inicio=null;salvar.disabled=!regiao||regiao.width<80||regiao.height<40;msg.textContent=salvar.disabled?'Marque uma janela maior, com o cabeçalho.':'Referência marcada. Guardar confere o título antes de registrar.';};
 canvas.onpointercancel=()=>{inicio=null;};
 async function post(url,dados){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});return r.json();}
-document.querySelector('#capturar').onclick=async()=>{const b=document.querySelector('#capturar');b.disabled=true;salvar.disabled=true;regiao=null;msg.textContent='Clique no jogo, com a janela RTC ou roda aberta…';
+document.querySelector('#capturar').onclick=async()=>{const b=document.querySelector('#capturar');b.disabled=true;salvar.disabled=true;regiao=null;msg.textContent='Clique no jogo, com Cura, RTCaster ou roda aberta…';
 try{const r=await post('/api/capturar',{});if(!r.ok)throw Error(r.erro);char=r.char||'';const st=await fetch('/api/hunt').then(r=>r.json());sessao=st.estado?.sessao||'';
-imagem=new Image();imagem.src='/api/print.png?'+Date.now();await imagem.decode();canvas.width=imagem.width;canvas.height=imagem.height;canvas.hidden=false;desenhar();msg.textContent=`${char||'Personagem não lido'} · marque a janela com o título.`;
+imagem=new Image();imagem.src='/api/print.png?'+Date.now();await imagem.decode();canvas.width=imagem.width;canvas.height=imagem.height;canvas.hidden=false;desenhar();salvar.disabled=false;msg.textContent=`${char||'Personagem não lido'} · clique em Guardar janela aberta. A janela será localizada automaticamente.`;
 }catch(e){msg.textContent=e.message;}finally{b.disabled=false;}};
-salvar.onclick=async()=>{salvar.disabled=true;msg.textContent='Conferindo o título e guardando a prova…';try{const r=await post('/api/configuracoes/calibrar',{tipo:document.querySelector('#tipo').value,regiao});if(!r.ok)throw Error(r.erro);msg.textContent='Referência guardada. Leitura parcial; aplicação não confirmada.';await atualizar();}catch(e){msg.textContent=e.message;}finally{salvar.disabled=false;}};
-async function atualizar(){const minha=++token;try{if(!char){const s=await fetch('/api/status').then(r=>r.json());char=s.char||'';}const r=await fetch('/api/configuracoes?'+new URLSearchParams({char,sessao})).then(r=>r.json());if(minha!==token)return;const cards=document.querySelector('#registros');cards.replaceChildren();
-for(const tipo of ['rtc','cura','roda']){const c=texto('article','');c.className='card';c.append(texto('h2',tipo==='rtc'?'RTC':tipo==='cura'?'Cura':'Roda'));const referencia=r.calibracoes?.[tipo];c.append(texto('p',referencia?'Referência guardada em '+new Date(referencia.instante*1000).toLocaleString('pt-BR'):'Sem referência manual guardada.'));const s=r[tipo];if(!s)c.append(texto('p','Ainda não lido para este personagem.'));else{c.append(texto('p',`${s.char} · Última leitura: ${new Date(s.instante*1000).toLocaleString('pt-BR')} · ${s.preset||'preset não lido'}`),texto('p','Observado parcialmente · aplicação não confirmada'));const a=document.createElement('a');a.href='/api/configuracoes/prova/'+s.prova;a.target='_blank';a.rel='noopener';const img=document.createElement('img');img.src=a.href;img.alt='Prova da última leitura';a.append(img);c.append(a);leituraHumana(s,c);const d=document.createElement('details');d.append(texto('summary','Campos e textos reconhecidos'),texto('pre',JSON.stringify({campos:s.campos,slots:s.slots,linhas:s.linhas},null,2)));c.append(d);}cards.append(c);}
+salvar.onclick=async()=>{salvar.disabled=true;msg.textContent='Reconhecendo a aba ativa e guardando a leitura…';try{const r=await post('/api/configuracoes/calibrar',{tipo:document.querySelector('#tipo').value,regiao});if(!r.ok)throw Error(r.erro);msg.textContent='Janela reconhecida e guardada. A leitura continua automaticamente durante a hunt.';await atualizar();}catch(e){msg.textContent=e.message;}finally{salvar.disabled=false;}};
+async function atualizar(){const minha=++token;try{const hunt=await fetch('/api/hunt').then(x=>x.json());sessao=hunt.estado?.sessao||sessao;if(!char){const s=await fetch('/api/status').then(r=>r.json());char=s.char||'';}const r=await fetch('/api/configuracoes?'+new URLSearchParams({char,sessao})).then(r=>r.json());if(minha!==token)return;const cards=document.querySelector('#registros');cards.replaceChildren();
+for(const tipo of ['rtc','cura','roda']){const c=texto('article','');c.className='card';c.append(texto('h2',tipo==='rtc'?'RTC':tipo==='cura'?'Cura':'Roda'));const referencia=r.calibracoes?.[tipo];c.append(texto('p',referencia?'Referência guardada em '+new Date(referencia.instante*1000).toLocaleString('pt-BR'):'Sem referência manual guardada.'));const s=r[tipo];if(!s)c.append(texto('p','Ainda não lido para este personagem.'));else{c.append(texto('p',`${s.char} · Última leitura: ${new Date((s.visto_por_ultimo_em||s.instante)*1000).toLocaleString('pt-BR')} · ${s.preset||'preset não lido'}`),texto('p',`${s.completo?'Leitura completa':'Leitura parcial'} · aplicação visual não confirmada`));const a=document.createElement('a');a.href='/api/configuracoes/prova/'+s.prova;a.target='_blank';a.rel='noopener';const img=document.createElement('img');img.src=a.href;img.alt='Prova da última leitura';a.append(img);c.append(a);leituraHumana(s,c);const d=document.createElement('details');d.append(texto('summary','Campos e textos reconhecidos'),texto('pre',JSON.stringify({campos:s.campos,slots:s.slots,linhas:s.linhas},null,2)));c.append(d);}cards.append(c);}
+usoDetectado(r);
 }catch{}}const tipoInicial=new URLSearchParams(location.search).get('tipo');if(['rtc','cura','roda'].includes(tipoInicial))document.querySelector('#tipo').value=tipoInicial;atualizar();setInterval(atualizar,5000);
 </script></body></html>

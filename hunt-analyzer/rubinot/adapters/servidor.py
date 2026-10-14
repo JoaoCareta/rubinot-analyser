@@ -105,7 +105,7 @@ OBRIGATORIAS = layout.REGIOES_OBRIGATORIAS
 PAINEIS = {
     "hunt": {"nome": "Hunt Analyser", "rotulos": ["Session", "Raw XP Gain", "XP Gain", "Raw XP/h", "XP/h", "Loot", "Supplies",
                          "Balance", "Damage", "Damage/h", "Healing", "Healing/h"],
-             "mostra": {"Raw XP Gain": "Raw XP Gain", "Supplies": "seus supplies", "Balance": "Balance"}},
+             "mostra": {"Damage": "dano causado", "Supplies": "seus supplies", "Balance": "Balance"}},
     "xp": {"nome": "XP Analyser", "rotulos": ["Raw XP Gain", "XP Gain", "Raw XP/h", "XP/h", "Next Level"],
            "mostra": {"Raw XP/h": "Raw XP/h", "Next Level": "Next Level"}},
     "loot": {"nome": "Loot Analyser", "rotulos": ["Gold Value", "Per Hour", "Target"],
@@ -428,11 +428,22 @@ def v_painel(k):
         achou = {a: v for a in p["rotulos"] if (v := valor(pares, a)) is not None}
         destaque = " · ".join(f"{rot} {achou[a].replace(chr(0xFFFD), '') or '–'}"
                               for a, rot in p["mostra"].items() if a in achou)
-        n, total = len(achou), len(p["rotulos"])
-        if n >= 0.6 * total:
-            return "ok", f"{destaque} · {n} de {total} campos"
+        import painel_stream
+        from rubinot.observacao import paineis
+        textos = painel_stream.linhas(Image.fromarray(arr))
+        leitura = paineis.campos(k,textos)
+        n, total = sum(v['valor'] is not None for v in leitura.values()), len(leitura)
+        faltantes = [chave for chave,v in leitura.items() if v['valor'] is None]
+        complemento = ' · estimativas auxiliares' if k in ('supply','loot') else ''
+        if k == 'party':
+            membros = paineis.membros_party(textos)
+            if membros and (not all(m['completo'] for m in membros)
+                    or sum(m['balance']['valor'] or 0 for m in membros) != leitura['Balance']['valor']):
+                return 'aviso', f'{destaque} · membros parcialmente visíveis; confira a altura do painel'
+        if n == total:
+            return "ok", f"{destaque} · {n} valores lidos; listas podem estar parciais{complemento}"
         if n:
-            return "aviso", f"li só {n} de {total} campos: pegue o painel inteiro" + (f" · {destaque}" if destaque else "")
+            return "aviso", f"{n} de {total} valores lidos · faltam {', '.join(faltantes)}{complemento}" + (f" · {destaque}" if destaque else "")
         return "erro", f"não achei os campos do {p['nome']}"
     return conferir
 
@@ -456,6 +467,15 @@ def validar(k, r, nome=None):
         # 24/09: o título do cabeçalho vale mais que os campos — é o único jeito de saber se o
         # que está marcado é o Loot ou o Supply Analyser, que têm os mesmos rótulos
         outro = titulo_acima(img, r) if k in TITULOS else None
+        if k in TITULOS:
+            from rubinot.observacao.geometria_paineis import detectar as localizar
+            for chave,reg in localizar(img)['regioes'].items():
+                if chave not in TITULOS:
+                    continue
+                x,y,z,w = reg['box']
+                area = max(0,min(z,r['left']+r['width'])-max(x,r['left'])) * max(0,min(w,r['top']+r['height'])-max(y,r['top']))
+                if area/max(1,r['width']*r['height'])>.85:
+                    outro = chave; break
         if k in TITULOS and not outro:
             return {'status': 'erro', 'texto': f'Não li o título {NOMES[k]} no cabeçalho. Marque o painel com o título em cima.'}
         if outro and outro != k:
@@ -471,24 +491,8 @@ def validar(k, r, nome=None):
 def detectar(img, nome=None):
     """Acha os painéis pelo cabeçalho: botão × no canto direito + título lido à esquerda dele.
     Conteúdo = logo abaixo do cabeçalho até o próximo cabeçalho da mesma coluna (ou o fim da janela)."""
-    cinza = np.asarray(img.convert("RGB")).max(axis=2).astype(np.float32)
-    res = cv2.matchTemplate(cinza, BOTAO_X, cv2.TM_CCOEFF_NORMED)
-    picos = []
-    for y, x in sorted(zip(*np.where(res >= 0.8)), key=lambda t: -res[t]):
-        if all(abs(y - a) > 6 or abs(x - b) > 6 for a, b in picos):
-            picos.append((int(y), int(x)))
-    b = cinza > LUM_TITULO
-    achados = {}
-    for y, x in sorted(picos):
-        txt = " ".join(ab.decode_binary(b[y + 1:y + 11, max(0, x - 165):max(0, x - 40)], GLYPHS, GAP))
-        abaixo = [a for a, c in picos if abs(c - x) <= 6 and a > y]
-        regiao = _r(max(0, x - 158), y + 13, x, (min(abaixo) - 2) if abaixo else img.height - 4)
-        k = titulo_acima(img, regiao)
-        if not k and regiao["height"] > 20:  # título ilegível: as palavras-chave do painel inteiro dizem qual é
-            j, f = identifica(campos(recorte(img, regiao)))
-            k = j if f >= 0.6 else None
-        if k and k not in achados:
-            achados[k] = regiao
+    from rubinot.observacao.geometria_paineis import detectar as localizar
+    achados = {k:_r(*r['box']) for k,r in localizar(img)['regioes'].items() if k in TITULOS}
     tela = achar_tela(img, nome_do_print(img, nome))
     if tela:
         achados["tela"] = tela
@@ -684,7 +688,20 @@ class Handler(BaseHTTPRequestHandler):
         # /api/hunt montado do disco (a tela reusa o painel). Funciona com a gravação desligada.
         if rota == "/api/historico":
             return self._json({"sessoes": ao_vivo.historico() if ao_vivo else []})
-        prova_ks = re.fullmatch(r'/api/ks/(session_[a-z0-9_]+/(?:logs/|[0-9]{3}/)?[a-zA-Z0-9_]+\.png)', rota)
+        gravacao = re.fullmatch(r'/api/gravacoes/(session_[a-z0-9_]+)/([qf]_\d+_\d+\.png)', rota)
+        if gravacao and ao_vivo:
+            from rubinot.adapters.gravacoes import quadro
+            png = quadro(ao_vivo.CAPTURAS, gravacao[1], gravacao[2])
+            return self._envia(png.read_bytes(), 'image/png') if png else self._json({'erro': 'quadro não encontrado'}, 404)
+        curas = re.fullmatch(r'/api/historico/([a-z0-9_.\-]{1,60}/\d{8}_\d{4}(?:\d{2}(?:_[a-f0-9]{8})?)?)/curas', rota)
+        if curas and ao_vivo:
+            dados = ao_vivo.historico_curas(curas[1])
+            return self._json(dados if dados is not None else {'erro': 'Hunt não encontrada'}, 200 if dados is not None else 404)
+        replay = re.fullmatch(r'/api/historico/([a-z0-9_.\-]{1,60}/\d{8}_\d{4}(?:\d{2}(?:_[a-f0-9]{8})?)?)/gravacao', rota)
+        if replay and ao_vivo:
+            dados = ao_vivo.historico_gravacao(replay[1])
+            return self._json(dados) if dados is not None else self._json({'erro': 'sessão não encontrada'}, 404)
+        prova_ks = re.fullmatch(r'/api/ks/(session_[a-z0-9_]+/(?:[a-zA-Z0-9_]+/){0,4}[a-zA-Z0-9_]+\.png)', rota)
         if prova_ks and ao_vivo:
             png = ao_vivo.ks.RAIZ / prova_ks[1]
             return self._envia(png.read_bytes(), 'image/png') if png.is_file() else self._json({'erro': 'prova não encontrada'}, 404)
@@ -740,6 +757,8 @@ class Handler(BaseHTTPRequestHandler):
                 if acao=='pontos':resultado=configuracoes.pontos_total(char,dados.get('valor'))
                 elif acao=='sugestao':resultado=configuracoes.guardar_sugestao(char,dados.get('sugestao'))
                 elif acao=='confirmar':resultado=configuracoes.confirmar(char,dados.get('id'))
+                elif acao=='declarar_uso':resultado=configuracoes.declarar_uso(char,dados.get('sessao'),dados.get('revisoes'),dados.get('resposta'),dados.get('sugestao_id'))
+                elif acao=='experimento_twin':resultado=configuracoes.propor_twin(char,dados.get('sessao'),dados.get('candidato'))
                 else:raise ValueError('Operação não reconhecida.')
                 return self._json({'ok':True,'resultado':resultado})
             except (ValueError,TypeError,KeyError) as erro:
@@ -758,9 +777,12 @@ class Handler(BaseHTTPRequestHandler):
                 if not char:
                     raise ValueError('Personagem não identificado no print. Capture novamente.')
                 sessao = ao_vivo.sessao_atual() if ao_vivo else None
-                return self._json(configuracoes.calibrar(dados.get('tipo'), dados.get('regiao') or {}, PRINT,
-                    char, sessao.name if sessao else 'calibracao'))
+                resultado = configuracoes.calibrar(dados.get('tipo'), dados.get('regiao') or {}, PRINT,
+                    char, sessao.name if sessao else 'calibracao')
+                print(f"[{time.strftime('%d/%m %H:%M:%S')}] Configuração {dados.get('tipo')}: referência e leitura guardadas", flush=True)
+                return self._json(resultado)
             except (ValueError, KeyError, TypeError, OSError) as erro:
+                print(f"[{time.strftime('%d/%m %H:%M:%S')}] Configuração {dados.get('tipo')}: {erro}", flush=True)
                 return self._json({'ok': False, 'erro': str(erro)}, 400)
         if self.path == "/api/detectar":
             if not PRINT.exists():

@@ -95,6 +95,7 @@
   th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
   td { padding: 5px 8px; border-bottom: 1px solid rgba(38, 43, 54, .5); color: var(--suave); }
   td b { color: var(--texto); font-weight: 500; }
+  .origem-xp { display: block; font: 10px var(--sans); color: var(--apagado); }
   tbody tr:hover td { background: rgba(255, 255, 255, .03); }
   td a { color: var(--ouro-claro); text-decoration: none; }
   td a:hover { text-decoration: underline; }
@@ -170,7 +171,9 @@ function grafico(fig, series, fmt) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'gr');
   const ns = (t, a) => { const n = document.createElementNS('http://www.w3.org/2000/svg', t); for (const k in a) n.setAttribute(k, a[k]); return n; };
-  const alto = Math.max(...series.flatMap(s => s.v.map(p => p.y)), 0);
+  const medidas = series.flatMap(s => s.v.map(p => p.y)).filter(Number.isFinite);
+  if (!medidas.length) return cx.append(el('div', 'vazio', 'Sem leitura disponível nas sessões deste período.'));
+  const alto = Math.max(...medidas, 0);
   const topo = alto > 0 ? Math.pow(10, Math.floor(Math.log10(alto))) * Math.ceil(alto / Math.pow(10, Math.floor(Math.log10(alto))) * 2) / 2 : 1;
   const X = i => MG.e + (pts === 1 ? (W - MG.e - MG.d) / 2 : i * (W - MG.e - MG.d) / (pts - 1));
   const Y = y => MG.c + (1 - y / topo) * (H - MG.c - MG.b);
@@ -183,12 +186,21 @@ function grafico(fig, series, fmt) {
   }
   const passo = Math.ceil(pts / 8);       // datas: só as que cabem
   series[0].v.forEach((p, i) => {
-    if (i % passo && i !== pts - 1) return;
+    if (i !== pts - 1 && (i % passo || (pts - 1 - i) < passo)) return;
     const t = ns('text', {x: X(i), y: H - 8, 'text-anchor': 'middle'}); t.textContent = ddmm(diaDe(p.s)); svg.append(t);
   });
   for (const s of series) {
-    svg.append(ns('path', {class: 'linha', stroke: s.cor, d: s.v.map((p, i) => `${i ? 'L' : 'M'}${X(i)} ${Y(p.y)}`).join(' ')}));
-    s.v.forEach((p, i) => svg.append(ns('circle', {class: 'ponto', cx: X(i), cy: Y(p.y), r: 4, fill: s.cor})));
+    let continua = false;
+    const caminho = s.v.map((p, i) => {
+      if (!Number.isFinite(p.y)) { continua = false; return ''; }
+      const trecho = `${continua ? 'L' : 'M'}${X(i)} ${Y(p.y)}`;
+      continua = true;
+      return trecho;
+    }).join(' ');
+    svg.append(ns('path', {class: 'linha', stroke: s.cor, d: caminho}));
+    s.v.forEach((p, i) => {
+      if (Number.isFinite(p.y)) svg.append(ns('circle', {class: 'ponto', cx: X(i), cy: Y(p.y), r: 4, fill: s.cor}));
+    });
   }
   // alvo de 11 px por sessão: pega o mouse em todas as séries daquela data de uma vez
   series[0].v.forEach((p, i) => {
@@ -206,8 +218,14 @@ function mostraDica(fig, fx, series, i, fmt) {
   series.forEach((se, k) => {
     if (k) d.append(el('br'));
     const sw = el('i'); sw.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${se.cor}`;
-    d.append(sw, series.length > 1 ? se.nome + ' ' : '', el('b', null, fmt(se.v[i].y, true)));
+    d.append(sw, series.length > 1 ? se.nome + ' ' : '', el('b', null, Number.isFinite(se.v[i].y) ? fmt(se.v[i].y, true) : 'sem leitura'));
   });
+  if (fig.id === 'g_raw') {
+    if (s.xp_origens?.length) d.append(el('br'), s.xp_origens.join(' · '));
+    const final = s.xp_paineis_finais?.at(-1);
+    if (final) d.append(el('br'), `Painel às ${final.horario}: ${kk(final.raw_xp_gain)} acumulados`,
+      el('br'), `Raw/h no painel: ${fmt(final.raw_h, true)} · ${final.origem}`);
+  }
   const plot = fig.querySelector('.plot'), largura = plot.clientWidth;
   d.style.left = plot.offsetLeft + Math.max(0, Math.min(largura - 160, fx * largura - 60)) + 'px';
   d.style.top = '44px';
@@ -220,7 +238,7 @@ function filtradas() {
   const hunt = $('#fhunt').value, quem = $('#fquem').value;
   return TODAS.filter(s => {
     const d = diaDe(s);
-    return (!de || d >= de) && (!ate || d <= ate) && (!hunt || s.hunt === hunt) && (!quem || (s.pt || s.char || '') === quem);
+    return (!de || d >= de) && (!ate || d <= ate) && (!hunt || s.hunt === hunt) && (!quem || (s.pt || 'modalidade não lida') === quem);
   });
 }
 const limpaPreset = () => document.querySelectorAll('#presets button').forEach(b => b.classList.remove('on'));
@@ -244,17 +262,18 @@ function desenha() {
   $('#conta').replaceChildren(el('b', null, String(ss.length)), ` de ${TODAS.length} sessões`);
   const soma = k => ss.reduce((a, s) => a + (s[k] || 0), 0);
   const tempo = soma('dur_s'), raw = soma('xp_raw');
-  const melhor = ss.length ? ss.reduce((a, s) => (taxa(s, 'raw_h') || 0) > (taxa(a, 'raw_h') || 0) ? s : a) : null;
+  const comRaw = ss.filter(s => taxa(s, 'raw_h') != null);
+  const melhor = comRaw.length ? comRaw.reduce((a, s) => taxa(s, 'raw_h') > taxa(a, 'raw_h') ? s : a) : null;
   const buracos = ss.reduce((a, s) => a + (s.taxas ? s.taxas.voltas - s.taxas.voltas_raw : 0), 0);   // voltas limpas sem leitura do painel
   const mRaw = media(ss, 'raw_h');
   $('#tiles').replaceChildren(...[
     ['sessões', ss.length || '—', ss.length ? `${soma('voltas')} voltas` : 'nada no período'],
     ['tempo caçando', tempo ? durc(tempo) : '—', 'só as voltas fechadas'],
-    ['raw no período', raw ? kk(raw) : '—',
-     buracos ? `${buracos} volta${buracos > 1 ? 's' : ''} sem leitura do painel` : 'todas as voltas lidas'],
-    ['raw/h típica', mRaw ? `${virg(mRaw / 1e6)} kk/h` : '—', `média de ${ss.length} sessõe${ss.length === 1 ? '' : 's'}`],
+    ['raw no período', ss.some(s => s.xp_raw != null) ? kk(raw) : '—',
+     buracos ? `${buracos} volta${buracos > 1 ? 's' : ''} sem leitura do painel` : (comRaw.length ? 'registros disponíveis' : 'sem leitura disponível')],
+    ['raw/h típica', mRaw != null ? `${virg(mRaw / 1e6)} kk/h` : '—', `média de ${comRaw.length} sessõe${comRaw.length === 1 ? '' : 's'}`],
     ['profit no período', ss.length ? ouro(soma('profit')) : '—', media(ss, 'profit_h') ? `${ouro(media(ss, 'profit_h'))}/h de média` : ''],
-    ['melhor sessão', melhor && taxa(melhor, 'raw_h') ? `${virg(taxa(melhor, 'raw_h') / 1e6)} kk/h` : '—', melhor ? `${ddmm(diaDe(melhor))} · ${melhor.hunt}` : ''],
+    ['melhor sessão', melhor ? `${virg(taxa(melhor, 'raw_h') / 1e6)} kk/h` : '—', melhor ? `${ddmm(diaDe(melhor))} · ${melhor.hunt}` : ''],
   ].map(([r, n, o]) => {
     const t = el('div', 'tile');
     t.append(el('div', 'rotulo', r), el('div', 'num', String(n)), el('div', 'obs', o));
@@ -263,7 +282,7 @@ function desenha() {
 
   const A = getComputedStyle(document.documentElement).getPropertyValue('--serie-a').trim();
   const B = getComputedStyle(document.documentElement).getPropertyValue('--serie-b').trim();
-  const serie = (k, cor, nome) => [{nome, cor, v: ss.map(s => ({s, y: taxa(s, k) || 0}))}];
+  const serie = (k, cor, nome) => [{nome, cor, v: ss.map(s => ({s, y: taxa(s, k)}))}];
   // cheio = a dica do mouse (com unidade); curto = o eixo, que já tem a unidade no título do gráfico
   const kkh = (v, cheio) => cheio ? `${virg(v / 1e6)} kk/h` : virg(v / 1e6, 1);
   const ouroh = (v, cheio) => cheio ? `${ouro(v)}/h` : (v >= 1e6 ? `${virg(v / 1e6, 1)} kk` : `${Math.round(v / 1000)}k`);
@@ -271,28 +290,35 @@ function desenha() {
   for (const [id, series, fmt] of [
     ['raw', serie('raw_h', A), kkh],
     ['profit', serie('profit_h', A), ouroh],
-    ['sup', [{nome: 'da pt', cor: A, v: ss.map(s => ({s, y: taxa(s, 'sup_pt_h') || 0}))},
-             {nome: 'seus', cor: B, v: ss.map(s => ({s, y: taxa(s, 'sup_eu_h') || 0}))}], ouroh],
+    ['sup', [{nome: 'da pt', cor: A, v: ss.map(s => ({s, y: taxa(s, 'sup_pt_h')}))},
+             {nome: 'seus', cor: B, v: ss.map(s => ({s, y: taxa(s, 'sup_eu_h')}))}], ouroh],
     ['bichos', serie('bichos_h', A), conta],
   ]) grafico($('#g_' + id), series, fmt);
 
   // tabela do período: os mesmos números dos gráficos em texto (e cada linha abre a sessão)
   const cab = el('tr'), thead = el('thead'), tbody = el('tbody');
-  ['data', 'hunt', 'quem', 'duração', 'voltas', 'raw/h', 'profit/h', 'sup. da pt/h', 'seus sup./h', 'bichos']
+  ['data', 'hunt', 'quem', 'duração', 'voltas', 'raw/h', 'painel perto do fim', 'profit/h', 'sup. da pt/h', 'seus sup./h', 'bichos']
     .forEach(h => cab.append(el('th', null, h)));
   thead.append(cab);
   tbody.append(...[...ss].reverse().map(s => {
     const l = el('tr'), td1 = el('td'), a = el('a', null, `${ddmm(diaDe(s))} · ${(s.inicio || '').slice(0, 5)}`);
     a.href = `/hunt?h=${encodeURIComponent(s.id)}`; a.title = 'abrir a análise desta sessão';
     td1.append(a);
-    const raw = el('td'); raw.append(el('b', null, taxa(s, 'raw_h') ? `${virg(taxa(s, 'raw_h') / 1e6)} kk` : '–'));
+    const raw = el('td'); raw.append(el('b', null, taxa(s, 'raw_h') != null ? `${virg(taxa(s, 'raw_h') / 1e6)} kk` : '–'));
+    if (s.xp_origens?.includes('Registro antigo')) raw.append(el('small', 'origem-xp', 'Registro antigo'));
+    raw.title = (s.xp_origens || []).join(' · ');
+    const final = s.xp_paineis_finais?.at(-1), painel = el('td');
+    if (final) {
+      painel.append(el('b', null, `${virg(final.raw_h / 1e6)} kk/h`), el('small', 'origem-xp', `${final.origem} · ${final.horario}`));
+      painel.title = `${kk(final.raw_xp_gain)} acumulados no painel. ${final.limite || ''}`;
+    } else painel.textContent = '–';
     const falta = s.taxas ? s.taxas.voltas - s.taxas.voltas_raw : 0;
     const vts = el('td', null, String(s.voltas));
     if (falta) { vts.title = `${falta} volta(s) sem leitura do painel: ficam fora da raw/h`; vts.textContent += ` (−${falta})`; }
     // supplies: da pt e seus em colunas separadas — uma coluna só trocava de significado entre
     // sessões em pt e solo sem dizer nada (user, 24/09: tudo da mesma fonte)
-    l.append(td1, el('td', null, s.hunt), el('td', null, s.pt || s.char || '—'),
-             el('td', null, durc(s.dur_s || 0)), vts, raw,
+    l.append(td1, el('td', null, s.hunt), el('td', null, s.pt || 'modalidade não lida'),
+             el('td', null, durc(s.dur_s || 0)), vts, raw, painel,
              el('td', null, ouro(taxa(s, 'profit_h'))),
              el('td', null, ouro(taxa(s, 'sup_pt_h'))),
              el('td', null, ouro(taxa(s, 'sup_eu_h'))),
@@ -326,7 +352,7 @@ $('#btnDesligar').onclick = async () => {
 
 (async () => {
   $('#graficos').replaceChildren(...[
-    ['raw', 'XP raw/h', 'kk/h · raw ÷ tempo caçando'],
+    ['raw', 'XP raw/h', 'kk/h · voltas com leitura'],
     ['profit', 'Profit/h', 'balance ÷ tempo caçando'],
     ['sup', 'Supplies/h', 'gasto por hora'],
     ['bichos', 'Bichos/h', 'mortos por hora'],
@@ -353,7 +379,7 @@ $('#btnDesligar').onclick = async () => {
   $('#sub').textContent = TODAS.length
     ? `${TODAS.length} ${TODAS.length > 1 ? 'sessões guardadas' : 'sessão guardada'} · filtre por período e hunt para ver a pt evoluindo`
     : 'Nenhuma hunt guardada ainda: cada sessão entra aqui sozinha quando a hunt acaba.';
-  for (const [sel, chave] of [['#fhunt', s => s.hunt], ['#fquem', s => s.pt || s.char]]) {
+  for (const [sel, chave] of [['#fhunt', s => s.hunt], ['#fquem', s => s.pt || 'modalidade não lida']]) {
     [...new Set(TODAS.map(chave).filter(Boolean))].sort().forEach(v => $(sel).append(el('option', null, v)));
   }
   desenha();

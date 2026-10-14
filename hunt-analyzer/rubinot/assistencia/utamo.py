@@ -485,6 +485,60 @@ class Utamo:
         self.ult_apito = self.ult_caiu = self.ult_som = -10 ** 9
         self.historico = []                   # últimos apitos, para a tela
         self.erro = None
+        self.input_danos = collections.deque(maxlen=30)
+        self.observacao = None
+        self.diario = None
+        self.politica_contexto = None
+        self.vida_t = -10 ** 9
+        self.aprendizado_erro = None
+
+    def receber_observacao(self, sessao, char, contexto, recurso, raiz):
+        """Publicação do observador existente; uma referência atômica, sem captura."""
+        self.observacao = (str(sessao), char, dict(contexto), dict(recurso), str(raiz))
+
+    def _compartilhada(self):
+        obs = self.observacao
+        if not obs or obs[0] != self.pasta:
+            return None
+        _, char, contexto, r, raiz = obs
+        if not 0 <= time.time()-r.get('processado_em', 0) <= 6:
+            return None
+        if r.get('t', -1)<self.escudo_t:
+            return None
+        self.escudo_on, self.escudo_t = r.get('escudo'), r['t']
+        vida = r.get('vida') or {}
+        self.vida = vida.get('percentual')/100 if vida.get('percentual') is not None else None
+        self.vida_t = r['t']
+        total = r.get('paineis',{}).get('input',{}).get('total')
+        if total is not None and (not self.input_danos or r['t']>self.input_danos[-1][0]):
+            self.input_danos.append((r['t'],total))
+        contexto = {**contexto, 'char':char, 'nivel':self.nivel, 'regras_ativas':dict(self.regras)}
+        if self.politica_contexto != contexto or self.diario is None or self.diario.sessao != pathlib.Path(self.pasta).name:
+            from rubinot.adapters.diario_assistencia import Diario
+            try:
+                self.diario = Diario(raiz, pathlib.Path(self.pasta).name, contexto, NIVEIS[self.nivel]['escudo'], r['instante'])
+                self.politica_contexto = contexto
+            except (OSError, ValueError) as e:
+                self.aprendizado_erro = str(e)
+        return r
+
+    def _limites(self):
+        lim = dict(NIVEIS[self.nivel])
+        obs = self.observacao
+        contexto = {**obs[2], 'char':obs[1], 'nivel':self.nivel, 'regras_ativas':dict(self.regras)} if obs else None
+        if (self.diario and obs and obs[0]==self.pasta and contexto==self.politica_contexto
+                and self.diario.politica.get('promover')
+                and (obs[3].get('prontidao',{}).get('magic_shield') or {}).get('pronta') is True):
+            lim['escudo'] = self.diario.politica['escudo_s']
+        return lim
+
+    def _registrar(self, row):
+        if not self.diario:
+            return
+        try:
+            self.diario.guardar(row)
+        except (OSError, ValueError) as e:
+            self.aprendizado_erro = str(e)
 
     # ------------------------------------------------------------ ciclo de vida
 
@@ -540,6 +594,9 @@ class Utamo:
             # Encerrar/Iniciar hunt troca a sessão. Sem zerar aqui, o nome do último quadro lido
             # (HHMMSS) podia ser MAIOR que os da sessão nova e o auxiliador ficava mudo para sempre.
             self.pasta, self.visto, self.prev, self.agora = str(ses), None, [], None
+            self.diario = self.politica_contexto = None
+            self.vida_t = self.ult_som = self.ult_vida = self.ult_caiu = self.ult_apito = -10 ** 9
+            self.input_danos.clear()
             self.eventos.clear()
             self.trilha_pos, self.pos, self.box_ult = 0, None, {}
             self.barra, self.visto_f, self.vida = None, None, None
@@ -590,6 +647,10 @@ class Utamo:
         if toca:
             self.ult_som = t
         self._anota(motivo if toca else f"{motivo} (sem apito: outro alarme acabou de soar)", t)
+        self._registrar({'id':f'aviso:{t}:{motivo}', 'tipo':'aviso', 't':t, 'instante':time.time(),
+                         'motivo':motivo, 'emitido':bool(toca and self.som),
+                         'suprimido_por':'som_desligado' if not self.som else 'arbitragem' if not toca else None,
+                         'escudo':self.escudo(), 'vida':self.vida, 'sinais':self.sinais()})
         if toca and self.som:
             threading.Thread(target=apita, args=(caiu,), daemon=True).start()
         return toca
@@ -624,6 +685,16 @@ class Utamo:
     def _le_quadro(self, ses):
         """Quadro cheio mais novo (a gravação faz um a cada 4 s): barra de vida e ícone do escudo.
         Os dois saem da MESMA leitura — nada de abrir o PNG duas vezes."""
+        anterior_escudo = self.escudo_on
+        compartilhada = self._compartilhada()
+        if compartilhada is not None:
+            if self.escudo_on is True:
+                self.caiu_desde = None
+            elif self.escudo_on is False and anterior_escudo is True:
+                self.caiu_desde = self.escudo_t
+            elif self.escudo_on is None:
+                self.caiu_desde = None
+            return
         fs = sorted(pathlib.Path(ses).glob("f_*.png"))
         if not fs or fs[-1].name == self.visto_f:
             return
@@ -645,6 +716,7 @@ class Utamo:
         elif self.escudo_on:        # estava de pé no quadro anterior: a queda começa agora
             self.caiu_desde = t
         self.escudo_on, self.escudo_t = tem, t
+        self.vida_t = t
 
     def caido_ha(self):
         """Há quantos segundos o ícone do utamo está fora da tela. None = de pé, ou não sei."""
@@ -673,14 +745,32 @@ class Utamo:
             return
         while self.eventos and self.eventos[0][0] <= self.agora - JANELA_S:
             self.eventos.popleft()
+        recurso = self.observacao[3] if self.observacao and self.observacao[0]==self.pasta else {}
+        fresca = 0 <= self.agora-self.escudo_t <= 6
+        if not (recurso and 0 <= self.agora-recurso.get('t', -1e9) <= 6
+                and 0 <= time.time()-recurso.get('processado_em', 0) <= 6):
+            recurso = {}
+        pronta = (recurso.get('prontidao', {}).get('magic_shield') or {}).get('pronta') if fresca else None
+        caido = self.caido_ha()
+        if recurso and fresca and 0 <= self.agora-recurso['t'] <= 1:
+            self._registrar({'id':'observacao:'+str(recurso['id']), 'tipo':'observacao',
+                't':recurso['t'], 'instante':recurso['instante'], 'vida':self.vida,
+                'escudo':self.escudo(), 'caido_s':caido, 'pronta':pronta,
+                'certificado':recurso.get('escudo') is not None and (recurso.get('vida') or {}).get('percentual') is not None,
+                'combate':self.sinais()['dano']>0, 'dano':self.sinais()['dano'],
+                'som_recente':self.som and self.agora-self.ult_som<8, 'prova':recurso.get('origem')})
         # vida baixa vem antes de tudo (user, 28/09): medido, cruza 60% ~1x por hora
-        if (self.regras.get("vida") and self.vida is not None and self.vida <= VIDA_LIMITE
+        if (self.regras.get("vida") and self.vida is not None and 0 <= self.agora-self.vida_t <= 6 and self.vida <= VIDA_LIMITE
                 and self.agora - self.ult_vida >= VIDA_SILENCIO_S):
             self.ult_vida = self.agora
             self._apita(f"vida em {self.vida:.0%}")
             return
+        # Prontidão negativa comprovada cala pedido de recast, nunca emergência.
+        # Quadro futuro/antigo ou região ilegível não certifica escudo ausente.
+        if not fresca or pronta is False or self.escudo() is None:
+            return
         # o escudo caiu: o ícone do utamo sumiu e CONTINUA fora, com você apanhando (user, 29/09)
-        caido, lim = self.caido_ha(), NIVEIS[self.nivel]
+        caido, lim = self.caido_ha(), self._limites()
         if (self.regras.get("escudo_caiu") and caido is not None
                 and caiu_o_escudo(caido, self.sinais()["dano"], lim) and self._caiu(self.agora, caido)):
             return
@@ -700,7 +790,7 @@ class Utamo:
                           else f"{b['dano'] // 1000}k de dano tomado ali nas hunts anteriores")
                 self._apita(f"box pesada à frente e você está sem escudo ({quanto})", caiu=True)
                 return
-        motivo = dispara(self.sinais(), NIVEIS[self.nivel], self.regras)
+        motivo = dispara(self.sinais(), lim, self.regras)
         if motivo and not self.escudo() and self.agora - self.ult_apito >= SILENCIO_S:
             self._apita(motivo)
 
@@ -708,8 +798,13 @@ class Utamo:
 
     def sinais(self):
         e = self.eventos
-        return {"bichos": len({a for _, k, _, a in e if k == "damage_taken"}),
-                "dano": sum(v for _, k, v, _ in e if k == "damage_taken"),
+        dano = sum(v for _, k, v, _ in e if k == 'damage_taken'); origem = 'log_parcial'
+        rows = [(t,v) for t,v in self.input_danos if self.agora is not None and 0<=self.agora-t<=JANELA_S]
+        if (len(rows)>=2 and self.agora-rows[-1][0]<=3 and rows[-1][0]-rows[0][0]>=6
+                and all(0<b[0]-a[0]<=4 and b[1]>=a[1] for a,b in zip(rows,rows[1:]))):
+            dano = rows[-1][1]-rows[0][1]; origem = 'Input Analyser'
+        return {"dano_origem":origem, "bichos": len({a for _, k, _, a in e if k == "damage_taken"}),
+                "dano": dano,
                 "curas_outros": sum(1 for _, k, _, _ in e if k == "heal_other"),
                 "curas_eu": sum(1 for _, k, _, _ in e if k == "heal_self")}
 
@@ -726,7 +821,9 @@ class Utamo:
             hora = time.localtime()
             atraso = max(0, hora.tm_hour * 3600 + hora.tm_min * 60 + hora.tm_sec - self.agora)
         return {"ligado": self.ligado, "nivel": self.nivel, "som": self.som, "auto": self.auto,
-                "limites": NIVEIS[self.nivel], "janela_s": JANELA_S, "silencio_s": SILENCIO_S,
+                "limites": self._limites(), "janela_s": JANELA_S, "silencio_s": SILENCIO_S,
+                "aprendizado":self.diario.politica if self.diario else {'estado':'aguardando_observacao'},
+                "aprendizado_erro":self.aprendizado_erro,
                 "sinais": self.sinais(), "escudo": self.escudo(), "erro": self.erro,
                 "vida": self.vida, "boxes": len(self.boxes), "hunt": self.hunt,
                 "regras": self.regras, "lista_regras": [{"id": k, "nome": n, "texto": d} for k, n, d in REGRAS],

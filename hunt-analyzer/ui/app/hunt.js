@@ -200,17 +200,18 @@ function renderTiles() {
   const media = limpas.length ? limpas.reduce((a, v) => a + v.dur, 0) / limpas.length : null;
   const rapida = limpas.length ? limpas.reduce((a, v) => v.dur < a.dur ? v : a) : null;
   const lenta = limpas.length ? limpas.reduce((a, v) => v.dur > a.dur ? v : a) : null;
-  const tempo = vs.length ? vs[vs.length - 1].fim - vs[0].ini : null;
+  const intervalo = vs.length ? vs[vs.length - 1].fim - vs[0].ini : null;
+  const tempo = tempoSessao(D.sessao);
   const parciais = vs.filter(v => v.parcial).length;
   // refil (user, 22/09): quem mede é o motor — a ida ao depot nem chega a virar volta, então não
   // dá mais para contar "volta com refill" pelo tamanho dela
   const fechado = D.estado?.historico || D.estado?.gravando === false;
   const refis = (D.refis || []).filter(r => !fechado || (vs.length && !r.aberto && r.inicio >= vs[0].ini && r.fim < vs[vs.length-1].fim));
   const totalRefil = refis.reduce((s,r) => s + r.dur_s,0);
-  const R = fechado ? {n:refis.length,total_s:totalRefil,media_s:refis.length ? totalRefil/refis.length : 0,fracao:tempo ? totalRefil/tempo : 0} : D.refil || {};
+  const R = fechado ? {n:refis.length,total_s:totalRefil,media_s:refis.length ? totalRefil/refis.length : 0,fracao:intervalo ? totalRefil/intervalo : 0} : D.refil || {};
   const aberto = !fechado && refis.some(r => r.aberto);
   const dados = [
-    ['tempo de hunt', tempo != null ? `${Math.floor(Math.round(tempo / 60) / 60)}h${String(Math.round(tempo / 60) % 60).padStart(2, '0')}` : '—', vs.length ? `desde ${hms(vs[0].ini).slice(0, 5)}` : ''],
+    ['tempo de sessão', tempo != null ? `${Math.floor(tempo / 3600)}h${String(Math.floor(tempo / 60) % 60).padStart(2, '0')}` : '—', tempo != null ? 'Party Hunt · última leitura' : 'aguardando Party Hunt'],
     ['voltas', vs.length || '—', parciais ? `${parciais} parcia${parciais > 1 ? 'is' : 'l'}` : 'fechadas'],
     ['volta média', media ? dur(media) : '—', 'sem refill'],
     ['mais rápida', rapida ? dur(rapida.dur) : '—', rapida ? `volta ${rapida.n}` : ''],
@@ -390,7 +391,7 @@ function renderCabeca() {
   const pt = roster.size >= 2 ? `pt x${roster.size}` : S.pt;
   const nome = S.hunt || E.local || 'Hunt';   // o backend manda o nome; local = lugar pelo catálogo
   $('#huntNome').textContent = nome;
-  $('#huntSub').textContent = [E.local !== nome && E.local, S.data, S.char, pt,
+  $('#huntSub').textContent = [E.local !== nome && E.local, S.data, pt === 'solo' ? null : S.char, pt,
     D.sessoes_origem?.length > 1 && `${D.sessoes_origem.length} gravações reunidas`,
     E.historico ? 'hunt guardada, em modo leitura' : S.inicio && `gravação desde ${S.inicio}`].filter(Boolean).join(' · ') || '—';  // pt "" em solo
   const espera = !vs.length && !E.historico;   // hunt guardada sem volta fechada: a tela mostra o que tem
@@ -446,6 +447,10 @@ function renderAbaPainel() {
     ksVistos.add(chaveKS(ep)); abaPainel = 'ks';
     guardaPreferencia('hunt:ks-vistos:'+id,[...ksVistos]);
   }
+  const temKS = eps.length > 0;
+  if (!temKS) abaPainel = 'hunt';
+  $('.painel-tabs').hidden = !temKS;
+  $('#abaKS').disabled = !temKS;
   $('#painel').hidden = abaPainel !== 'hunt'; $('#ksPainel').hidden = abaPainel !== 'ks';
   for (const [id,aba] of [['abaHunt','hunt'],['abaKS','ks']]) {
     const b = $('#'+id), selecionada = abaPainel === aba;
@@ -455,7 +460,6 @@ function renderAbaPainel() {
       e.preventDefault(); const alvo = $('#'+(e.key === 'Home' ? 'abaHunt' : e.key === 'End' ? 'abaKS' : aba === 'hunt' ? 'abaKS' : 'abaHunt')); alvo.click(); alvo.focus();
     } };
   }
-  $('#abaKS').textContent = 'KS';
   $('.painel-alternavel').classList.toggle('aba-ks',abaPainel === 'ks');
   $('#abaKS').classList.toggle('ks-alerta',eps.some(e => e.aberto));
 }
@@ -466,10 +470,16 @@ function registroGuilda(ep) {
   if (!edicoes) { edicoes = lePreferencia(chave) || {}; rascunhosKS.set(chave,edicoes); }
   const segundo = h => (h || '00:00:00').split(':').reduce((s,n)=>s*60+Number(n),0);
   const g = ep.ganhos, ganhos = g && Math.abs(g.inicio_t-segundo(ep.inicio)) <= 5 && Math.abs(g.fim_t-ep.ultimo_t) <= 5 ? g : null;
-  const base = {chars:Object.keys(ep.dano?.fora || {}).join(', '), hunted:'', respawn:D.sessao?.hunt || '',
+  const charAtual = D.sessao?.char || D.estado?.char || '';
+  const nomesFora = Object.keys(ep.dano?.fora || {}).join(', ');
+  if(edicoes.versaoNomes!==2){
+    if(!edicoes.hunted)edicoes.hunted=edicoes.chars || nomesFora;
+    edicoes.chars=charAtual;edicoes.versaoNomes=2;guardaPreferencia(chave,edicoes);
+  }
+  const base = {chars:charAtual, hunted:nomesFora, respawn:D.sessao?.hunt || '',
     raw:ganhos?.xp_raw ?? '', gold:ganhos?.loot ?? '', inicio:(ep.inicio || '').slice(0,5),
     fim:(ep.fim || ep.ultimo_evento?.ts || '').slice(0,5), descricao:'', tankando:false};
-  const valores = {...base,...edicoes}, form = el('div','ks-guilda');
+  const valores = {...base,...edicoes,chars:charAtual}, form = el('div','ks-guilda');
   form.append(el('div','rotulo','Dados para a guilda'));
   const status = el('p','ks-note'); status.setAttribute('role','status');
   const altera = (key,value) => { edicoes[key] = value; valores[key] = value;
@@ -480,6 +490,7 @@ function registroGuilda(ep) {
     wrap.append(el('span',null,label));
     if (tipo !== 'textarea') input.type = tipo;
     input.value = valores[key];
+    if(key==='chars')input.readOnly=true;
     if (tipo === 'number') { input.min = '0'; input.step = '1'; input.placeholder = 'Sem leitura · preencher'; }
     if (tipo === 'textarea') input.maxLength = 500;
     input.addEventListener('input',() => { altera(key,input.value); if (key === 'descricao') ajuda.textContent = `${input.value.length}/500 caracteres`;
@@ -488,10 +499,10 @@ function registroGuilda(ep) {
       : tipo === 'number' ? key in edicoes ? 'Informado por você.' : valores[key] === '' ? 'Sem leitura desse período.' : 'Leitura dos painéis.' : nota);
     wrap.append(input,ajuda); return wrap;
   }
-  form.append(campo('chars','Chars da PT que deu KS','text','Nomes detectados no dano de fora da party. Separe os nomes por vírgula.'),
-    campo('hunted','Chars oprimidos (hunted)','text','Preencha se houver. Pode informar mais de um.'),campo('respawn','Respawn'));
+  form.append(campo('chars','Chars da PT que deu KS','text','Seu personagem nesta hunt.'),
+    campo('hunted','Chars oprimidos (hunted)','text','Nomes detectados fora da sua party. Pode informar mais de um.'),campo('respawn','Respawn'));
   const camposGanhos = el('div','ks-dupla'); camposGanhos.append(campo('raw','Raw XP Gain','number'),campo('gold','Gold total','number')); form.append(camposGanhos,
-    el('p','ks-note','XP raw do seu personagem e gold (loot) da sua party/solo durante o KS. Leituras automáticas usam quadros próximos dos horários, com até 5 s de diferença em cada ponta. Sem leitura, preencha pelos painéis do jogo.'));
+    el('p','ks-note','XP ganha = XP raw final − inicial, no XP Analyser. Gold = loot final − inicial, no Party Hunt ou painel solo. Leituras até 5 s de cada ponta do KS; sem duas leituras válidas, o campo fica sem informação.'));
   const horas = el('div','ks-dupla'); horas.append(campo('inicio','Início do KS','time'),campo('fim','Término do KS','time',ep.aberto ? 'Horário do último dano registrado; acompanha novos golpes.' : 'Horário do último dano registrado na prova.')); form.append(horas,campo('descricao','Descrição','textarea'));
   if (ganhos?.limite) form.append(el('p','ks-note',ganhos.limite));
   const tank = el('label','ks-tank'), check = el('input'); check.type='checkbox'; check.checked=Boolean(valores.tankando);
@@ -517,29 +528,48 @@ function renderPartyDano() {
   const roster = [...(k.party || []), ...(k.sessoes || []).flatMap(s => s.party || [])];
   const chaveNome = n => n.replace(/\s+/g, '').toLocaleLowerCase();
   for (const nome of roster) if (!pessoas.some(p => chaveNome(p.nome) === chaveNome(nome))) pessoas.push({nome});
-  painel.hidden = !pessoas.some(p => p.dano != null || p.dano_observado != null);
+  painel.hidden = !pessoas.some(p => p.dano != null || p.cura != null || p.dano_observado != null);
   if (painel.hidden) { painel.replaceChildren(); return; }
   const titulo = el('div', 'secao-tit');
-  titulo.append(el('h2', null, 'Dano individual da party'), el('span', 'sub', 'acumulado do Party Hunt · extras do Server Log'));
+  const fonte = stats.fonte_dano || 'Party Hunt';
+  titulo.append(el('h2', null, fonte === 'Hunt Analyser' ? 'Dano solo' : 'Dano da party'));
   const filhos = [titulo];
   const numero = v => v == null ? '—' : v.toLocaleString('pt-BR');
   const porcento = v => v == null ? '—' : v.toLocaleString('pt-BR', {maximumFractionDigits:1}) + '%';
-  if (pessoas.length) {
-    const wrap = el('div', 'rolagem'), tabela = el('table'), head = el('thead'), linha = el('tr');
-    for (const nome of ['Jogador','Dano · painel','Participação','Profit · painel','Cura · painel','Golpes lidos','Críticos','Críticos %','Fatais','Fatais %','Maior golpe lido']) linha.append(el('th',null,nome));
-    head.append(linha); tabela.append(head);
-    const corpo = el('tbody');
-    for (const p of pessoas) {
-      const tr = el('tr');
-      for (const v of [p.nome, p.dano == null ? '—' : kk(p.dano), porcento(p.participacao), p.profit == null ? '—' : kk(p.profit), p.cura == null ? '—' : kk(p.cura), numero(p.golpes), numero(p.criticos), porcento(p.criticos_pct), numero(p.fatais), porcento(p.fatais_pct), p.maior_golpe == null ? '—' : kk(p.maior_golpe)]) tr.append(el('td',null,v));
-      tr.title = `Dano dos golpes críticos: ${p.dano_critico == null ? 'sem leitura' : kk(p.dano_critico)} · Dano dos golpes fatais: ${p.dano_fatal == null ? 'sem leitura' : kk(p.dano_fatal)}`;
-      corpo.append(tr);
+  const colunas = ['Jogador', 'Dano', 'Participação', 'Críticos', 'Fatais', 'Maior golpe'];
+  const tabela = el('table'), head = el('thead'), linha = el('tr');
+  tabela.setAttribute('aria-label', fonte === 'Hunt Analyser' ? 'Dano solo' : 'Dano da party');
+  for (const nome of colunas) {
+    const th = el('th'); th.scope = 'col';
+    const rotulo = el('span', 'party-campo');
+    if (nome === 'Críticos' || nome === 'Fatais') {
+      const img = el('img', 'party-efeito'); img.src = `/ui/party_${nome === 'Críticos' ? 'critico' : 'fatal'}.png`;
+      img.alt = ''; img.width = 32; img.height = 32; rotulo.append(img);
+    } else if (nome !== 'Jogador') {
+      const icone = el('span', 'party-simbolo', {Dano:'⚔',Participação:'◔','Maior golpe':'◆'}[nome]);
+      icone.setAttribute('aria-hidden','true'); rotulo.append(icone);
     }
-    tabela.append(corpo); wrap.append(tabela); filhos.push(wrap);
-  } else filhos.push(el('p','sub','Aguardando a identificação da party e golpes legíveis no Server Log.'));
-  const totais = ['loot','supplies','profit'].filter(c => stats[c] != null).map(c => `${{loot:'Loot da pt',supplies:'Supplies da pt',profit:'Profit da pt'}[c]}: ${kk(stats[c])}`);
-  if (totais.length) filhos.push(el('p','sub',totais.join(' · ') + (stats.tipo ? ` · ${stats.tipo}` : '')));
-  filhos.push(el('p','sub','Dano, participação, profit e cura vêm do Party Hunt visível, incluindo o acumulado anterior à abertura do analisador. Críticos, fatais (Onslaught), golpes e maior golpe vêm apenas das linhas lidas no Server Log; são parciais e contam por alvo. Crítico e fatal podem ocorrer juntos. — indica informação não medida.'));
+    rotulo.append(el('span', null, nome)); th.append(rotulo); linha.append(th);
+  }
+  head.append(linha); tabela.append(head);
+  const corpo = el('tbody');
+  for (const p of pessoas) {
+    const tr = el('tr');
+    const valores = [p.nome, p.dano == null ? '—' : kk(p.dano), porcento(p.participacao), numero(p.criticos), numero(p.fatais), p.maior_golpe == null ? '—' : kk(p.maior_golpe)];
+    valores.forEach((v, i) => {
+      const td = el('td'); td.dataset.label = colunas[i];
+      td.append(el('span', 'party-valor', v));
+      if (i === 3 || i === 4) td.append(el('small', 'party-percentual', porcento(i === 3 ? p.criticos_pct : p.fatais_pct)));
+      if (i === 2 && p.participacao != null) {
+        const barra = el('span', 'party-participacao'), fill = el('span');
+        fill.style.width = `${Math.max(0,Math.min(100,p.participacao))}%`; barra.append(fill); td.append(barra);
+      }
+      tr.append(td);
+    });
+    tr.title = `Dano dos golpes críticos: ${p.dano_critico == null ? 'sem leitura' : kk(p.dano_critico)} · Dano dos golpes fatais: ${p.dano_fatal == null ? 'sem leitura' : kk(p.dano_fatal)}`;
+    corpo.append(tr);
+  }
+  tabela.append(corpo); filhos.push(tabela);
   painel.replaceChildren(...filhos);
 }
 function renderKS() {
@@ -666,13 +696,14 @@ function renderEstado(vs, E) {
   }));
   relogio();
 }
-function relogio() {              // tempo desde o início da hunt (ou da gravação), pelo relógio do PC
-  const E = D?.estado || {}, ref = E.hunt_comecou || E.desde, mostra = !semResposta && E.gravando && !!ref;
+function relogio() {              // Session do Party Hunt, sem avançar além do que foi lido.
+  const E = D?.estado || {}, sessao = D?.sessao || {};
+  const seg = tempoSessao(sessao);
+  const mostra = !semResposta && E.gravando && seg != null;
   $('#relogio').style.display = mostra ? '' : 'none';
   if (!mostra) return;
-  const [h, m, s] = ref.split(':').map(Number), d = new Date();
-  const seg = ((d.getHours() - h) * 3600 + (d.getMinutes() - m) * 60 + d.getSeconds() - s + 86400) % 86400;   // passa da meia-noite
-  $('#relogio').textContent = seg >= 3600 ? hms(seg) : hms(seg).slice(3);
+  $('#relogio').textContent = `${Math.floor(seg / 3600)}h${String(Math.floor(seg / 60) % 60).padStart(2, '0')}`;
+  $('#relogio').title = 'Session do Party Hunt · última leitura, precisão de 1 minuto';
 }
 // ------------------------------------------------------------ monstros (user, 21/09): o programa cataloga sozinho pelo
 // TibiaWiki e separa pelas classes do Bestiary; cada monstro é uma linha que abre com o que ele toma, bate e dropa
@@ -680,7 +711,9 @@ const CATALOGO = {}, abertos = new Set();
 const milhar = v => v == null ? '?' : v.toLocaleString('pt-BR');
 const classeToma = p => p == null || p === 100 ? '' : p === 0 ? 'imune' : p > 100 ? 'fraco' : 'resiste';
 // a MESMA lista do resumo guardado e dos bichos da capa do histórico (ui/taxas.js = ao_vivo.especies)
-const monstrosDaHunt = () => D.area_atual?.especies || Object.keys(especiesDe(voltasVisiveis()));
+const monstrosDaHunt = () => [...new Set([
+  ...Object.keys(especiesDe(voltasVisiveis())), ...(D.area_atual?.especies || [])
+])];
 function pedeMonstro(nome) {      // o servidor devolve do catálogo ou busca no TibiaWiki e guarda
   if (CATALOGO[nome]) return;
   CATALOGO[nome] = {buscando: true};
@@ -762,7 +795,11 @@ async function abreLista() {
   let r = null;
   try { r = await (await fetch('/api/historico', {cache: 'no-store'})).json(); } catch { }
   if (!r) return erroHist('Sem resposta do programa: confira no painel de controle se o analisador está ligado.');
-  const ss = r.sessoes || [];
+  let ss = r.sessoes || [];
+  try{
+    const correcao=await fetch('/ui/party_correcoes.json',{cache:'no-store'});
+    if(correcao.ok)ss=HuntCorrecoesParty.lista(ss,await correcao.json());
+  }catch{ /* Sem revisão, conservar os metadados do histórico. */ }
   $('#huntNome').textContent = 'Histórico';
   $('#huntSub').textContent = ss.length
     ? `${ss.length} ${ss.length > 1 ? 'sessões guardadas' : 'sessão guardada'} · clique num quadrado para abrir a análise dela`
@@ -775,6 +812,7 @@ async function abreSessao(id) {
   if (!d?.estado) return erroHist(d?.erro ? `Esta hunt não está mais guardada (${d.erro}).` : 'Sem resposta do programa ao abrir a hunt guardada.');
   D = Object.fromEntries(Object.entries(VAZIO).map(([k, v]) => [k, d[k] ?? v]));
   D.voltas = D.voltas.filter(v => (v.tipo || 'volta') === 'volta');
+  await aplicaCorrecoesParty(D);
   await aplicaAjustesMapa(D);
       await carregaFundos();
   mostradas = D.voltas.length;
@@ -833,6 +871,16 @@ async function aplicaAjustesMapa(dados){
   return dados;
 }
 let semResposta = false, assinatura = null, desligou = false;
+async function aplicaCorrecoesParty(dados){
+  try{
+    const r=await fetch('/ui/party_correcoes.json',{cache:'no-store'});
+    if(r.ok)HuntCorrecoesParty.aplicar(dados,await r.json());
+  }catch{ /* Sem declaração, conservar o relatório observado. */ }
+  try{
+    const r=await fetch('/ui/xp_releituras.json',{cache:'no-store'});
+    if(r.ok)HuntReleiturasXP.aplicar(dados,await r.json());
+  }catch{ /* Sem prova de releitura, preservar lacunas. */ }
+}
 async function busca() {
   if (desligou) return;
   try {
@@ -843,6 +891,7 @@ async function busca() {
       D = Object.fromEntries(Object.entries(VAZIO).map(([k, v]) => [k, novo[k] ?? v]));
       // deslocamento e refil não são volta (user, 22/09): o motor já separa, isto é a garantia da tela
       D.voltas = D.voltas.filter(v => (v.tipo || 'volta') === 'volta');
+      await aplicaCorrecoesParty(D);
       await aplicaAjustesMapa(D);
       await carregaFundos();
     }

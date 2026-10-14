@@ -1,0 +1,53 @@
+const assert=require('node:assert/strict');
+const C=require('./ui/shared/correcoes_party.js');
+const declaracoes={s:{origem:'usuario',aliados:['Aliado']}};
+const original={sessao:'s',party:['Eu'],episodios:[{id:'1',dano:{fora:{Aliado:{dano:10}}}},
+  {id:'2',dano:{fora:{Aliado:{dano:5},Intruso:{dano:20}}}}]};
+const copia=JSON.stringify(original),r=C.corrigir(original,declaracoes);
+assert.equal(JSON.stringify(original),copia);
+assert.deepEqual(r.episodios.map(e=>e.id),['2']);
+assert.deepEqual(Object.keys(r.episodios[0].dano.fora),['Intruso']);
+assert.equal(r.episodios_reclassificados[0].id,'1');
+assert.equal(C.corrigir(r,declaracoes).episodios_reclassificados.length,1);
+assert.equal(C.corrigir({...original,sessao:'outra'},declaracoes).episodios.length,2);
+assert.equal(C.corrigir(original,{s:{origem:'inferido',aliados:['Aliado']}}),original);
+const hist={ks:{sessoes:[original,{...original,sessao:'outra'}]}};
+C.aplicar(hist,declaracoes);assert.equal(hist.ks.episodios.length,3);
+console.log('Correções explícitas de party: passou');
+const recuperado={id:'real',origem:'releitura_server_log',inicio:'08:45:48',fim:'08:45:48',
+  prova_inicio:{sha256_log_original:'prova'},dano:{party:{},fora:{Hectera:{dano:1039}}}};
+const declaracaoReal={s:{...declaracoes.s,episodios_recuperados:[recuperado]}};
+const real=C.corrigir(original,declaracaoReal);
+assert.equal(real.episodios.filter(e=>e.id==='real').length,1);
+assert.equal(C.corrigir(real,declaracaoReal).episodios.filter(e=>e.id==='real').length,1);
+assert.equal(C.corrigir({...original,sessao:'outra'},declaracaoReal).episodios.length,2);
+assert.equal(C.corrigir(original,{s:{...declaracoes.s,episodios_recuperados:[{...recuperado,prova_inicio:{}}]}}).episodios.length,1);
+const XP=require('./ui/shared/releituras_xp.js');
+const xp={s:{voltas:{'1|10|20':{xp_origem:'XP Analyser',xp_raw:0,provas:['quadro']}}}};
+const dados={estado:{sessao:'s'},voltas:[{n:1,ini:10,fim:20,xp_raw:null},{n:1,ini:10,fim:21,xp_raw:null}]};
+XP.aplicar(dados,xp);assert.equal(dados.voltas[0].xp_raw,0);assert.equal(dados.voltas[1].xp_raw,null);
+assert.equal(XP.aplicar({estado:{sessao:'outra'},voltas:[]},xp).voltas.length,0);
+const relido={origem:'releitura_paineis_e_console',provas:['quadro'],party_paineis:[{t:20}],
+  dano_hunt_observado:{party:{Aliado:{dano:50}}},estatisticas_party:{jogadores:[{nome:'Aliado',dano:100}]}};
+const dCompleta={s:{...declaracoes.s,relatorio_releitura:relido,
+  contexto_confirmado:{origem:'usuario',hazard:5,provas:['imagem']}}};
+const completo={estado:{sessao:'s'},ks:{sessoes:[original]}};
+C.aplicar(completo,dCompleta);
+assert.equal(completo.ks.estatisticas_party.jogadores[0].dano,100);
+assert.equal(completo.estado.hazard_confirmado.hazard,5);
+assert.equal(JSON.stringify(original),copia);
+const semProva=C.corrigir(original,{s:{...declaracoes.s,relatorio_releitura:{...relido,provas:[]}}});
+assert.equal(semProva.estatisticas_party,undefined);
+const outra={estado:{sessao:'outra'},ks:{sessoes:[{...original,sessao:'outra'}]}};
+C.aplicar(outra,dCompleta);assert.equal(outra.estado.hazard_confirmado,undefined);
+const semImpacto=C.corrigir(real,{s:{...declaracaoReal.s,episodios_baixo_impacto:['real']}});
+assert.equal(semImpacto.episodios.some(e=>e.id==='real'),false);
+assert.equal(semImpacto.episodios_ocultos[0].id,'real');
+assert.equal(C.corrigir(semImpacto,{s:{...declaracaoReal.s,episodios_baixo_impacto:['real']}}).episodios_ocultos.length,1);
+const metadados={_historico:{'hunt/id':{origem:'relatorios_ks_efetivos',pt:'pt x4',tem_ks:true,ks_episodios:1}}};
+const linhaOriginal={id:'hunt/id',pt:'pt x3',fechada:true};
+const listada=C.lista([linhaOriginal,{...linhaOriginal,id:'outra/id'}],metadados);
+assert.equal(listada[0].pt,'pt x4');assert.equal(listada[0].tem_ks,true);
+assert.equal(listada[1].pt,'pt x3');assert.equal(linhaOriginal.pt,'pt x3');
+assert.equal(C.lista([{...linhaOriginal,fechada:false}],metadados)[0].pt,'pt x3');
+assert.equal(C.lista([{...linhaOriginal,tem_ks:false}],metadados)[0].tem_ks,false);

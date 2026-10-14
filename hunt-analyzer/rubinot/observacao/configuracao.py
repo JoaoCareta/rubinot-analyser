@@ -44,6 +44,16 @@ def linhas(imagem):
         for x0, x1 in zip(inicios, finais):
             texto = nameplates.decode_shape(banda[:, x0:x1], *_atlas)
             out.append({'x': x0, 'y': ini, 'texto': texto})
+    # Botões à esquerda podem unir bandas verticais e esconder uma linha de
+    # Vessels. Relê somente o painel ancorado, sem adivinhar texto ou valores.
+    vessels = next((l for l in out if l['texto'] == 'Vessels'), None)
+    revelation = next((l for l in out if l['texto'] == 'Revelation Perks'), None)
+    if vessels and revelation and revelation['y'] > vessels['y'] + 16:
+        x0, y0, y1 = max(0, vessels['x'] - 100), vessels['y'] + 16, revelation['y'] - 2
+        painel = linhas(imagem.crop((x0, y0, imagem.width, y1)))
+        out = [l for l in out if not (l['x'] >= x0 and y0 <= l['y'] < y1)]
+        out.extend({**l, 'x': l['x'] + x0, 'y': l['y'] + y0} for l in painel)
+        out.sort(key=lambda l: (l['y'], l['x']))
     return out
 
 
@@ -152,13 +162,32 @@ def roda_da_imagem(imagem, textos, campos):
             'selection.efeito_ativo_confirmado':False}
 
 
+def ancora_cura(textos):
+    """A barra tem duas abas; só o conteúdo de Cura comprova a aba aberta.
+
+    RTCaster é uma âncora alternativa estável na mesma barra. Um título
+    isolado (inclusive Cura na aba inativa) não identifica este painel.
+    """
+    for titulo in textos:
+        if titulo['texto'] not in ('Cura', 'RTCaster'):
+            continue
+        tx = titulo['x'] - (203 if titulo['texto'] == 'Cura' else 594)
+        ty = titulo['y'] - 41
+        if all(any(l['texto'] == nome and abs(l['x']-tx-x) <= 3
+                   and abs(l['y']-ty-81) <= 3 for l in textos)
+               for nome, x in (('Cura por magia', 278), ('Treino de mana', 665))):
+            return titulo
+    return None
+
+
 def cura_da_imagem(imagem, textos):
-    titulo = next((l for l in textos if l['texto'] == 'Cura' and l['y'] < 80), None)
-    if not titulo or not any(l['texto'] == 'Cura por magia' for l in textos):
+    titulo = ancora_cura(textos)
+    if not titulo:
         return {}, []
     refs = _json(AQUI/'ui'/'janelas_referencias.json').get('cura_icones', {})
     arr = np.asarray(imagem.convert('RGB'))
-    tx, ty = titulo['x']-203, titulo['y']-41
+    tx = titulo['x']-(203 if titulo['texto'] == 'Cura' else 594)
+    ty = titulo['y']-41
     def patch(x,y,w,h):
         x,y=x+tx,y+ty
         return arr[y:y+h,x:x+w] if x>=0 and y>=0 and x+w<=arr.shape[1] and y+h<=arr.shape[0] else None
@@ -176,7 +205,9 @@ def cura_da_imagem(imagem, textos):
         import leitura_jogo
         key=leitura_jogo.icone(icon,refs,_json(AQUI/'ui'/'magias.json').get('magias',[]),AQUI)
         if key:ident=key if key!='vazio' else None;estado='icone_identificado' if ident else 'vazio_confirmado'
-        pct=next((l['texto'] for l in textos if abs(l['y']-ty-(111,148,199)[i])<4 and abs(l['x']-tx-319)<4), '')
+        # O início de uma linha global varia com textos das outras colunas.
+        # Ler o próprio campo impede que a legenda à esquerda esconda 70%.
+        pct=texto(310,(105,149,193)[i],44,18) or ''
         m=re.fullmatch(r'(\d{1,3})%',pct)
         slots.append({'tipo':'autocura','slot':i+1,'id':ident,'estado':estado,
                       'vida_percent':int(m[1]) if m and int(m[1])<=100 else None,'atual':True})
@@ -184,7 +215,7 @@ def cura_da_imagem(imagem, textos):
         rec=patch(x+2,269,108,105)
         nomes='\n'.join(l['texto'] for l in linhas(Image.fromarray(rec))) if rec is not None else None
         # Uma lista pode ter nomes ilegíveis: não atribuir a EK/RP pelo nome.
-        campos[magia+'.destinos_texto']=nomes if nomes and '?' not in nomes else None
+        campos[magia+'.destinos_texto']=nomes or None
         for i,y in enumerate((284,340)):
             p=patch(x+178,y,12,12)
             ativo=None
@@ -231,10 +262,20 @@ def campos_das_linhas(tipo, textos):
         cabecalhos = [(l['y'], l.get('x', 0), grupos[l['texto'].strip()]) for l in textos if l['texto'].strip() in grupos]
         rotulos = {'Hit Points', 'Mana', 'Capacity', 'Mitigation Mult.', 'Magic Skill Boost',
                    'Aug. Forked Spells', 'Aug. Mass Healing', 'Aug. Heal Friend', 'Aug. Strong Ice Wave',
-                   'VR Top Left', 'VR Bottom Left', 'VR Bottom Right', 'Healing Link', 'Damage and Healing', 'Ice', 'Fire', 'Energy', 'Earth',
-                   'Avatar of Nature', 'Twin Bursts', 'Gift of Life'}
+                   'VR Top Left', 'VR Top Right', 'VR Bottom Left', 'VR Bottom Right', 'Healing Link', 'Damage and Healing', 'Ice', 'Fire', 'Energy', 'Earth',
+                   'Avatar of Nature', 'Twin Bursts', 'Gift of Life', 'Blessing of the Grove', 'Strong Ice Wave', 'Heal Friend'}
+        # Abreviações fixas do painel identificam o benefício, não o domínio,
+        # grau ou identidade da gema. Nunca completar texto arbitrário/ilegível.
+        aliases = {'Blessing of the Gr...': 'Blessing of the Grove', 'Strong Ice Wa...': 'Strong Ice Wave'}
         for l in textos:
-            nome = l['texto'].strip()
+            # O leitor pode unir rótulo e valor próximos; exigir a linha inteira
+            # e o grupo correto, sem interpretar '?' ou descrição selecionada.
+            unido = re.fullmatch(r'Blessing of\s*the Gr\.\.\. (Stage [1-3]|Locked)', l['texto'].strip())
+            if unido:
+                anteriores = [(y, g) for y, x, g in cabecalhos if y < l['y'] and abs(x-l.get('x', 0)) < 120]
+                if anteriores and max(anteriores)[1] == 'revelation':
+                    campos['revelation.Blessing of the Grove'] = unido[1]
+            nome = aliases.get(l['texto'].strip(), l['texto'].strip())
             if nome not in rotulos:
                 continue
             prox = [v for v in textos if abs(v['y']-l['y']) <= 2 and v.get('x', 0) > l.get('x', 0)+80]
@@ -244,6 +285,8 @@ def campos_das_linhas(tipo, textos):
             anteriores = [(y, g) for y, x, g in cabecalhos if y < l['y'] and abs(x-l.get('x', 0)) < 120]
             if anteriores:
                 grupo = max(anteriores)[1]
+                if nome in ('Strong Ice Wave', 'Heal Friend') and (grupo != 'vessels' or not re.fullmatch(r'\+\d+(?:[.,]\d+)?%', prox[0]['texto'].strip())):
+                    continue
                 campos[f'{grupo}.{nome}'] = prox[0]['texto'].strip()
     for texto in limpas:
         m = re.fullmatch(r'(?:Current\s+)?Preset\s*:?\s*(.+)', texto, re.I)

@@ -46,7 +46,10 @@ def recortar(dados, areas):
                 v[medida] = None
         if v['fim']-inicio < 900:
             v.update(estabilizando=True, xp_raw_15min=None)
-        v['especies'] = {n: k for n, k in v.get('especies', {}).items() if n in areas[-1]['especies']}
+        # Dominantes reconhecem a área, mas não são uma lista exaustiva dos seus monstros.
+        # Só a volta que cruza a fronteira tem origem ambígua; as posteriores preservam raros.
+        if original['ini'] < inicio:
+            v['especies'] = {n: k for n, k in v.get('especies', {}).items() if n in areas[-1]['especies']}
         voltas.append(v)
     return {**dados, 'voltas': voltas, 'amostras': [p for p in dados.get('amostras', []) if p[0] >= inicio],
             'areas_hunt': areas, 'area_atual': areas[-1]}

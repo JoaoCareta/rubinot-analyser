@@ -20,7 +20,10 @@ class ArquiteturaTest(unittest.TestCase):
         self.assertEqual(violacoes_dominio('import math\ndef conta(x): return math.floor(x)'), [])
 
     def test_metricas_nao_importam_motor_ou_adaptadores(self):
-        for nome in ('rubinot/hunt/metricas.py', 'rubinot/planejamento/avaliacao.py', 'rubinot/configuracao_combate/concordancia.py'):
+        for nome in ('rubinot/hunt/metricas.py', 'rubinot/planejamento/avaliacao.py',
+                     'rubinot/planejamento/validacao.py', 'rubinot/planejamento/residual.py', 'rubinot/assistencia/aprendizado.py', 'rubinot/planejamento/efetividade.py',
+                     'rubinot/planejamento/oportunidades.py', 'rubinot/planejamento/previsao.py', 'rubinot/planejamento/sio.py', 'rubinot/planejamento/cura.py', 'rubinot/configuracao_combate/vigencia.py',
+                     'rubinot/configuracao_combate/concordancia.py', 'rubinot/planejamento/twin.py'):
             texto = pathlib.Path(nome).read_text(encoding='utf8')
             self.assertEqual(violacoes_dominio(texto), [], nome)
         for nome in ('rubinot/planejamento/registro.py', 'rubinot/planejamento/modelos.py'):

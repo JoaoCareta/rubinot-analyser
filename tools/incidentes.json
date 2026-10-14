@@ -1,0 +1,65 @@
+[
+  {
+    "id": "xp-historico-lacunas-20261014",
+    "aceite_e2e": "xp-historico-lacunas",
+    "criterio": "Raw antiga não é descartada por ausência de metadado; releituras comprovadas têm prioridade, lacunas interrompem a curva e zero medido permanece visível.",
+    "python": [
+      "tests.unit.test_fontes_paineis.FontesPaineisTest.test_historico_antigo_preserva_xp_com_origem_sem_regravar",
+      "tests.unit.test_fontes_paineis.FontesPaineisTest.test_historico_releitura_prioritaria_e_lacuna_atual"
+    ],
+    "suites": ["e2e"]
+  },
+  {
+    "id": "cura-feedback-historico-20261014",
+    "aceite_e2e": "cura-feedback-historico",
+    "criterio": "Feedback chega ao histórico pelo carregador e worker reais: 75/70/60; candidata não vira benefício validado.",
+    "suites": ["test_feedback_cura", "e2e"]
+  },
+  {
+    "id": "plunder-filtrado-20261014",
+    "aceite_e2e": "plunder-historico",
+    "criterio": "Espécie rara posterior à fronteira permanece visível; selo não vaza entre sessões nem representa abates.",
+    "python": ["tests.test_areas.AreasTest.test_recorte_preserva_raro_posterior_sem_trazer_area_anterior"],
+    "suites": ["e2e"]
+  },
+  {
+    "id": "xp-e-party-cortados-20261013",
+    "criterio": "Scrollbar não invalida XP; quarta linha cortada não certifica PT de três membros.",
+    "python": [
+      "tests.unit.test_paineis_adaptativos.PaineisAdaptativosTest.test_xp_segue_posicao_sem_calibracao_e_nao_inclui_scrollbar",
+      "tests.unit.test_paineis_adaptativos.PaineisAdaptativosTest.test_party_cortado_nao_vira_total_de_tres_membros"
+    ],
+    "suites": ["test_correcoes_party"]
+  },
+  {
+    "id": "rejeicao-roda-por-objetivo-20261014",
+    "aceite_e2e": "rejeicao-por-objetivo",
+    "criterio": "Roda rejeitada em Dano não é repetida nesse contexto; Cura mantém candidatas independentes.",
+    "suites": ["test_comparacao_roda", "e2e"]
+  },
+  {
+    "id": "barras-altura-zero-20261012",
+    "aceite_e2e": "barras-visiveis",
+    "criterio": "Preenchimentos têm altura efetiva nas duas posições; valores e cores permanecem coerentes.",
+    "suites": ["e2e"]
+  },
+  {
+    "id": "gravacoes-permanentes-20261014",
+    "aceite_e2e": "replay-com-lacunas",
+    "criterio": "Consumo concluído, pendência, falha e estado desconhecido não autorizam apagar gravações; replay preserva lacunas.",
+    "python": [
+      "tests.integration.test_retencao.RetencaoTest.test_limpeza_nunca_apaga_gravacoes_nem_apos_consumo",
+      "tests.integration.test_retencao.RetencaoTest.test_replay_preserva_lacunas_meia_noite_e_fallback"
+    ],
+    "suites": ["e2e"]
+  },
+  {
+    "id": "observacao-nao-confirma-adocao",
+    "criterio": "Leitura parcial e revisão obsoleta não confirmam configuração completa nem uso retroativo.",
+    "python": [
+      "tests.contracts.test_uso_detectado.UsoDetectadoTest.test_parcial_sem_roda_e_sem_sugestao",
+      "tests.contracts.test_uso_detectado.UsoDetectadoTest.test_frescor_sem_fase_duplicada_ou_confirmacao_retroativa"
+    ],
+    "suites": ["e2e"]
+  }
+]

@@ -21,7 +21,7 @@ const HuntTemporal=(()=>{
   if(!(duracao>0)||magias.some(m=>!valido(m.cd)||m.cd<=0||!valido(m.grupo)||m.grupo<=0))throw Error('Cooldown desconhecido');
   const estados=(contexto.janelas||[{t:0,fim:duracao,...contexto}]).filter(s=>s.valida!==false).sort((a,b)=>a.t-b.t);
   const pronta={...contexto.pronta},grupos={...contexto.grupos},casts={},castsAlvos={},efeitos={},sequencia=[],vida={},saude={};
-  let score=0,cura=0,excesso=0,manaGasta=0,validos=0,mortes=0,tempo_critico=0,vida_minima=100,mana=null,ultimaJanela=-Infinity,focusAte=-Infinity,converter=null;
+  let score=0,bonusFixoHp=0,cura=0,excesso=0,manaGasta=0,validos=0,mortes=0,tempo_critico=0,vida_minima=100,mana=null,ultimaJanela=-Infinity,focusAte=-Infinity,converter=null;
   const latencias=[],recuperacoes=[],inicioDano={},latencia=Math.max(0,contexto.modelo?.latencia_s??contexto.latencia_s??0);
   const membro=nome=>saude[nome]??(saude[nome]={mortes:0,tempo_critico:0,vida_minima:100,cobertura_s:0});
   const medir=(desde,ate)=>{const dt=Math.max(0,ate-Math.max(desde,inicio));if(dt)for(const [nome,v] of Object.entries(vida)){const pct=v.atual/v.maxima*100,r=membro(nome);r.cobertura_s+=dt;r.vida_minima=Math.min(r.vida_minima,pct);vida_minima=Math.min(vida_minima,pct);if(pct<30){tempo_critico+=dt;r.tempo_critico+=dt;}}};
@@ -93,6 +93,9 @@ const HuntTemporal=(()=>{
      // O rendimento aprendido é parcial e já inclui área/HP da build observada.
      // Não multiplicar de novo por alvos ou pelo bônus Twin da mesma amostra.
      valor=valido(s.potencia_ml?.[m.id])?s.potencia_ml[m.id]:ajustado*(principal+lateral*(m.beam_lateral||0))*bonus*beam;
+     // Bônus nominal em HP é uma dimensão separada do índice Base Power.
+     // Sem fórmula/calibração de HP não somar os dois nem prometer dano real.
+     if(t>=inicio)bonusFixoHp+=(m.dano_fixo_hp||0)*n;
      const lord=m.lord_destruction||0,postura=contexto.postura;
      let chance=contexto.critico_chance,extra=contexto.critico_extra;
      if(postura==='master_of_flames'&&elemento==='fire')valor*=1+.04+[0,.02,.03,.04][lord];
@@ -120,7 +123,7 @@ const HuntTemporal=(()=>{
    }
    medir(ultimoT,fim);ultimaJanela=fim;
   }
-  return {score,cura,excesso,manaGasta,efeitos,casts,castsAlvos,sequencia,mortes,tempo_critico,vida_minima,saude,
+  return {score,bonus_fixo_hp_nominal:bonusFixoHp,cura,excesso,manaGasta,efeitos,casts,castsAlvos,sequencia,mortes,tempo_critico,vida_minima,saude,
    recuperacao_media:recuperacoes.length?recuperacoes.reduce((a,b)=>a+b)/recuperacoes.length:null,
    atraso_medio:latencias.length?latencias.reduce((a,b)=>a+b)/latencias.length:null,
    duracao:duracao-inicio,segundos_validos:validos,frequencia:Object.fromEntries(magias.map(m=>[m.id,validos?(casts[m.id]||0)/validos*60:null])),porSegundo:validos?score/validos:null};
@@ -149,8 +152,8 @@ const HuntTemporal=(()=>{
   if(janelas.length<30||janelas.some((j,i)=>!valido(j.t)||!valido(j.fim)||j.fim<=j.t||j.fim-j.t>6||i&&Math.abs(j.t-janelas[i-1].fim)>.001||!j.dano||originais.some(m=>{
    const v=j.vida?.[m.alvo||'eu'];return !v||!valido(v.atual)||!valido(v.maxima)||v.maxima<=0||v.atual<0||v.atual>v.maxima;
   })))return inicial();
-  const corte=janelas[Math.floor(janelas.length*2/3)].t,fim=janelas.at(-1).fim;
-  if(corte-janelas[0].t<60||fim-corte<30)return inicial();
+  const corte=janelas[Math.floor(janelas.length/2)].t,testeDesde=janelas[Math.floor(janelas.length*3/4)].t,fim=janelas.at(-1).fim;
+  if(corte-janelas[0].t<60||testeDesde-corte<30||fim-testeDesde<30)return inicial();
   const treino=janelas.filter(j=>j.fim<=corte),ctxTreino={...contexto,janelas:treino};
   const avaliar=linhas=>simular(linhas,ctxTreino,{duracao:corte,sem_critico:true});
   let linhas=originais,melhor=avaliar(linhas);const baseTreino=melhor;
@@ -158,6 +161,7 @@ const HuntTemporal=(()=>{
   for(let rodada=0;rodada<2;rodada++){
    let escolhidas=linhas,resultado=melhor;
    for(let i=0;i<linhas.length;i++)if(!linhas[i].limiar_fixo)for(let pct=1;pct<=100;pct++){
+    if(valido(linhas[i].limiar_maximo_feedback)&&pct>linhas[i].limiar_maximo_feedback)continue;
     if(pct===linhas[i].vida_percent)continue;
     const teste=linhas.map((m,k)=>k===i?{...m,vida_percent:pct}:m);
     if(teste.filter((m,k)=>m.vida_percent!==originais[k].vida_percent).length>2)continue;
@@ -166,12 +170,15 @@ const HuntTemporal=(()=>{
    if(escolhidas===linhas)break;linhas=escolhidas;melhor=resultado;
   }
   // O prefixo aquece HP/cooldowns; só o período posterior entra nas métricas.
-  const validar=lista=>simular(lista,{...contexto,janelas},{inicio:corte,duracao:fim,sem_critico:true});
+  const selecionar=lista=>simular(lista,{...contexto,janelas:janelas.filter(j=>j.fim<=testeDesde)},{inicio:corte,duracao:testeDesde,sem_critico:true});
+  const selecaoAntes=selecionar(originais),selecaoDepois=selecionar(linhas);
+  if(comparar(selecaoDepois,selecaoAntes)<=0||!naoPiora(selecaoDepois,selecaoAntes))linhas=originais;
+  const validar=lista=>simular(lista,{...contexto,janelas},{inicio:testeDesde,duracao:fim,sem_critico:true});
   const antes=validar(originais),depois=validar(linhas);
   const aceita=comparar(melhor,baseTreino)>0&&comparar(depois,antes)>0
    &&naoPiora(depois,antes);
   const metricas=r=>Object.fromEntries(['mortes','tempo_critico','vida_minima','cura','excesso','manaGasta','segundos_validos'].map(k=>[k,r[k]]));
-  Object.assign(aprendizado,{estado:aceita?'aprendizado_validado':'validado_sem_melhoria',treino:treino.length,validacao:janelas.length-treino.length,treino_ate:corte,teste_desde:corte,
+  Object.assign(aprendizado,{estado:aceita?'aprendizado_validado':'validado_sem_melhoria',treino:treino.length,selecao:janelas.filter(j=>j.t>=corte&&j.fim<=testeDesde).length,validacao:janelas.filter(j=>j.t>=testeDesde).length,treino_ate:corte,selecao_ate:testeDesde,teste_desde:testeDesde,
    antes:metricas(antes),depois:metricas(depois),criterio:'sobrevivencia_sem_critico_cura_util_excesso_mana'});
   if(!aceita)linhas=originais;
   else aprendizado.ajustes=linhas.flatMap((m,i)=>m.vida_percent===originais[i].vida_percent?[]:[{id:m.id,alvo:m.alvo,vocacao_destino:m.vocacao_destino,antes:originais[i].vida_percent,depois:m.vida_percent}]);

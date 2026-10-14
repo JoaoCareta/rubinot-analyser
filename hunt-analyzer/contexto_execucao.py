@@ -112,7 +112,7 @@ def construir(char,sessao,eventos,quadros,party,magias,modelo=None):
     for e in eventos:
         nome=e.get('target') or e.get('alvo');voc=vocs.get(e.get('vocation','').casefold())
         if e.get('kind')=='player_info' and nome and voc and (nome.casefold() in conhecidos or nome.casefold() in destinos):
-            conhecidos[nome.casefold()]={'nome':nome,'vocacao':voc,'origem':'look_do_cliente','instante':e['t']}
+            conhecidos[nome.casefold()]={'nome':nome,'vocacao':voc,'origem':'look_do_cliente','instante':e['t'],'identidade_confirmada':True}
     party=list(conhecidos.values())
     potencias=collections.defaultdict(list);cobertura=collections.defaultdict(list)
     por_id={m['id']:m for m in magias}
@@ -162,7 +162,11 @@ def construir(char,sessao,eventos,quadros,party,magias,modelo=None):
     for q in quadros:atributos.update(q.get('atributos',{}))
     posturas=[e['magia_id'] for e in casts if e['magia_id'] in ('shared_conservation','elemental_synthesis','master_of_flames','master_of_thunder','master_of_decay')]
     if posturas:atributos['postura']=posturas[-1]
+    primeiro=next((q for q in quadros if q['t']>=desde),{})
+    pronta={ident:max(0,primeiro['t']-desde+v['restante_s']) for ident,v in primeiro.get('prontidao',{}).items()
+            if isinstance(v.get('restante_s'),(int,float))}
     return {'versao':2,'char':char,'sessao':sessao,'modelo_versao':(modelo or {}).get('versao'),
+            'pronta':pronta,
             'nivel':atributos.get('nivel'),'atributos':atributos,
             'cobertura':{m:statistics.median(v) for m,v in cobertura.items() if len(v)>=12} or None,
             'cura':{'potencia_hp':hp,'qualidade':qualidade,'janelas':janelas,'aliados':party,'postura':atributos.get('postura'),'critico_chance':atributos.get('critico_chance'),'critico_extra':atributos.get('critico_extra')},

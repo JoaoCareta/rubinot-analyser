@@ -38,7 +38,7 @@ class AprendizadoHunt(unittest.TestCase):
 
     def test_inventario_copias_e_taxas_oficiais(self):
         from ao_vivo import taxas
-        v={'dur':120,'tipo':'volta','xp_raw':1000,'profit':None,'sup_pt':None,'sup_eu':10,'bichos':2}
+        v={'dur':120,'tipo':'volta','xp_raw':1000,'xp_origem':'XP Analyser','profit':None,'sup_pt':None,'sup_eu':10,'bichos':2}
         resumo={'pasta':'session_20261012_060001','sessao':{'char':'char','hunt':'Hunt'},'voltas':[v]}
         for root in ('workspace','instalacao'):
             p=self.raiz/root/'hunt_data'/'hunt'/'sessoes'/'20261012_0600'

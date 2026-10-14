@@ -20,6 +20,9 @@ PROJETO = AQUI.parent / "hunt-analyzer"
 BUILD = AQUI / "build"
 DIST = BUILD / "hunt_launcher.dist"
 SAIDA = AQUI / "saida"
+sys.path.insert(0, str(AQUI.parent / 'tools'))
+from rastreabilidade import emitir_proveniencia, fontes, validar_proveniencia
+from verificar import impressao_runtime
 
 
 def valida_dados():
@@ -70,6 +73,12 @@ def main():
     mods, dados = valida_dados()
     BUILD.mkdir(exist_ok=True)
     SAIDA.mkdir(exist_ok=True)
+    fontes_inicio = fontes(AQUI.parent)
+    runtime_inicio = impressao_runtime()
+    proveniencia = BUILD / 'proveniencia.json'
+    if args.sem_compilar:
+        validar_proveniencia(DIST, json.loads(proveniencia.read_text(encoding='utf8')),
+                             fontes_inicio, runtime_inicio)
     if not args.sem_compilar:
         cmd = [sys.executable, "-m", "nuitka", "--mode=standalone", "--mingw64",
                # Caminhos 8.3 podem colidir com pastas virtualizadas do Windows.
@@ -120,6 +129,12 @@ def main():
         raise RuntimeError(f"Executável não passou no autoteste: {teste}")
     if pathlib.Path(teste["comando"][0]) != exe:
         raise RuntimeError(f"Subprocesso não aponta para o executável distribuído: {teste}")
+    if args.sem_compilar:
+        validar_proveniencia(DIST, json.loads(proveniencia.read_text(encoding='utf8')),
+                             fontes(AQUI.parent), impressao_runtime())
+    else:
+        emitir_proveniencia(DIST, proveniencia, fontes_inicio, fontes(AQUI.parent),
+                            runtime_inicio, impressao_runtime())
     if args.apenas_compilar:
         print(f'Aplicativo validado, sem instalador: {exe}')
         return

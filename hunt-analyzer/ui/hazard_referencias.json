@@ -1,0 +1,16 @@
+{
+  "versao": 1,
+  "icone_png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAABPElEQVR4nGPMk5BgYGB49Zfx+V+Gg++eM2AAYxUDFgiL5f+/g+9ezukvh8tNKu/P6yy8ffdB55SVDImi4mFCYgwMDHP6y/XY2MpzwstzwvXY2FZLSuqxsTEwMDgY2jJECYt58IsyMDDAJeAIYrCXtTuTMCezqiArAwNDXmdh89u3a8LCaoWFw5iZ4fb++/ePiZ+dSYYXJDSpvH9NWNjFvXsZGBjUBQRQFLGzMkI4eZ2FIatWQdg3P3yAK/r48SMLG0wRHDS/fcvAwBDGzDypvJ+BgeHTp09MjAwMX77/g6uAmOGZFrjq79+8zkIGBob///8zduvKlV5+BA8hSPBA2Nt27Fm386y6hApI0ePXvya9eIEZ1gwMDAHC4o+ZOKAh3q0rpyTBfvP1r0P3v/EwM0qxMUHEf/3//+PHNwAN93HsmJ2lqAAAAABJRU5ErkJggg==",
+  "mascara": [
+    2,
+    2,
+    10,
+    10
+  ],
+  "numero": [
+    13,
+    2,
+    38,
+    10
+  ]
+}

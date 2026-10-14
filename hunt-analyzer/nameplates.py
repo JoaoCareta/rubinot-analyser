@@ -34,7 +34,19 @@ def shape_index(glyphs):
     for key, ch in glyphs.items():
         top, w, rows = _json.loads(key)
         idx[_json.dumps([w, rows])][ch] += 1
-    return {k: c.most_common(1)[0][0] for k, c in idx.items()}
+    formas = {k: c.most_common(1)[0][0] for k, c in idx.items()}
+    # Fonte dos nomes no mundo: estas formas de 8 px diferem das de 9 px
+    # do console. Correspondência exata de pixels, nunca completar um nome
+    # desconhecido pelo nome esperado de um integrante.
+    for ch, w, rows in (
+        ('f', 5, [7,12,31,12,12,12,12,12]),
+        ('d', 6, [3,3,31,51,51,51,51,31]),
+        ('h', 6, [48,48,62,51,51,51,51,51]),
+        ('k', 6, [48,48,51,54,60,60,54,51]),
+        ('m', 8, [246,219,219,219,219,219]),
+    ):
+        formas.setdefault(_json.dumps([w, rows]), ch)
+    return formas
 
 
 def decode_shape(binary, sidx, space_gap=5):

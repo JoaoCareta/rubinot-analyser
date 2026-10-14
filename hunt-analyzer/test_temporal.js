@@ -2,6 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 global.HuntRTC=require('./ui/rtc.js');global.HuntRodaMotor=require('./ui/roda_motor.js');
 const T=global.HuntTemporal=require('./ui/temporal.js'),I=require('./ui/integracao.js');
 const ataque={id:'atk',cd:2,grupo:2,ajustado:100,tipo:'ofensiva',grupo_id:'ataque'};
+assert(I.ataque([{...ataque,creatures_recomendado:20}],{criaturas_histograma:{20:180}},{}).linhas.every(m=>m.creatures<=10));
 const vita={id:'vita',cd:1,grupo:1,cura_hp:100,tipo:'cura',grupo_id:'cura',alvo:'eu',vida_percent:100};
 let r=T.simular([ataque,vita],{janelas:[{t:0,fim:6,criaturas:1,alvos:{atk:1},vida:{eu:{atual:0,maxima:1000}}}]},{duracao:6});
 assert.equal(r.casts.atk,3);assert.equal(r.casts.vita,6);assert.equal(r.cura,600);assert.equal(r.frequencia.vita,60);
@@ -75,7 +76,7 @@ assert.equal(livre.cura.linhas.length,7);assert(livre.cura.linhas.every(m=>Numbe
 const rtcAntes=I.calcularRTC(cat,magias,ctx);
 const rodas={};
 for(const modo of ['vida','utamo'])for(const foco of ['dano','cura'])for(const tier of [0,1,2,3]){
-  const r=I.calcularRoda(cat,magias,ctx,foco,tier,{modo_vida:modo,finais:2,limite_ms:400});
+  const r=I.calcularRoda(cat,magias,{...ctx,pt:'solo'},foco,tier,{modo_vida:modo,finais:2,limite_ms:400});
   rodas[modo+'_'+foco+'_'+tier]=r;
   assert.equal(r.roda.estado,'Calculado');
   assert(HuntRTC.validarDistribuicao(cat,r.roda.pontos,ctx.total).ok);
@@ -132,12 +133,13 @@ const slotsCal=[{tipo:'magia',slot:1,icone_hash:'gelo',mana_percent:5,creatures:
 const escopoCal={char:ctx.char,sessao:ctx.sessao,preset:ctx.preset,rtc_chave:'magia:1:gelo:5:2:1'};
 const ctxCal={...ctx,observado:{...ctx.observado,rtc:{slots:slotsCal}},modelo:{rtc_calibracao:{escopo:escopoCal,intervalos_efetivos:{forked_glacier:{segundos:4,validacao:10,suporte_validacao:10}}}}};
 const rtcCal=I.calcularRTC(cat,magias,ctxCal).rtc;
-assert.equal(rtcCal.linhas.find(m=>m.id==='forked_glacier').cd,4);
+assert.equal(rtcCal.linhas.find(m=>m.id==='forked_glacier').cd,6);
+assert.equal(rtcCal.linhas.find(m=>m.id==='forked_glacier').cadencia_observada.segundos,4);
 assert.equal(I.calcularRTC(cat,magias,{...ctxCal,sessao:'outra'}).rtc.linhas.find(m=>m.id==='forked_glacier').cd,6);
 assert.equal(I.calcularRTC(cat,magias,{...ctxCal,preset:'outro'}).rtc.linhas.find(m=>m.id==='forked_glacier').cd,6);
 const mudou={...ctxCal,observado:{...ctxCal.observado,rtc:{slots:[{...slotsCal[0],prioridade:2}]}}};
 assert.equal(I.calcularRTC(cat,magias,mudou).rtc.linhas.find(m=>m.id==='forked_glacier').cd,6);
-console.log('Calibração RTC: intervalo efetivo validado e isolado por sessão/preset/campos.');
+console.log('Calibração RTC: cadência diagnóstica isolada; cooldown normativo preservado.');
 
 // Runa pronta em prioridade 2 ocupa os turnos de magia 3; ambos usam ataque.
 const magiaTurno={id:'wave',tipo:'ofensiva',runa:false,cd:4,grupo:2,grupo_id:'ataque',ajustado:140,creatures:2,prioridade:3};
@@ -254,3 +256,15 @@ for(const [dados,obs,voc] of [[huntAntiga,{...obsAntiga,referencia_atual:{...ref
   const c=I.contexto(dados,obs,voc);assert.equal(c.referencia_roda,'sessao');assert.deepEqual(c.observado.roda.campos,{});
 }
 console.log('Histórico: roda atual por personagem/vocação, Twin e isolamento das leituras aprovados.');
+const studySlots=[{id:'ice_burst',tipo:'magia',slot:1,creatures:8,prioridade:1,mana_percent:5,icone_hash:'twin'}];
+const studyFields={'revelation.Twin Bursts':{valor:'Stage 2',qualidade:'texto_integral'}};
+const study={origem:'replay_configuracao_observada',sessao:'fase',hazard:5,id:'ice_burst',limiar_atual:8,provas:['inicio','fim'],rtc_chave:'magia:1:twin:5:8:1',roda_chave:JSON.stringify([['revelation.Twin Bursts','Stage 2']]),resultados:[{limiar:2,score:90,score_conservador:9},{limiar:5,score:102,score_conservador:10.1},{limiar:8,score:100,score_conservador:10}]};
+const studyCtx={...semRoda,sessao:'fase',hazard:5,estudos_rtc:[study],observado:{roda:{campos:studyFields},rtc:{slots:studySlots}},sugestoes_cura:[{origem:'feedback_analisado',sessao:'fase',hazard:5,id:'heal_friend',vocacao_destino:'EK',anterior:80,vida_percent:90,provas:['vida']}]};
+const studyResult=I.calcularRTC(cat,magias,studyCtx);
+assert.equal(studyResult.rtc.linhas.find(m=>m.id==='ice_burst').creatures,5);
+assert.equal(studyResult.cura.linhas.find(m=>m.id==='heal_friend'&&m.vocacao_destino==='EK').vida_percent,90);
+assert.equal(I.calcularRTC(cat,magias,{...studyCtx,sessao:'outra'}).rtc.estudo,undefined);
+assert.equal(I.calcularRTC(cat,magias,{...studyCtx,hazard:4}).rtc.estudo,undefined);
+assert.equal(I.calcularRTC(cat,magias,{...studyCtx,estudos_rtc:[{...study,provas:[]}]}).rtc.estudo,undefined);
+assert.equal(I.calcularRTC(cat,magias,{...studyCtx,observado:{...studyCtx.observado,roda:{campos:{'revelation.Twin Bursts':{valor:'Stage 3',qualidade:'texto_integral'}}}}}).rtc.estudo,undefined);
+console.log('Estudo documentado: configuração, roda, Hazard e sessão isolados; cura do EK por feedback aprovado.');

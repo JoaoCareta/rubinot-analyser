@@ -1,0 +1,45 @@
+{
+ "nome": "Plunder Patriarch",
+ "categoria": "Vermes",
+ "hp": null,
+ "xp": 0,
+ "toma": {
+  "físico": 100,
+  "terra": 100,
+  "fogo": 100,
+  "morte": 100,
+  "energia": 100,
+  "sagrado": 100,
+  "gelo": 100,
+  "cura": 100
+ },
+ "bate": {},
+ "loot": {
+  "comum": [
+   "10-50 Crystal Coins",
+   "Royal Almandine",
+   "Raw Watermelon Tourmaline"
+  ],
+  "semi-raro": [
+   "Amber (Item)",
+   "Amber with a Bug",
+   "Amber with a Dragonfly"
+  ],
+  "raro": [
+   "Giant Amethyst",
+   "Giant Sapphire",
+   "Fiery Tear"
+  ],
+  "muito raro": [
+   "Primal Bag"
+  ]
+ },
+ "gif": "plunder_patriarch.gif",
+ "local": [
+  "Crystal Enigma",
+  "Monster Graveyard",
+  "Sparkling Pools"
+ ],
+ "fonte": "https://www.tibiawiki.com.br/wiki/Plunder_Patriarch",
+ "catalogado": "2026-10-14"
+}

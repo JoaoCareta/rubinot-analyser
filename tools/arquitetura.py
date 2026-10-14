@@ -59,11 +59,12 @@ def ciclos(g):
 
 
 def violacoes_dominio(texto):
-    permitidos = {'collections', 'math', 'hashlib', 'json', 'datetime', 'dataclasses', 'typing', 'enum', 'statistics'}
+    permitidos = {'collections', 'math', 'hashlib', 'json', 'datetime', 'dataclasses', 'typing', 'enum', 'statistics', 'bisect'}
+    regras_puras = {'rubinot.planejamento.efetividade', 'rubinot.hunt.metricas'}
     violacoes = []
     for n in ast.walk(ast.parse(texto)):
         nomes = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module or ''] if isinstance(n, ast.ImportFrom) else []
-        violacoes += [nome for nome in nomes if nome.split('.')[0] not in permitidos]
+        violacoes += [nome for nome in nomes if nome.split('.')[0] not in permitidos and nome not in regras_puras]
         if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in {'open', '__import__', 'eval', 'exec'}:
             violacoes.append(n.func.id)
     return violacoes

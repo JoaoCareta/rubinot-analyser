@@ -182,30 +182,11 @@ QUADRO = re.compile(r"^[bcmfsq]_\d+_\d+\.png$")
 
 
 def limpa_quadros(manter=None, raiz=None):
-    """Apaga os QUADROS das sessões já encerradas (user, 28/09: "o que me interessa são os números,
-    porém os vídeos não"). Os números — laps.jsonl, cards.jsonl, trilha.jsonl, logs — ficam onde
-    estão, e o histórico em hunt_data nem é tocado. A sessão passada em `manter` fica inteira: é
-    dela que o retomavel() continua se você religar em menos de 1 h.
-
-    Sem isso a pasta capture ia a 3 GB por hora de hunt e o disco enchia sozinho.
+    """Compatibilidade: limpeza automática desativada por decisão de 14/10/2026.
+    Gravações só podem ser excluídas após pedido explícito do usuário para elas.
+    Consumo concluído, idade e espaço livre nunca autorizam apagar a gravação.
     """
-    manter = str(manter) if manter else ""
-    apagados = bytes_ = 0
-    for s in sorted((raiz or CAPTURAS).glob("session_*")):
-        if str(s) == manter or not s.is_dir():
-            continue
-        estado_aprendizado = _le_json(s / 'aprendizado_estado.json') or {}
-        if estado_aprendizado.get('estado') in ('coletando', 'pendente', 'falhou'):
-            continue  # Extração incompleta é recuperável; quadros ainda são evidência.
-        for p in s.iterdir():
-            if p.is_file() and QUADRO.match(p.name):
-                try:
-                    bytes_ += p.stat().st_size
-                    p.unlink()
-                    apagados += 1
-                except OSError:      # quadro preso por outro processo: fica para a próxima
-                    pass
-    return apagados, bytes_
+    return 0, 0
 
 
 def retomavel(char=None, raiz=None):
@@ -299,16 +280,14 @@ class Gravacao:
                 quadros=sorted(self.sessao.glob('f_*.png'))
                 while time.monotonic()<limite:
                     observador.processar(self.sessao,self.char,quadros[-1] if quadros else None)
+                    observador.coletar_cura(self.sessao,self.char)
                     estado=_le_json(self.sessao/'aprendizado_estado.json') or {}
-                    if estado.get('estado')=='numeros_persistidos':break
+                    cura=_le_json(self.sessao/'coleta_cura.json') or {}
+                    if estado.get('estado')=='numeros_persistidos' and cura.get('estado')=='numeros_persistidos':break
         except Exception as erro:
             configuracoes._grava(self.sessao/'aprendizado_estado.json',{'estado':'falhou','erro':str(erro)})
             self.registra(f'extração de execução pendente: {erro}')
         self._historico(final=True)   # 22/09 (user item 5): a sessão fecha guardada
-        n, b = limpa_quadros(manter=self.sessao)   # 28/09 (user): os quadros das sessões velhas vão
-        if n:
-            self.registra(f"limpeza: {n} quadros de sessões encerradas apagados ({b/1e9:.1f} GB); "
-                          "os números de todas elas continuam na pasta")
 
     def reiniciar(self):
         """Recomeça a análise do zero (user, 22/09 item 7): fecha a sessão de agora (salvando o
@@ -514,12 +493,13 @@ class Gravacao:
         agora = lw.fsec(ms[-1]) if ms else _agora_s()   # "agora" do jogo = o último quadro gravado
         refis, refil = self._refis(t0, agora)
         lt = self._linha_do_tempo(t0, janelas)
+        from rubinot.adapters.paineis import resumo as resumo_paineis
         self.dados = {
-            "sessao": {"hunt": hunt, "char": self.char or "",
+            "sessao": {**resumo_paineis(self.sessao), "hunt": hunt, "char": self.char or "",
                        # a tela escreve "gravação desde <inicio>"; o início da hunt vai no estado
                        "data": self.info["data"], "inicio": self.info["desde"] or "",
                        "fim": laps[-1]["fim"] if laps else "",
-                       "pt": modalidade_party(_le_json(self.sessao / 'ks.json', {}),
+                       "pt": modalidade_party(ks.corrigir_relatorio(_le_json(self.sessao / 'ks.json', {})),
                            ("solo" if ultimo["solo"] else f"pt x{ultimo['membros']}" if ultimo["membros"] else "") if ultimo else "")},
             "andares": self._andares(janelas),
             "voltas": voltas,
@@ -529,6 +509,8 @@ class Gravacao:
             "especies_fora": fora,
             "areas_hunt": getattr(self, 'areas_hunt', []),
         }
+        configuracoes._grava(self.sessao/'contexto_hunt.json', {**self.dados['sessao'],
+            't':agora, 'origem':'motor_hunt', 'atualizado_em':time.time()})
         self._historico()
 
     def _areas(self, bs):
@@ -731,7 +713,7 @@ class Gravacao:
             self.registra(f"card da volta {L['volta']} ({L['inicio']}-{L['fim']}, {c['dur_s']} s): "
                           f"raw {c['xp_raw_painel']} · profit {c['balance_atual']} · "
                           f"{len(c['especies'])} espécies")
-        return self.cards[chave]
+        return pt_card.aplicar_releitura_xp(self.sessao, L, self.cards[chave])
 
     def _local(self, vistas):
         """(local do wiki, nome da hunt): o local mais comum das espécies (ex. Book World); sem local,
@@ -810,7 +792,7 @@ class Gravacao:
         xp = c["xp_raw_painel"]
         return {"n": L["volta"], "tipo": L.get("tipo", "volta"),
                 "ini": pt_card.sec(L["inicio"]), "fim": pt_card.sec(L["fim"]), "dur": c["dur_s"],
-                "xp_raw": xp, "xp_raw_15min": c.get("xp_raw_15min"), "estabilizando": c.get("estabilizando"),
+                "xp_raw": xp, "xp_origem":c.get("xp_origem"), "dmg_in_painel":c.get("dmg_in_painel"), "dmg_in_origem":c.get("dmg_in_origem"), "xp_raw_15min": c.get("xp_raw_15min"), "estabilizando": c.get("estabilizando"),
                 "profit": c["balance_atual"], "sup_pt": c.get("supplies_pt"), "sup_eu": c.get("supplies_eu"),
                 "bichos": self._bichos(c, L, esp, local), "base": c.get("base"),
                 "solo": c["solo"], "reset": bool(c.get("reset")),
@@ -895,11 +877,19 @@ class Gravacao:
             arquivos['laps.jsonl'] = (self.sessao / 'laps.jsonl').read_bytes()
         publicar(pasta, resumo, arquivos)
         self.n_hist = marca  # só marca depois da publicação completa
+        try:
+            import aprendizado_hunt
+            estudos = aprendizado_hunt.Registro(HUNT_DATA / '_aprendizado').estudar_voltas(self.sessao.name, resumo)
+            aprendizado_hunt.Registro(HUNT_DATA / '_aprendizado').estudar_twin(self.sessao.name,resumo.get('sessao',{}).get('char',''),resumo)
+            configuracoes._grava(pasta / 'estudo_previsto.json', estudos)
+        except Exception as erro:
+            self.registra(f'estudo previsto pendente: {erro}')
         if final:
             try:
                 import aprendizado_hunt
                 registro = aprendizado_hunt.Registro(HUNT_DATA / '_aprendizado')
                 resultado = registro.consolidar(self.sessao.name, resumo)
+                resultado['efetividade'] = registro.avaliar_resultado_posterior(self.sessao.name, resultado)
                 configuracoes._grava(pasta / 'aprendizado.json', resultado)
             except Exception as erro:
                 configuracoes._grava(self.sessao / 'aprendizado_estado.json', {'estado':'falhou','erro':str(erro)})
@@ -988,7 +978,7 @@ class Gravacao:
             e.update(local=nome, hunt_comecou=lw.fmt(a['inicio']))
             e['mensagem'] = 'Nova área reconhecida por andar e monstros. Volta que atravessou a troca fica parcial.'
         return {"estado": e, **dados,
-                "ks": _le_json(self.sessao / "ks.json", {}) if self.sessao else {}}
+                "ks": ks.corrigir_relatorio(_le_json(self.sessao / "ks.json", {})) if self.sessao else {}}
 
     def _mensagem(self, e):
         if not e["calibrado"]:
@@ -1002,9 +992,9 @@ class Gravacao:
         if self.grava and not e["gravando"]:  # caiu: o supervisor relança; o detalhe fica no capture.log
             if capture.pouco_disco():
                 return (f"Disco quase cheio (menos de {capture.MIN_LIVRE_GB} GB livres): a gravação parou. "
-                        "Apague as sessões antigas da pasta capture e religue.")
+                        "As gravações foram preservadas. Libere espaço ou solicite a exclusão de gravações específicas e religue.")
             if getattr(self.procs.get("capture"), "returncode", None) == 0:
-                return "Gravação encerrada no limite de 3 h, sem volta na última hora. Para continuar: Desligar e Ligar."
+                return "Gravação encerrada. Para continuar: Desligar e Ligar."
             return "A captura parou, religando."
         if self.grava and (e["ultimo_quadro_s"] is None or e["ultimo_quadro_s"] > PARADO_S):
             return "Gravação em espera: ela só grava com o jogo em primeiro plano."
@@ -1066,7 +1056,7 @@ def _fechada(r):
         return False
 
 
-from rubinot.hunt.metricas import PAUSA_S, especies, taxas
+from rubinot.hunt.metricas import PAUSA_S, especies, taxas, pressao, consumo_itens, tempo_sessao, resumo_vida, taxas_intervalos
 
 
 def _pico_xph(r):
@@ -1081,9 +1071,30 @@ def _pico_xph(r):
 def _grupos_historico():
     """Mesmo dia, hunt, personagem e modalidade; intervalo < 1 h. Originais intactos."""
     registros = []
+    revisoes_xp = _le_json(pt_card.RELEITURAS_XP) or {}
     for p in HUNT_DATA.glob('*/sessoes/*/resumo.json'):
         r = _le_json(p)
         if isinstance(r, dict):
+            revisao = revisoes_xp.get(r.get('pasta'), {})
+            # Recuperação histórica autorizada em 14/10: provas primeiro, registro
+            # antigo como fallback. Não muda a fonte da coleta nem regrava originais.
+            for v in r.get('voltas',[]):
+                leitura = revisao.get('voltas', {}).get(f"{v.get('n')}|{v.get('ini')}|{v.get('fim')}", {})
+                if (leitura.get('xp_origem') == 'XP Analyser' and leitura.get('provas')
+                        and type(leitura.get('xp_raw')) is int and leitura['xp_raw'] >= 0):
+                    v.update(xp_raw=leitura['xp_raw'], xp_raw_15min=leitura.get('xp_raw_15min'),
+                             xp_origem='XP Analyser', xp_releitura=True)
+                elif v.get('xp_origem') != 'XP Analyser' and p.parent.name[:8] <= '20261012':
+                    v['xp_origem'] = 'Registro antigo'
+                    v['xp_limite'] = 'Coletor antigo; sem nova comprovação pelo XP Analyser'
+                elif v.get('xp_origem') != 'XP Analyser':
+                    v['xp_raw']=v['xp_raw_15min']=None
+                    v['xp_limite']='Origem histórica não certificada como XP Analyser'
+            final = revisao.get('final')
+            if (isinstance(final, dict) and final.get('origem') in ('XP Analyser', 'Hunt Analyser')
+                    and final.get('prova')):
+                r['xp_paineis_finais'] = [final]
+            r['totais']={**r.get('totais',{}),'xp_raw':sum(v['xp_raw'] for v in r.get('voltas',[]) if v.get('xp_raw') is not None) if any(v.get('xp_raw') is not None for v in r.get('voltas',[])) else None}
             registros.append((p, r))
     grupos, ultimos = [], {}
     for p, r in sorted(registros, key=lambda item: item[0].parent.name):
@@ -1117,6 +1128,9 @@ def _mescla_historico(grupo):
     if len(grupo) == 1:
         return r
     r['sessao']['fim'] = grupo[-1][1]['sessao'].get('fim')
+    for campo in ('tempo_sessao_s','tempo_sessao_origem','tempo_sessao_resolucao_s',
+                  'tempo_sessao_quadro','tempo_sessao_t','paineis_revisao'):
+        r['sessao'][campo] = grupo[-1][1]['sessao'].get(campo)
     r['fechada'] = all(_fechada(d) for _, d in grupo)
     r['salvo_em'] = max(d.get('salvo_em', '') for _, d in grupo)
     for campo in ('voltas', 'amostras', 'refis', 'trechos', 'entradas'):
@@ -1130,6 +1144,9 @@ def _mescla_historico(grupo):
                 r[campo].append(novo)
     r['totais'] = {k: sum((d.get('totais') or {}).get(k, 0) or 0 for _, d in grupo)
                    for k in ('voltas', 'dur_s', 'xp_raw', 'profit', 'sup_pt', 'sup_eu', 'bichos')}
+    if all((d.get('totais') or {}).get('xp_raw') is None for _, d in grupo):
+        r['totais']['xp_raw'] = None
+    r['xp_paineis_finais'] = [f for _, d in grupo for f in d.get('xp_paineis_finais', [])]
     r['especies'] = especies(r['voltas'])
     r['refil'] = grupo[-1][1].get('refil') or {}
     # Intervalos entre gravações ficam explícitos, fora do tempo das voltas e das taxas.
@@ -1186,6 +1203,7 @@ def _ks_hist(grupo):
                 arquivos = list(ks.RAIZ.glob('session_*/logs/' + nome + '_relatorio.json'))
                 k = _le_json(arquivos[0]) if arquivos else _le_json(ks.RAIZ / nome / 'relatorio.json')
             if k:
+                k = ks.corrigir_relatorio(k)
                 if _fechada(r):
                     for ep in k.get('episodios') or []:
                         if ep.get('aberto'):
@@ -1206,6 +1224,15 @@ def modalidade_party(k, anterior=''):
     return f'pt x{len(nomes)}' if len(nomes) >= 2 else anterior
 
 
+def _plunder_avistado(resumo):
+    """Presença observada, sem converter leituras repetidas em abates/aparições."""
+    fontes = [resumo.get('especies') or {}]
+    fontes.extend(v.get('especies') or {} for v in resumo.get('voltas') or [])
+    return any(' '.join(nome.lower().split()) == 'plunder patriarch'
+               and isinstance(qtd, (int, float)) and not isinstance(qtd, bool) and qtd > 0
+               for fonte in fontes for nome, qtd in fonte.items())
+
+
 def historico(limite=200):
     """Sessões guardadas, da mais nova para a mais velha. Só pasta com resumo.json — os summary
     soltos de julho ficam de fora."""
@@ -1221,12 +1248,18 @@ def historico(limite=200):
         # mortos primeiro, e só os que têm gif no catálogo (sem gif a imagem quebraria na tela).
         icones = [sl for n in list(r.get("especies") or {})[:3]   # sl, não s: o walrus vaza da lista
                   if (sl := catalogo.slug(n)) and catalogo.imagem(sl)]
+        conflitos = _ks_hist(grupo)
         out.append({"id": f"{arq.parent.parent.parent.name}/{arq.parent.name}",
                     "hunt": s.get("hunt") or arq.parent.parent.parent.name.replace("_", " "),
                     "data": s.get("data"), "inicio": s.get("inicio"), "fim": s.get("fim"),
-                    "char": s.get("char"), "pt": modalidade_party(_ks_hist(grupo), s.get('pt')), "voltas": t.get("voltas", 0),
+                    "char": s.get("char"), "pt": modalidade_party(conflitos, s.get('pt')), "voltas": t.get("voltas", 0),
+                    "tem_ks": bool(conflitos['episodios']), "ks_episodios": len(conflitos['episodios']),
+                    "tem_plunder": _plunder_avistado(r),
                     "sessoes_origem": r['sessoes_origem'],
                     "dur_s": t.get("dur_s", 0), "xp_raw": t.get("xp_raw", 0),
+                    "xp_origens": sorted({v.get('xp_origem') for v in r.get('voltas', [])
+                                          if v.get('xp_raw') is not None and v.get('xp_origem')}),
+                    "xp_paineis_finais": r.get('xp_paineis_finais', []),
                     "profit": t.get("profit", 0), "bichos": t.get("bichos", 0),
                     # 24/09: a aba de evolução usa as TAXAS (por hora, só do que foi lido); os
                     # totais aqui são a soma do que deu para medir e podem ter buraco
@@ -1285,6 +1318,44 @@ def historico_mapa(ident):
     fundos = _fundos_hist(grupo, r)
     a = fundos.get(r.get('andar')) or next(iter(fundos.values()), None)
     return base64.b64decode(a['fundo'].split(',', 1)[1]) if a else None
+
+
+def historico_gravacao(ident):
+    grupo = _grupo_hist(ident)
+    if not grupo:
+        return None
+    from rubinot.adapters.gravacoes import indice, SESSAO
+    nomes = [r.get('pasta', '') for _, r in grupo]
+    return indice(CAPTURAS, [nome for nome in nomes if isinstance(nome, str) and SESSAO.fullmatch(nome)])
+
+
+def historico_curas(ident):
+    grupo = _grupo_hist(ident)
+    if not grupo:
+        return None
+    from rubinot.adapters.curas import projetar, segundos
+    from rubinot.planejamento.registro import Registro
+    registro = Registro(configuracoes.raiz_aprendizado())
+    declaracoes = _le_json(AQUI / 'ui' / 'party_correcoes.json') or {}
+    trechos = []
+    for pasta, r in grupo:
+        sessao = r.get('pasta')
+        if not sessao:
+            continue
+        party = declaracoes.get(sessao, {}).get('referencias_sio', {}).get('party', [])
+        party = list(party)
+        # Nomes do painel confirmam participação; look resolve somente vocação.
+        conhecidos = {p.get('nome') for p in party}
+        relatorios = _ks_hist([(pasta, r)]).get('sessoes') or []
+        for nome in {n for k in relatorios for n in k.get('party', []) if isinstance(n, str)}:
+            if isinstance(nome, str) and nome not in conhecidos:
+                party.append({'nome': nome, 'identidade_confirmada': True})
+        voltas = r.get('voltas') or []
+        inicios = [t for v in voltas if (t := segundos(v.get('ini'))) is not None]
+        fins = [t for v in voltas if (t := segundos(v.get('fim'))) is not None]
+        trechos.append(projetar(registro, sessao, (r.get('sessao') or {}).get('char'), party,
+                               min(inicios, default=None), max(fins, default=None)))
+    return {'trechos': trechos}
 
 
 _G = Gravacao()  # singleton do módulo: um programa, uma gravação

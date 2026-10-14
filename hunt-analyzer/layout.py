@@ -74,6 +74,7 @@ def da_calibracao(c):
         "map": recorte_mapa(r["mapa"]),  # recorte m_ igual ao do LEGADO
         "hunt": caixa("hunt"),
         "party": caixa("party"),
+        **{k:caixa(k) for k in ("xp","input","supply","loot") if r.get(k)},
         "tela": dict(r["tela"]),
         "tile": c.get("tile_px") or LEGADO["tile"],
     }

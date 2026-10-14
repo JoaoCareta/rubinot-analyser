@@ -3,6 +3,12 @@ const HuntRodaMotor=(()=>{
   const selecionar=(cat,voc)=>({...cat,...cat.vocacoes[voc],vocacao:voc});
   const dominios=['TL','TR','BL','BR'];
   const estagio=n=>n>=1000?3:n>=500?2:n>=250?1:0;
+  function beneficios(cat,e){
+    return cat.dominios.filter(d=>e.revelation[d.revelation_id]>0).map(d=>({
+      dominio:d.dominio,id:d.revelation_id,nome:cat.revelation[d.revelation_id]?.Name,
+      estagio:e.revelation[d.revelation_id],bonus_fixo_hp:cat.composicao.revelation_bonus_hp[e.revelation[d.revelation_id]],
+      uso:/Avatar|Gift of Life/.test(cat.revelation[d.revelation_id]?.Name)?'ativacao_ou_contingencia':'condicional'}));
+  }
   function importarCodigo(cat,codigo,total){
     codigo=codigo.trim().split('code=').pop().split('&')[0];
     if(!/^[DS]0[-_A-Za-z0-9]{3,90}$/.test(codigo))throw Error('Use o código atual do planejador ou do cliente (D0/S0).');
@@ -83,7 +89,7 @@ const HuntRodaMotor=(()=>{
       const grau=g.grau??1;
       if(nivel<3||qualidade!==3||(g.basicos||[]).length!==2||(g.basicos||[]).some(b=>(b.grau??1)<grau))continue;
       const mod=cat.gemas_normalizadas?.[g.mod],e=mod?.graus?.[grau];if(!e)continue;
-      const ids=g.magias||[];
+      const ids=g.magias?.length?g.magias:Object.entries(nomesPorBonus).filter(([id])=>cat.conviction[id]?.Name?.split('|').some(n=>n.replace(/^Augmented |^Aug\. /,'')===e.magias_nome)).flatMap(([,ids])=>ids);
       if(e.tipo==='base_percent')somar(ids,e.valor);else if(e.tipo==='cooldown_delta')ids.forEach(id=>cd[id]=(cd[id]||0)+e.valor);
       else if(e.tipo==='critico_extra'){if(ids.length)ids.forEach(id=>critico_extra[id]=(critico_extra[id]||0)+e.valor);else globais.critico_extra+=e.valor;}
       else if(e.tipo==='life_leech'){if(ids.length)ids.forEach(id=>life_leech[id]=(life_leech[id]||0)+e.valor);else globais.life_leech+=e.valor;}
@@ -92,7 +98,12 @@ const HuntRodaMotor=(()=>{
       notas.push(`${g.dominio}: ${mod.nome} · ${e.descricao}`);
     }
     fixo_hp+=Object.values(s.revelation).reduce((n,rank)=>n+(cat.composicao?.revelation_bonus_hp?.[rank]||0),0);
-    return {...s,bp,cd,alvos,notas,critico_extra,life_leech,mana,resistencias,recursos,magic_level,fixo_hp,globais};
+    // Resumo observado permite comparar benefícios sem inventar a distribuição
+    // ou a identidade das gemas. Não acumular esse resumo com gemas completas.
+    if(!gemas.length)for(const [id,n] of Object.entries(observados.bp_gemas||{}))if(Number.isFinite(n))bp[id]=(bp[id]||0)+n;
+    if(Number.isFinite(observados.fixo_hp))fixo_hp=observados.fixo_hp;
+    return {...s,bp,cd,alvos,notas,critico_extra,life_leech,mana,resistencias,recursos,magic_level,fixo_hp,globais,
+      beneficios:beneficios(cat,s),unidade_bonus_fixo:'HP_por_aplicacao'};
   }
   function modificar(cat,pontos,magias,gemas=[],cenario={alvos:1}){
     const e=efeitos(cat,pontos,gemas,cenario.efeitos_observados);
@@ -103,6 +114,7 @@ const HuntRodaMotor=(()=>{
       if(beam&&!cenario.temporal)bp*=1+[.10,.12,.14][beam-1]*Math.min(3,cenario.alvos);
       const alvos=m.alvos==null?null:m.alvos+(e.alvos[m.id]||0);
       return {...m,bp,bp_original:m.bp,multiplicador_base:bp/m.bp,ajustado:m.tipo==='cura'?bp:bp*m.resistencia/100,cd,alvos,
+        dano_fixo_hp:m.tipo==='cura'?0:e.fixo_hp,
         area_ampliada:!!((m.id==='mass_healing'&&e.ranks[32]>=2)||(m.id==='energy_wave'&&e.ranks[25])||(m.id==='strong_ice_wave'&&e.ranks[31]>=2)),
         alvo_adicional:!!e.alvos[m.id],twin_estagio:m.familia==='bursts'?e.revelation[10]:0,
         critico_extra:e.critico_extra[m.id]||0,life_leech:e.life_leech[m.id]||0,
@@ -187,6 +199,41 @@ const HuntRodaMotor=(()=>{
       for(const f of cat.fatias.filter(f=>f.conexoes.includes(p.id)))if(!vistos.has(f.id))fila.push({id:f.id,custo:p.custo+f.limite-(existentes[f.id]||0),pontos:{...p.pontos,[f.id]:f.limite}});
     }return null;
   }
+  function alternativasSio(cat,pontos,total){
+    if(cat.vocacao!=='ED')return [];
+    const base=efeitos(cat,pontos),orcamento=total-3,saida=[];
+    // Preservar estágios, ressonâncias e perks já ativos. Pontos incompletos
+    // podem financiar sio sem serem tratados como leech ativado.
+    const preservar=p=>{const e=efeitos(cat,p);
+      return dominios.every(q=>e.vr[q]===base.vr[q])&&Object.entries(base.revelation).every(([id,n])=>e.revelation[id]===n)
+        &&Object.entries(base.ranks).every(([id,n])=>id==='33'||e.ranks[id]>=n)
+        &&e.magic_level>=base.magic_level&&e.fixo_hp>=base.fixo_hp;};
+    const validar=p=>HuntRTC.validarDistribuicao(cat,p,Math.max(total,10000)).ok;
+    let sementes=[{...pontos}];
+    for(const de of cat.fatias.filter(f=>f.conviction_id>=37&&f.conviction_id<=40&&pontos[f.id]===f.limite)){
+      for(const para of cat.fatias.filter(f=>f.dominio===de.dominio&&f.conviction_id===de.conviction_id&&f.limite<de.limite&&!pontos[f.id])){
+        sementes.push({...pontos,[de.id]:0,[para.id]:para.limite});
+      }
+    }
+    for(const s of sementes){let p={...s};
+      for(const f of cat.fatias.filter(f=>f.conviction_id===33))if(p[f.id]!==f.limite)p=caminho(cat,f.id,p)||p;
+      if(!validar(p)||!preservar(p))continue;
+      for(let passo=0;passo<36&&resumo(cat,p).investidos>orcamento;passo++){
+        const falta=resumo(cat,p).investidos-orcamento;let escolhido=null;
+        for(const f of cat.fatias.filter(f=>f.conviction_id!==33&&(p[f.id]||0)>0)){
+          for(let n=Math.min(falta,p[f.id]);n>0;n--){const q={...p,[f.id]:p[f.id]-n};
+            if(validar(q)&&preservar(q)){const e=efeitos(cat,q);
+              const perda=Math.max(0,base.recursos.mana-e.recursos.mana)+Math.max(0,base.recursos.vida-e.recursos.vida)*5;
+              if(!escolhido||perda<escolhido.perda||perda===escolhido.perda&&n>escolhido.n)escolhido={p:q,perda,n};break;}
+          }
+        }
+        if(!escolhido)break;p=escolhido.p;
+      }
+      const e=efeitos(cat,p);
+      if(e.investidos===orcamento&&e.ranks[33]>(base.ranks[33]||0)&&e.recursos.vida>=base.recursos.vida&&e.recursos.mana>=base.recursos.mana&&e.recursos.mitigacao>=base.recursos.mitigacao&&HuntRTC.validarDistribuicao(cat,p,total).ok)saida.push(p);
+    }
+    return [...new Map(saida.map(p=>[JSON.stringify(p),p])).values()];
+  }
   function candidatas(cat,total,tier,estrategia,objetivo,opcoes={}){
     const v=viabilidade(cat,total,tier);if(v.estado!=='Cabe nos pontos')return {...v,distribuicoes:[]};
     const link=estrategia.includes('link'),critico=estrategia.includes('critica'),dom=cat.dominios.find(d=>d.revelation_id===11)?.dominio;
@@ -199,19 +246,58 @@ const HuntRodaMotor=(()=>{
       const f=cat.fatias.find(f=>f.dominio===q&&(p[f.id]||0)<f.limite&&(f.raiz||f.conexoes.some(k=>p[k]===limites[k])));if(!f)return null;
       p[f.id]=(p[f.id]||0)+Math.min(f.limite-(p[f.id]||0),n-resumoDe(p).porDominio[q]);}return p;}
     if(critico)seeds=seeds.map(p=>completarDominio(p,dom,250)).filter(Boolean);
+    // Enumerar combinações de limiares ANTES da poda. Entre 500 e 999 pontos
+    // o próximo ponto no mesmo domínio não aproxima o bônus de outro domínio.
+    // A expansão gulosa por fatia perdia II+I em favor de um II incompleto.
+    const combinacoes=[];
+    function combinar(i,alvos,custo){
+      if(i===dominios.length){combinacoes.push(alvos);return;}
+      for(const n of [0,250,500,1000])if(custo+n<=v.orcamento)combinar(i+1,[...alvos,n],custo+n);
+    }
+    combinar(0,[],0);
+    for(const alvos of combinacoes)for(const c of v.caminhos){
+      let p=link?caminho(cat,l.id,c.pontos):{...c.pontos};
+      for(let i=0;p&&i<dominios.length;i++)if(alvos[i])p=completarDominio(p,dominios[i],alvos[i]);
+      if(p&&critico)p=completarDominio(p,dom,250);
+      if(p&&resumoDe(p).investidos<=v.orcamento)seeds.push(p);
+    }
     // Partir dos efeitos comprovados da roda atual. Isto reconstrói caminhos
     // válidos para a busca; não declara conhecidas as fatias ainda não lidas.
     let inicial={};
-    for(const [id,n] of Object.entries(opcoes.efeitos_iniciais?.ranks||{})){
-      if(!opcoes.convictions_uteis?.includes(+id))continue;
+    for(const [id,n] of Object.entries((opcoes.efeitos_minimos||opcoes.efeitos_iniciais)?.ranks||{})){
+      if(!opcoes.efeitos_minimos&&!opcoes.convictions_uteis?.includes(+id))continue;
       const candidatos=cat.fatias.filter(f=>f.conviction_id===+id).sort((a,b)=>Object.values(caminho(cat,a.id,inicial)||{}).reduce((s,n)=>s+n,0)-Object.values(caminho(cat,b.id,inicial)||{}).reduce((s,n)=>s+n,0));
       for(const f of candidatos.slice(0,n))inicial=caminho(cat,f.id,inicial)||inicial;
     }
-    for(const [id,n] of Object.entries(opcoes.efeitos_iniciais?.revelation||{})){
+    for(const [id,n] of Object.entries((opcoes.efeitos_minimos||opcoes.efeitos_iniciais)?.revelation||{})){
       const d=cat.dominios.find(d=>d.revelation_id===+id);
-      if(n&&d&&opcoes.revelations_uteis?.includes(+id))inicial=completarDominio(inicial,d.dominio,[0,250,500,1000][n])||inicial;
+      if(n&&d&&(opcoes.efeitos_minimos||opcoes.revelations_uteis?.includes(+id)))inicial=completarDominio(inicial,d.dominio,[0,250,500,1000][n])||inicial;
     }
     if(Object.keys(inicial).length)seeds.push(...v.caminhos.map(c=>merge(c.pontos,inicial)));
+    // Reconstruir sobre cada caminho de ressonância evita somar dois caminhos
+    // mínimos incompatíveis e gastar pontos em acessos redundantes.
+    if(opcoes.efeitos_minimos)for(const c of [...v.caminhos,...cat.caminhos_minimos.filter(c=>c.tier>tier)]){
+      let bases=[{...c.pontos}];
+      for(const [id,n] of Object.entries(opcoes.efeitos_minimos.ranks||{})){
+        const proximas=[];
+        for(const base of bases){
+          const fatias=cat.fatias.filter(f=>f.conviction_id===+id);
+          for(const primeira of fatias){let p=caminho(cat,primeira.id,base);
+            if(n>1)for(const f of fatias)if(p)p=caminho(cat,f.id,p);
+            if(p&&resumoDe(p).investidos<=v.orcamento)proximas.push(p);
+          }
+        }
+        bases=proximas;
+      }
+      for(let p of bases){
+        for(const [id,n] of Object.entries(opcoes.efeitos_minimos.revelation||{})){
+          const d=cat.dominios.find(d=>d.revelation_id===+id);
+          if(p&&d)p=completarDominio(p,d.dominio,[0,250,500,1000][n]);
+        }
+        if(p&&opcoes.exigir_sio_critico)p=completarDominio(p,dom,250);
+        if(p&&resumoDe(p).investidos<=v.orcamento)seeds.push(p);
+      }
+    }
     // Pacotes completos: reconstruir do zero permite retirar blocos da roda
     // atual e alcançar desbloqueios que a expansão ponto a ponto perde.
     const uteis=new Set(opcoes.convictions_uteis||[]);
@@ -236,13 +322,23 @@ const HuntRodaMotor=(()=>{
       }
     }
     seeds.push(...pacotes.values());
-    const requisitoOk=p=>{const s=resumoDe(p);return (!link||s.ranks[28])&&(!critico||s.revelation[11]>0)&&Math.max(...Object.values(s.vr))>=tier;};
+    if(opcoes.pontos_iniciais)seeds.push({...opcoes.pontos_iniciais});
+    if(opcoes.exigir_sio_critico&&cat.vocacao==='ED'){
+      let suporte={};
+      for(const f of cat.fatias.filter(f=>f.conviction_id===33))suporte=caminho(cat,f.id,suporte)||suporte;
+      suporte=completarDominio(suporte,dom,250);
+      if(suporte)for(const c of v.caminhos){const p=merge(suporte,c.pontos);if(resumoDe(p).investidos<=v.orcamento)seeds.push(p);}
+      // As prioridades de dano não podem podar o requisito de suporte antes
+      // da expansão; inclui também marcos ofensivos sobre a base protegida.
+      if(suporte)for(const f of marcos){const p=caminho(cat,f.id,suporte);if(p&&resumoDe(p).investidos<=v.orcamento)seeds.push(...v.caminhos.map(c=>merge(p,c.pontos)));}
+    }
+    const requisitoOk=p=>{const s=resumoDe(p);return ['ranks','revelation'].every(g=>Object.entries(opcoes.efeitos_minimos?.[g]||{}).every(([id,n])=>(s[g][id]||0)>=n))&&(!link||s.ranks[28])&&(!critico||s.revelation[11]>0)&&Math.max(...Object.values(s.vr))>=tier;};
     const key=p=>cat.fatias.map(f=>p[f.id]||0).join(',');
     const pesos=opcoes.pesos_magias,peso=id=>pesos?pesos[id]||0:1;
     const valor=p=>{if(opcoes.valor_roda)return opcoes.valor_roda(p);const s=resumoDe(p),e=efeitos(cat,p),bonus=Object.entries(e.bp).reduce((n,[id,v])=>n+v*peso(id),0),cadencia=pesos?Object.entries(e.cd).reduce((n,[id,v])=>n+Math.max(0,-v)*peso(id),0):0;
       const especial=pesos?(s.revelation[10]||0)*(peso('ice_burst')+peso('terra_burst'))+(s.revelation[7]||0)*(peso('energy_beam')+peso('great_energy_beam')):(s.revelation[10]||s.revelation[7]||0);
-      return bonus*100+cadencia*4+(objetivo==='cura'?(s.ranks[28]||0)*25+(s.revelation[11]||0)*18:especial*18)+Math.max(...Object.values(s.vr))*4;};
-    seeds=seeds.filter(p=>HuntRTC.validarDistribuicao(cat,p,total).ok&&requisitoOk(p));
+      return bonus*100+cadencia*4+(objetivo==='cura'?(s.ranks[28]||0)*25+(s.revelation[11]||0)*18:especial*18)+Math.max(...Object.values(s.vr))*4+e.fixo_hp;};
+    seeds=seeds.filter(p=>HuntRTC.validarDistribuicao(cat,p,total).ok&&requisitoOk(p)&&(!opcoes.exigir_sio_critico||(resumoDe(p).ranks[33]>=2&&resumoDe(p).revelation[11]>0)));
     seeds=[...new Map(seeds.map(p=>[key(p),p])).values()];
     let feixe=seeds.slice().sort((a,b)=>valor(b)-valor(a)).slice(0,opcoes.larguraRoda??48),distribuicoes=new Map(seeds.map(p=>[key(p),p]));
     for(let passo=0;passo<20&&feixe.length;passo++){
@@ -257,7 +353,7 @@ const HuntRodaMotor=(()=>{
     // Incluir sementes de caminhos distintos; não perder Link+Blessing por pesos de dano.
     // Diversidade por benefício alcançado conserva sio/proteção e cada estágio.
     const grupos=new Map();
-    for(const p of seeds){const s=resumoDe(p),g=JSON.stringify([s.revelation,!!s.ranks[33],!!s.ranks[32],!!s.ranks[28],s.vr]);
+    for(const p of seeds){const s=resumoDe(p),g=JSON.stringify([s.revelation,s.ranks[33]||0,!!s.ranks[32],!!s.ranks[28],s.vr]);
       if(!grupos.has(g)||valor(p)>valor(grupos.get(g)))grupos.set(g,p);}
     for(const p of grupos.values())if(!lista.some(a=>key(a)===key(p)))lista.push(p);
     if(opcoes.preencher){
@@ -279,8 +375,22 @@ const HuntRodaMotor=(()=>{
       };
       lista=[...new Map(lista.map(completar).filter(p=>resumoDe(p).investidos===alvo&&HuntRTC.validarDistribuicao(cat,p,total).ok&&requisitoOk(p)).map(p=>[key(p),p])).values()];
     }
-    return {...v,estado:lista.length?'Calculado':'Pontos insuficientes para a estratégia',distribuicoes:lista,expansoes:distribuicoes.size};
+    // Rodízio entre perfis de Revelation; o limite de tempo não deve consumir
+    // todas as avaliações em variações de uma única concentração de pontos.
+    const perfis=new Map();
+    for(const p of lista){const k=JSON.stringify(resumoDe(p).revelation);if(!perfis.has(k))perfis.set(k,[]);perfis.get(k).push(p);}
+    const filas=[...perfis.values()].map(ps=>ps.sort((a,b)=>valor(b)-valor(a)))
+      .sort((a,b)=>efeitos(cat,b[0]).fixo_hp-efeitos(cat,a[0]).fixo_hp||valor(b[0])-valor(a[0]));
+    lista=[];while(filas.some(ps=>ps.length))for(const ps of filas)if(ps.length)lista.push(ps.shift());
+    if(opcoes.priorizar_sio){
+      const extras=lista.filter(p=>(resumo(cat,p).ranks[33]||0)<2).flatMap(p=>alternativasSio(cat,p,total));
+      lista=[...new Map([...lista,...extras].map(p=>[key(p),p])).values()];
+      // Intercalar com sio II antes de variações equivalentes: um limite de
+      // tempo não pode consumir a busca antes de avaliar o suporte ao EK.
+      lista.sort((a,b)=>(resumo(cat,b).ranks[33]||0)-(resumo(cat,a).ranks[33]||0));
+    }
+    return {...v,estado:lista.length?'Calculado':'Pontos insuficientes para a estratégia',distribuicoes:lista,expansoes:distribuicoes.size,perfis_revelation:perfis.size};
   }
-  return {selecionar,resumo,viabilidade,efeitos,modificar,cura,otimizar,importarCodigo,exportarCodigo,gemasPossiveis,candidatas,caminho};
+  return {selecionar,resumo,viabilidade,efeitos,beneficios,modificar,cura,otimizar,importarCodigo,exportarCodigo,gemasPossiveis,candidatas,caminho,alternativasSio};
 })();
 if(typeof module!=='undefined')module.exports=HuntRodaMotor;

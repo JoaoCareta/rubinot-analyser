@@ -3,11 +3,69 @@ import pathlib
 import tempfile
 import unittest
 from unittest.mock import patch
-from PIL import Image
+from PIL import Image, ImageDraw
 import configuracoes as c
 
 
 class ConfiguracoesTest(unittest.TestCase):
+    def test_cura_icones_corretos_e_independentes_da_posicao(self):
+        img=Image.open('tests/fixtures/leitores/cura-autocura.png').convert('RGB')
+        textos=c.linhas(img)
+        _,slots=c.cura_da_imagem(img,textos)
+        self.assertEqual([(s['id'],s['vida_percent']) for s in slots[:3]],
+                         [('mass_healing',75),('ultimate_healing',70),('restoration',60)])
+        primeiro=img.crop((255,100,287,132));terceiro=img.crop((255,188,287,220))
+        img.paste(terceiro,(255,100));img.paste(primeiro,(255,188))
+        _,slots=c.cura_da_imagem(img,textos)
+        self.assertEqual([s['id'] for s in slots[:3]],['restoration','ultimate_healing','mass_healing'])
+        ImageDraw.Draw(img).rectangle((255,100,286,131),fill=(255,0,255))
+        self.assertIsNone(c.cura_da_imagem(img,textos)[1][0]['id'])
+
+    def test_rtc_sd_nao_exige_limiar_de_criaturas(self):
+        slots=[{'tipo':'magia','slot':i+1,'estado':'vazio_confirmado'} for i in range(5)]
+        slots += [{'tipo':'runa','slot':1,'id':'avalanche_rune','prioridade':2,'creatures':1},
+                  {'tipo':'runa','slot':2,'id':'sudden_death_rune','prioridade':1,'creatures':None}]
+        with patch.object(c,'rtc_da_imagem',return_value=({},slots)):
+            s=c.observar('rtc',Image.new('RGB',(300,200)),'QA','teste',textos=[])['snapshot']
+        self.assertTrue(s['completo'])
+        import json
+        alias=next(self.raiz.rglob('rtc_atual.json'))
+        legado={**s,'completo':False}
+        alias.write_text(json.dumps(legado),encoding='utf8')
+        prova=alias.with_name(s['id']+'_rtc.json')
+        prova.write_text(json.dumps(legado),encoding='utf8')
+        with patch.object(c,'rtc_da_imagem',return_value=({},slots)):
+            relida=c.observar('rtc',Image.new('RGB',(300,200)),'QA','teste',textos=[],capturado_em=s['instante'])['snapshot']
+        self.assertTrue(relida['completo'])
+        self.assertNotEqual(relida['id'],s['id'])
+        self.assertFalse(json.loads(prova.read_text(encoding='utf8'))['completo'])
+        self.assertEqual(c.consultar('QA')['rtc']['id'],relida['id'])
+        slots[5]['creatures']=None
+        with patch.object(c,'rtc_da_imagem',return_value=({},slots)):
+            s=c.observar('rtc',Image.new('RGB',(300,200)),'QA','teste',textos=[])['snapshot']
+        self.assertFalse(s['completo'])
+
+    def test_vessels_isolado_de_botoes_da_roda(self):
+        painel=Image.open(pathlib.Path(__file__).parent/'tests/fixtures/leitores/vessels-cura.png').convert('RGB')
+        img=Image.new('RGB',(painel.width+340,painel.height),'black')
+        img.paste(painel,(340,0))
+        ImageDraw.Draw(img).rectangle((10,24,12,42),fill=(160,160,160))
+        campos,_=c.campos_das_linhas('roda',c.linhas(img))
+        self.assertEqual(campos['vessels.Damage and Healing'],'+3')
+        self.assertEqual(campos['vessels.Heal Friend'],'+7.5%')
+        self.assertNotIn('gemas.TR',campos)
+
+    def test_bonus_visivel_nao_inventa_gema(self):
+        linhas=[{'texto':'Vessels','x':100,'y':10},{'texto':'Strong Ice Wa...','x':60,'y':30},{'texto':'+12%','x':220,'y':30},
+            {'texto':'Revelation Perks','x':100,'y':100},{'texto':'Blessing ofthe Gr... Stage 1','x':60,'y':120}]
+        campos,_=c.campos_das_linhas('roda',linhas)
+        self.assertEqual(campos['vessels.Strong Ice Wave'],'+12%')
+        self.assertEqual(campos['revelation.Blessing of the Grove'],'Stage 1')
+        self.assertFalse(any(k.startswith('gemas.') for k in campos))
+        campos,_=c.campos_das_linhas('roda',[{**l,'texto':l['texto'].replace('Strong Ice','Strong ?ce').replace('Stage 1','Stage ?')} for l in linhas])
+        self.assertNotIn('vessels.Strong Ice Wave',campos)
+        self.assertNotIn('revelation.Blessing of the Grove',campos)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.raiz = pathlib.Path(self.tmp.name)
@@ -50,7 +108,8 @@ class ConfiguracoesTest(unittest.TestCase):
         s=c.consultar('QA cura')['cura']
         self.assertEqual(s['preset'],'ice')
         self.assertEqual([s['slots'][i]['vida_percent'] for i in range(2)],[90,75])
-        self.assertEqual(s['slots'][0]['id'],'ultimate_healing')
+        self.assertEqual(s['slots'][0]['id'],'mass_healing')
+        self.assertEqual(s['slots'][1]['id'],'ultimate_healing')
         self.assertFalse(s['aplicado_confirmado'])
 
     def test_eventos_sem_cast_nao_inventam_frequencia(self):
@@ -226,6 +285,9 @@ class ConfiguracoesTest(unittest.TestCase):
         campos={'heal_friend.destinos_texto':'Argano'}
         self.assertIsNone(leitura_jogo.destinatarios(slots,campos,[])[0]['vocacao_destino'])
         s=leitura_jogo.destinatarios(slots,campos,[{'nome':'Argano','vocacao':'EK'}])
+        self.assertIsNone(s[0]['vocacao_destino']) # a lista não é a ordem das regras
+        regras={'origem':'usuario','provas':['print'],'slots':{'heal_friend':{'1':'EK'}}}
+        s=leitura_jogo.destinatarios(slots,campos,[{'nome':'Argano','vocacao':'EK'}],regras)
         self.assertEqual(s[0]['vocacao_destino'],'EK')
 
     def test_concordancia_cura_e_roda_nao_so_completude(self):
@@ -354,6 +416,74 @@ class ConfiguracoesTest(unittest.TestCase):
         self.assertLess(ctx.calibrar_ataque('QA','s',eventos,magias,recente)['magias']['fork']['lancamentos'],15)
         ruim=[*eventos[:-10],*[dict(e,t=eventos[-11]['t']+(j+1)*6) for j,e in enumerate(eventos[-10:])]]
         self.assertEqual(ctx.calibrar_ataque('QA','s',ruim,magias,{})['intervalos_efetivos'],{})
+
+
+    def test_cura_calibracao_com_margem_e_barra_variavel(self):
+        original = Image.open('tests/fixtures/leitores/cura.png').convert('RGB')
+        painel = original.crop((540,272,1381,738))
+        # A aba pressionada e sua barra variam; o conteúdo comprova Cura.
+        painel.paste((70,70,70), (12,27,407,63))
+        tela = Image.new('RGB', (1100,700), 'black')
+        tela.paste(painel, (100,100))
+        arquivo = self.raiz/'cura_margem.png'
+        tela.save(arquivo)
+        r = c.calibrar('cura', {'left':80,'top':70,'width':881,'height':506}, arquivo, 'QA')['snapshot']
+        self.assertEqual(r['slots'][0]['id'], 'mass_healing')
+        self.assertEqual(r['slots'][0]['vida_percent'], 90)
+        c.Leitor().processar_imagem(tela, 'Outro', 's')
+        self.assertIn('cura', c.consultar('Outro', 's', True))
+        self.assertNotIn('rtc', c.consultar('Outro', 's', True))
+        movida = Image.new('RGB', (1200,800), 'black')
+        movida.paste(tela.crop((80,70,961,576)), (150,140))
+        movida.save(arquivo)
+        c.Leitor().processar(arquivo, 'QA', 's2')
+        self.assertEqual(c.consultar('QA', 's2', True)['cura']['slots'][0]['vida_percent'], 90)
+
+    def test_cura_aba_inativa_e_indicativos_fora_do_painel_rejeitados(self):
+        rtc = Image.open('tests/fixtures/leitores/01-rtc-configurado.png').convert('RGB')
+        self.assertEqual(c.cura_da_imagem(rtc, c.linhas(rtc))[1], [])
+        arquivo = self.raiz/'rtc.png'
+        rtc.save(arquivo)
+        with self.assertRaises(ValueError):
+            c.calibrar('cura', {'left':540,'top':272,'width':841,'height':466}, arquivo, 'QA')
+        self.assertNotIn('cura', c.consultar('QA'))
+        from rubinot.observacao.configuracao import ancora_cura
+        self.assertIsNone(ancora_cura([
+            {'texto':'Cura','x':203,'y':41},
+            {'texto':'Cura por magia','x':278,'y':200},
+            {'texto':'Treino de mana','x':665,'y':200}]))
+
+
+    def test_guardar_automatico_e_troca_de_abas_na_hunt(self):
+        pasta = pathlib.Path('tests/fixtures/leitores')
+        leitor = c.Leitor()
+        for tipo, nome in [('rtc','01-rtc-configurado.png'), ('cura','cura.png'), ('roda','roda-referencia.png')]:
+            p = pasta/nome
+            s = c.calibrar('auto', {}, p, 'QA')['snapshot']
+            self.assertEqual(s['tipo'], tipo)
+            self.assertTrue(s['slots'] if tipo != 'roda' else s['campos']['pontos.total'])
+            f = self.raiz/f'q_{tipo}.png'
+            Image.open(p).save(f)
+            leitor.processar(f, 'QA', 'hunt_teste')
+            self.assertEqual(c.ESTADO_LEITOR['janelas'], [tipo])
+            observado = c.consultar('QA','hunt_teste',True)
+            self.assertIn(tipo, observado)
+            if tipo == 'cura':
+                # O título RTCaster continua visível, mas sua aba está inativa.
+                self.assertEqual(observado['rtc']['preset'], 'ice')
+                self.assertTrue(all(s.get('atual') for s in observado['rtc']['slots']))
+        preto = self.raiz/'preto.png'
+        Image.new('RGB',(1000,700),'black').save(preto)
+        with self.assertRaises(ValueError):c.calibrar('auto', {}, preto, 'QA')
+
+    def test_monitor_usa_quadro_atual_sem_esperar_proximo_f(self):
+        from rubinot.bootstrap.monitor import Monitor
+        for nome in ['f_140001.png','q_140001.png','q_140003.png','c_140004.png']:
+            (self.raiz/nome).touch()
+        self.assertEqual(Monitor._quadros(self.raiz)[-1].name, 'q_140003.png')
+        self.assertEqual(Monitor._quadros(None), [])
+        m = Monitor(lambda: None, lambda: False, lambda: {})
+        self.assertFalse(m.leitor.estabilizar)
 
 
 if __name__ == '__main__':

@@ -54,6 +54,10 @@ class AprendizadoRTC(unittest.TestCase):
         self.assertEqual(ml.estado_magia({'id':'strong_ice_wave'},ref)['chave'],'strong_ice_wave|area:1|extra:0|twin:0')
         self.assertEqual(ml.estado_magia({'id':'ice_burst','familia':'bursts'},ref)['twin_estagio'],2)
         self.assertIsNone(ml.estado_magia({'id':'terra_wave'},ref))
+        roda['campos']['vessels.Strong Ice Wave']={'valor':'+12%','qualidade':'texto_integral'}
+        ref_gema=ml.referencia_roda(roda,catalogo)
+        self.assertAlmostEqual(ml.estado_magia({'id':'strong_ice_wave'},ref_gema)['multiplicador_base'],1.18)
+        self.assertNotEqual(ref['chave'],ref_gema['chave'])
 
     def test_rendimento_validado_e_sem_leakage(self):
         rows=[{'id':str(i),'instante':i,'regras_versao':'QA','estado_magia':'ice|area:1|extra:0|twin:0',
@@ -70,6 +74,23 @@ class AprendizadoRTC(unittest.TestCase):
         b=ml.exemplos('QA','s1',self.eventos,self.magias,{**self.rtc,'roda_efeitos':{'ranks':{'31':2}}},[[32400,33100]])
         self.assertNotEqual(a[0]['fase'],b[0]['fase'])
         self.assertNotEqual(a[0]['id'],b[0]['id'])
+
+    def test_rendimento_contextual_nao_mistura_solo_party_hunt_hazard(self):
+        import json
+        rows = []
+        for grupo, (pt, hunt, hazard) in enumerate([('solo','gelo',5),('pt x4','gelo',5),('solo','terra',5),('solo','gelo',4)]):
+            for i in range(100):
+                rows.append({'id':f'{grupo}:{i}','instante':i,'regras_versao':'QA','estado_magia':'ice|area:1|extra:0|twin:0',
+                    'magia_id':'ice','criaturas':2+i%5,'rendimento':(20+grupo*20)*(2+i%5)**.4,'roda_chave':'atual','sessao':str(grupo),
+                    'contexto_aprendizado':{'pt':pt,'hunt':hunt,'hazard':hazard}})
+        r = ml.treinar_combate(rows, {'char':'QA'}, 'QA')
+        self.assertEqual(len(r['contextos']),4)
+        for chave, contexto in r['contextos'].items():
+            self.assertEqual(contexto['amostras'],100)
+            self.assertIn(json.loads(chave)[0],('solo','party'))
+            for p in contexto['perfis'].values():
+                self.assertLess(p['treino_ate'],p['teste_desde'])
+        self.assertEqual(ml.treinar_combate([{**d,'contexto_aprendizado':{}} for d in rows],{'char':'QA'},'QA')['contextos'],{})
 
     def test_associacao_rejeita_ambiguidade_critico_e_lacuna(self):
         magia={'id':'strong_ice_wave','tipo':'ofensiva','elemento':'gelo','bp':140}

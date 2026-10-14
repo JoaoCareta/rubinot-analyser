@@ -16,6 +16,15 @@ import stream_twitch
 
 
 class FontesTest(unittest.TestCase):
+    def test_dano_cura_pessoal_nao_confunde_dano_por_hora(self):
+        v = painel_stream.campos(['Damage: 5,823k','Damage/h: 945,885','Healing: 750,669'])
+        self.assertEqual(v['Damage'], 5823000)
+        self.assertEqual(v['Healing'], 750669)
+        self.assertNotIn('Damage', painel_stream.campos(['Damage: 5,?23k']))
+        with Image.open('tests/fixtures/leitores/hunt-cura.png') as img:
+            v, _ = painel_stream.ler(img)
+        self.assertEqual(v['Healing'], 750669)
+
     def test_urls_e_personagem(self):
         f = fontes.normalizar({'tipo':'twitch', 'canal':'https://www.twitch.tv/9Dude', 'char':'Traps the cat'})
         self.assertEqual(f['canal'], '9dude')
@@ -75,6 +84,12 @@ class FontesTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d, contextlib.ExitStack() as st:
             base=pathlib.Path(d); cp=base/'cal.json'; fontes.grava_json(cp,c)
             session=base/'session_20261009_000000'
+            session.mkdir()
+            # Mesmo consumidos e anteriores ao antigo buffer de 60 s, não expiram.
+            antigos = [session/f'q_000000_{n:03d}.png' for n in range(121)]
+            for antigo in antigos:
+                antigo.write_bytes(b'prova anterior')
+            fontes.grava_json(session/'coleta_cura.json', {'estado':'numeros_persistidos','ultimo':'q_999999_999.png'})
             st.enter_context(patch.object(capture.sys,'argv',['capture',str(session)]))
             st.enter_context(patch.object(fontes,'atual',return_value=f))
             st.enter_context(patch.object(fontes,'caminhos',return_value=(cp,base/'print.png')))
@@ -83,9 +98,12 @@ class FontesTest(unittest.TestCase):
             st.enter_context(patch.object(stream_twitch,'Leitor',return_value=leitor))
             st.enter_context(patch.object(capture,'MAX_HOURS',0.5/3600))
             with contextlib.redirect_stdout(io.StringIO()): capture.main()
-            for prefix in ['c','b','m','f','q']:
-                paths=list(session.glob(prefix+'_*.png')); self.assertEqual(len(paths),1)
+            for prefix in ['c','m','f','q']:
+                paths=[p for p in session.glob(prefix+'_*.png') if p not in antigos]; self.assertEqual(len(paths),1)
                 with Image.open(paths[0]) as img: img.verify()
+            self.assertTrue(all(p.read_bytes() == b'prova anterior' for p in antigos))
+            # Quadro preto não identifica Battle List: ausência nunca vira lista vazia.
+            self.assertEqual(list(session.glob('b_*.png')), [])
             self.assertTrue(leitor.fechou)
             self.assertEqual(fontes.da_sessao(session),f)
             self.assertEqual(json.loads((session/'calibracao.json').read_text())['janela'],c['janela'])

@@ -13,13 +13,97 @@ import numpy as np
 
 
 class RegrasKS(unittest.TestCase):
+    def test_lista_historico_reusa_party_e_ks_do_mesmo_relatorio(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(ao_vivo,'HUNT_DATA',pathlib.Path(tmp)):
+            p=pathlib.Path(tmp)/'hunt/sessoes/20261013_062400';p.mkdir(parents=True)
+            (p/'resumo.json').write_text(json.dumps({'sessao':{'pt':'pt x3'},'voltas':[], 'totais':{},'fechada':True}))
+            conflitos={'episodios':[{'id':'ks'}],'sessoes':[{'party':['A','B','C','D']}]}
+            with patch.object(ao_vivo,'_ks_hist',return_value=conflitos) as leitura:
+                s=ao_vivo.historico()[0]
+                self.assertEqual(s['pt'],'pt x4');self.assertTrue(s['tem_ks'])
+                self.assertEqual(s['ks_episodios'],1);leitura.assert_called_once()
+
+    def test_ks_recuperado_com_prova_preserva_aliado_e_nao_duplica(self):
+        ep=dict(id='real',origem='releitura_server_log',inicio='08:45:48',fim='08:45:48',
+                prova_inicio=dict(sha256_log_original='prova'),
+                dano=dict(party={},fora={'Hectera':dict(dano=1039,golpes=2)}))
+        original=dict(sessao='qa',party=['Eu'],episodios=[],dano_hunt_observado=dict(party={},fora={}))
+        d=dict(origem='usuario',aliados=['Aliado'],episodios_recuperados=[ep])
+        r=ks.corrigir_relatorio(original,d)
+        self.assertEqual([e['id'] for e in r['episodios']],['real'])
+        self.assertEqual(len(ks.corrigir_relatorio(r,d)['episodios']),1)
+        self.assertEqual(original['episodios'],[])
+        self.assertEqual(ks.corrigir_relatorio(original,{**d,'episodios_recuperados':[{**ep,'prova_inicio':{}}]})['episodios'],[])
+
+    def test_solo_prioriza_hunt_analyser_e_preserva_log_parcial(self):
+        r = dict(party_paineis=[dict(t=1,solo=True,fonte_dano='Hunt Analyser',
+            danos={'Druida':5823000},curas={'Druida':750669},profits={'Druida':None}),
+            dict(t=2,solo=True,fonte_dano='Hunt Analyser',
+                 danos={'Druida':None},curas={'Druida':760000},profits={})],
+            dano_hunt_observado={'party':{'Druida':dict(dano=50,golpes=1,criticos=0)}})
+        stats = ks.estatisticas_party([r])
+        self.assertEqual(stats['fonte_dano'], 'Hunt Analyser')
+        self.assertEqual(stats['total'], 5823000)
+        self.assertEqual(stats['jogadores'][0]['cura'], 760000)
+        self.assertEqual(stats['jogadores'][0]['dano_observado'], 50)
+
+    def test_party_nao_e_substituida_pelo_solo_apos_sair(self):
+        ps = [dict(t=1,danos={'Druida':1000,'Cavaleiro':2000},curas={},profits={}),
+              dict(t=2,solo=True,fonte_dano='Hunt Analyser',danos={'Druida':5000},curas={},profits={})]
+        stats = ks.estatisticas_party([dict(party_paineis=ps)])
+        self.assertEqual(stats['total'], 3000)
+        self.assertEqual(stats['fonte_dano'], 'Party Hunt')
+
+    def test_reset_solo_depois_de_lacuna_preserva_segmentos(self):
+        ps = [dict(t=t,solo=True,fonte_dano='Hunt Analyser',danos={'Druida':d},curas={},profits={})
+              for t,d in [(1,1000),(2,None),(3,0),(4,200)]]
+        stats = ks.estatisticas_party([dict(party_paineis=ps)])
+        self.assertEqual(stats['total'],1200)
+        self.assertEqual(stats['resets'],1)
+
+    def test_variacao_espacos_do_painel_nao_duplica_acumulado(self):
+        ps = [dict(t=1,danos={'Druida Um':1000},curas={},profits={}),
+              dict(t=2,danos={'DruidaUm':1200},curas={},profits={})]
+        stats = ks.estatisticas_party([dict(party_paineis=ps)])
+        self.assertEqual(stats['total'],1200)
+        self.assertEqual(len(stats['jogadores']),1)
+
+    def test_party_formas_identifica_nome_sem_exigir_dano_legivel(self):
+        nomes, danos, _, curas = ks.Leitor.blocos_party([
+            'Druida', '1,000', '2?000', '400', 'Cavaleiro', '200', '3,000', '0'])
+        self.assertEqual(nomes, ['Druida','Cavaleiro'])
+        self.assertIsNone(danos['Druida'])
+        self.assertEqual(curas['Druida'], 400)
+        _, danos, _, _ = ks.Leitor.blocos_party([
+            'Druida','? 1,000','? 2,000','? 400','Cavaleiro','? 200','? 3,00?','? 0'])
+        self.assertEqual(danos['Druida'],2000)
+        self.assertIsNone(danos['Cavaleiro'])
+
+    def test_leitor_solo_publica_dano_cura_do_painel_pessoal(self):
+        from PIL import Image
+        p = self.sessao / 'f_000001_000.png'
+        Image.new('RGB',(2000,1100)).save(p)
+        with patch.object(self.d.leitor,'linhas',return_value=[]), \
+             patch.object(ks.painel_stream,'recortar_painel',return_value=Image.new('RGB',(200,200))), \
+             patch.object(ks.painel_stream,'linhas',return_value=[]), \
+             patch.object(ks.painel_stream,'ler',return_value=({'Loot':0,'Supplies':0,'Balance':0},[])), \
+             patch.object(ks.painel_stream,'ler_quadro',return_value=({'Damage':5823000,'Healing':750669},[])):
+            painel = self.d.leitor.party(p,self.d.lay,'Druida')
+        self.assertTrue(painel['solo'])
+        self.assertEqual(painel['danos'], {'Druida':5823000})
+        self.assertEqual(painel['curas'], {'Druida':750669})
+
     def test_ganhos_ks_usam_fronteiras_e_rejeitam_reset_ou_loot_type(self):
         ep = dict(inicio='00:00:10',ultimo_t=30)
-        self.d.paineis = [dict(t=10,xp_raw=100,loot_periodo=200,fonte_loot='Party Hunt',tipo='Market'),
-                          dict(t=30,xp_raw=140,loot_periodo=270,fonte_loot='Party Hunt',tipo='Market')]
+        self.d.paineis = [dict(t=10,xp_raw=100,fonte_xp='XP Analyser',loot_periodo=200,fonte_loot='Party Hunt',tipo='Market'),
+                          dict(t=30,xp_raw=140,fonte_xp='XP Analyser',loot_periodo=270,fonte_loot='Party Hunt',tipo='Market')]
         self.assertEqual(self.d.ganhos_painel(ep)['xp_raw'],40)
         self.assertEqual(self.d.ganhos_painel(ep)['loot'],70)
-        self.d.paineis.insert(1,dict(t=20,xp_raw=10,loot_periodo=10,fonte_loot='Party Hunt',tipo='Market'))
+        self.d.paineis[0]['fonte_xp']='Hunt Analyser'
+        self.assertIsNone(self.d.ganhos_painel(ep)['xp_raw'])
+        self.assertEqual(self.d.ganhos_painel(ep)['loot'],70)
+        self.d.paineis[0]['fonte_xp']='XP Analyser'
+        self.d.paineis.insert(1,dict(t=20,xp_raw=10,fonte_xp='XP Analyser',loot_periodo=10,fonte_loot='Party Hunt',tipo='Market'))
         self.assertIsNone(self.d.ganhos_painel(ep)['xp_raw'])
         self.assertIsNone(self.d.ganhos_painel(ep)['loot'])
         self.d.paineis.pop(1);self.d.paineis[-1]['tipo']='Leader'
@@ -205,13 +289,28 @@ class RegrasKS(unittest.TestCase):
 
 
 class Historico(unittest.TestCase):
+    def test_correcao_declarada_preserva_original_e_intrusos_sem_ledger(self):
+        r = dict(sessao='qa', party=['Eu'], episodios=[
+            dict(id='1', inicio='00:00:10', ultimo_t=10, aberto=False,
+                 dano={'party': {}, 'fora': {'Aliado': {'dano': 10}}}),
+            dict(id='2', inicio='00:00:20', ultimo_t=20, aberto=False,
+                 dano={'party': {}, 'fora': {'Intruso': {'dano': 20}}})])
+        antes = copy.deepcopy(r)
+        d = dict(origem='usuario', aliados=['Aliado'])
+        corrigido = ks.corrigir_relatorio(r, d)
+        self.assertEqual(r, antes)
+        self.assertEqual([e['id'] for e in corrigido['episodios']], ['2'])
+        self.assertEqual(corrigido['episodios_reclassificados'][0]['id'], '1')
+        self.assertEqual(len(ks.corrigir_relatorio(corrigido, d)['episodios_reclassificados']), 1)
+        self.assertIs(ks.corrigir_relatorio(r, dict(origem='inferido', aliados=['Aliado'])), r)
+
     def test_intervalo_personagem_dia_e_taxa_unica(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(ao_vivo, 'HUNT_DATA', pathlib.Path(tmp)):
             def salva(nome, inicio, fim, char='Druida', data='08/10/2026'):
                 p = pathlib.Path(tmp) / 'hunt' / 'sessoes' / nome
                 p.mkdir(parents=True)
                 r = {'sessao': {'inicio': inicio, 'fim': fim, 'char': char, 'data': data, 'pt': 'pt x4'},
-                     'voltas': [{'n': 1, 'ini': 0, 'fim': 100, 'dur': 100, 'xp_raw': 1000, 'bichos': 10}],
+                     'voltas': [{'n': 1, 'ini': 0, 'fim': 100, 'dur': 100, 'xp_raw': 1000, 'xp_origem':'XP Analyser', 'bichos': 10}],
                      'totais': {'voltas': 1, 'dur_s': 100, 'xp_raw': 1000}, 'fechada': True}
                 (p / 'resumo.json').write_text(json.dumps(r), encoding='utf-8')
                 return p / 'resumo.json'
@@ -335,5 +434,23 @@ class EstatisticasParty(unittest.TestCase):
             self.assertEqual(r['estatisticas_party']['jogadores'][0]['dano_observado'], 50)
             self.assertEqual(json.loads((pasta / 'ks.json').read_text(encoding='utf-8'))['estatisticas_party'], r['estatisticas_party'])
 
+    def test_releitura_party_com_prova_recupera_ultima_linha_sem_alterar_original(self):
+        original = {'party':['Druida'],'episodios':[],'party_paineis':[],
+                    'dano_hunt_observado':{'party':{},'fora':{}}}
+        releitura = {'origem':'releitura_paineis_e_console','provas':['quadro'],
+                     'party_paineis':[{'t':20,'nomes':['Druida','Aliado'],
+                       'danos':{'Druida':100,'Aliado':200},'profits':{},'curas':{},
+                       'fonte_dano':'Party Hunt'}],
+                     'dano_hunt_observado':{'party':{},'fora':{}}}
+        declaracao = {'origem':'usuario','aliados':['Aliado'],'relatorio_releitura':releitura}
+        r = ks.corrigir_relatorio(original,declaracao)
+        aliado = next(p for p in r['estatisticas_party']['jogadores'] if p['nome']=='Aliado')
+        self.assertEqual(aliado['dano'],200)
+        self.assertIsNone(aliado['golpes'])
+        self.assertEqual(original['party_paineis'],[])
+        releitura['provas']=[]
+        self.assertEqual(ks.corrigir_relatorio(original,declaracao)['party_paineis'],[])
+
 if __name__ == '__main__':
     unittest.main()
+

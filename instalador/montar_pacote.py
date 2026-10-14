@@ -23,7 +23,7 @@ LEIA_ME = AQUI / "LEIA-ME.txt"
 
 # controle = atalho; app = servidor; capture e lap_watch = subprocessos que o ao_vivo sobe
 ENTRADAS = ["controle", "app", "capture", "lap_watch", "ao_vivo"]
-DADOS = [
+DADOS = ["ui/input_received_damage.png", "ui/paineis_referencias.json",
     "atlas.json",            # atlas de glifos: todo leitor de texto (atlas_build.load_atlas)
     "botao_x.png",           # molde do × dos cabeçalhos (app.detectar)
     "pin_template.png",      # molde do pin do Map View (pin_detect)
@@ -33,19 +33,21 @@ DADOS = [
     "ui/taxas.js",   # taxas.js = a conta da tela
     "ui/navegacao.js", "ui/calibracoes_resumo.js",  # navegação e referências da calibração
     "ui/tutorial.js", "ui/rtc.js", "ui/magias.json",
-    "ui/rtc_worker.js", "ui/temporal.js", "ui/integracao.js", "ui/janelas_referencias.json", "ui/recursos_glifos.json", "ui/roda_motor.js", "ui/fflate.js", "ui/fflate-LICENSE.txt", "ui/roda_catalogo.json",
+    "ui/rtc_worker.js", "ui/temporal.js", "ui/personalizacao.js", "ui/integracao.js", "ui/janelas_referencias.json", "ui/recursos_glifos.json", "ui/roda_motor.js", "ui/fflate.js", "ui/fflate-LICENSE.txt", "ui/roda_catalogo.json",
     "ui/configuracoes.html", "ui/voc_ed.png", "ui/voc_ms.png", "ui/roda_visual.js",
-    "ui/configuracoes_glifos.json", "ui/rtc_referencias.json", "ui/roda_referencias.json",
+    "ui/configuracoes_glifos.json", "ui/rtc_referencias.json", "ui/roda_referencias.json", "ui/hazard_referencias.json",
     "ui/gato_scuba.png", "ui/gato_som.mp3", "ui/hunt_analyzer_icone.png",
 ]
 DADOS += ['ui/magia_apprentice_s_strike.png', 'ui/magia_buzz.png', 'ui/magia_chill_out.png', 'ui/magia_death_strike.png', 'ui/magia_energy_beam.png', 'ui/magia_energy_strike.png', 'ui/magia_energy_wave.png', 'ui/magia_eternal_winter.png', 'ui/magia_fire_wave.png', 'ui/magia_flame_strike.png', 'ui/magia_great_energy_beam.png', 'ui/magia_hell_s_core.png', 'ui/magia_ice_strike.png', 'ui/magia_lightning.png', 'ui/magia_great_fire_wave.png', 'ui/magia_ice_burst.png', 'ui/magia_great_death_beam.png', 'ui/magia_forked_glacier.png', 'ui/magia_forked_thorns.png', 'ui/magia_physical_strike.png', 'ui/magia_rage_of_the_skies.png', 'ui/magia_strong_energy_strike.png', 'ui/magia_strong_flame_strike.png', 'ui/magia_strong_ice_strike.png', 'ui/magia_strong_ice_wave.png', 'ui/magia_strong_terra_strike.png', 'ui/magia_scorch.png', 'ui/magia_mud_attack.png', 'ui/magia_terra_strike.png', 'ui/magia_terra_wave.png', 'ui/magia_wrath_of_nature.png', 'ui/magia_ultimate_energy_strike.png', 'ui/magia_ultimate_ice_strike.png', 'ui/magia_ultimate_terra_strike.png', 'ui/magia_ultimate_flame_strike.png', 'ui/magia_terra_burst.png', 'ui/magia_avalanche_rune.png', 'ui/magia_great_fireball_rune.png', 'ui/magia_stone_shower_rune.png', 'ui/magia_thunderstorm_rune.png', 'ui/magia_sudden_death_rune.png']
 DADOS += ['ui/roda_icone_5.png', 'ui/roda_icone_6.png', 'ui/roda_icone_23.png', 'ui/roda_icone_24.png', 'ui/roda_icone_25.png', 'ui/roda_icone_26.png', 'ui/roda_icone_27.png', 'ui/roda_icone_28.png', 'ui/roda_icone_29.png', 'ui/roda_icone_30.png', 'ui/roda_icone_31.png', 'ui/roda_icone_32.png', 'ui/roda_icone_33.png', 'ui/roda_icone_34.png', 'ui/roda_icone_35.png', 'ui/roda_icone_36.png', 'ui/roda_icone_37.png', 'ui/roda_icone_38.png', 'ui/roda_icone_39.png', 'ui/roda_icone_40.png']
 DADOS += ['ui/magia_intense_healing.png', 'ui/magia_ultimate_healing.png', 'ui/magia_heal_friend.png', 'ui/magia_mass_healing.png', 'ui/magia_restoration.png', 'ui/magia_nature_s_embrace.png']
+DADOS += ['ui/party_critico.png', 'ui/party_fatal.png']
 DADOS += ['ui/elemento_fisico.png', 'ui/elemento_fogo.png', 'ui/elemento_terra.png', 'ui/elemento_energia.png', 'ui/elemento_gelo.png', 'ui/elemento_sagrado.png', 'ui/elemento_morte.png']
+DADOS += ['ui/rodas_preparadas.js', 'ui/gema_ed_1.png', 'ui/gema_ed_2.png', 'ui/gema_ed_3.png', 'ui/gema_ms_1.png', 'ui/gema_ms_2.png', 'ui/gema_ms_3.png']
 DADOS += [p.relative_to(PROJETO).as_posix() for d in ("app", "features", "shared") for p in (PROJETO / "ui" / d).rglob("*") if p.is_file() and p.relative_to(PROJETO).as_posix() not in DADOS and p.name != "mock_hunt.json"]
 DADOS_PASTAS = ["monstros"]  # catálogo já baixado do TibiaWiki (o resto baixa sozinho)
 # citados no código mas são do dono (ou gerados em uso): nunca vão
-PESSOAIS = {"calibracao.json", "calibracao_print.png", "app.log", "app_anterior.log", "z_ue_calib.png", "mock_hunt.json",
+PESSOAIS = {"fila_rtc.sqlite3", "coleta_rtc.json", "xp_releituras.json", "party_correcoes.json", "contexto_hunt.json","supplies_referencias.json", "residual_exemplos.json", "residual_vigente.json","calibracao.json", "calibracao_print.png", "app.log", "app_anterior.log", "z_ue_calib.png", "mock_hunt.json",
             "fonte.json", "fontes", "stream_estado.json",
             "auxiliares.json", "locais_player.json", "rtc_player.json", "mapa_ajustes.json",   # configurações e reparos pessoais
             ".tela_perfil", "capture", "KS", "configuracoes_player",
@@ -87,8 +89,8 @@ def locais(mod):
     return nomes, arv
 
 
-def fecho():
-    mods, fila, arvores = set(), list(ENTRADAS), {}
+def fecho(entradas=None):
+    mods, fila, arvores = set(), list(ENTRADAS if entradas is None else entradas), {}
     while fila:
         m = fila.pop()
         if m not in mods:

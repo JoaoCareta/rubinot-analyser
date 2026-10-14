@@ -293,9 +293,8 @@ function desenhaResto() {
     return l;
   }) : [el('p', 'nota', on ? 'Nenhum apito ainda nesta sessão.' : 'Ligue para começar a acompanhar.')]));
   $('#nota').textContent = E.erro ? `Um quadro não leu direito (${E.erro}); ele tenta de novo sozinho.`
-    : `Medido nas suas hunts: o escudo cai 58x por hora (metade volta em 4 s), a vida cruza 60% ~1x `
-      + `e dentro de uma box pesada o escudo aguenta 12 s. `
-      + (E.boxes ? `${E.boxes} boxes pesadas mapeadas em ${E.hunt || 'esta hunt'}.` : 'As boxes se mapeiam sozinhas enquanto você caça com ele ligado.');
+    : 'Vida em 60% ou menos mantém o aviso de emergência. '
+      + (E.boxes ? `${E.boxes} boxes mapeadas em ${E.hunt||'esta hunt'}.` : 'As boxes se mapeiam enquanto você caça com o auxiliador ligado.');
 }
 
 $('#btnLigar').onclick = async () => { E = await api({ligar: !E?.ligado, nivel: E?.nivel, som: E?.som}) || E; desenha(); };
